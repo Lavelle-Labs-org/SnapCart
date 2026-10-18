@@ -55,3 +55,18 @@ export function validateStateTransition(
     }`,
   };
 }
+
+/**
+ * Returns true if the given order state is terminal (cannot transition further).
+ */
+export function isTerminalState(state: OrderState): boolean {
+  return (ALLOWED_TRANSITIONS[state] || []).length === 0;
+}
+
+/**
+ * Returns the list of permitted next states for a given order state.
+ */
+export function getNextAllowedStates(state: OrderState): OrderState[] {
+  return ALLOWED_TRANSITIONS[state] || [];
+}
+
