@@ -92,4 +92,33 @@ describe("Environment Validation Schema (INFRA-001)", () => {
     expect(result.SMS_DAILY_CAP).toBe(50);
     expect(result.SMS_SENDING_PAUSED).toBe(false);
   });
+
+  it("rejects default or placeholder development secrets in production mode", () => {
+    expect(() =>
+      validateEnv({
+        ...validMockEnv,
+        NODE_ENV: "production",
+        SESSION_SECRET: "replace_with_at_least_32_random_characters_for_sessions",
+      })
+    ).toThrowError(/SESSION_SECRET cannot use default or placeholder development secret in production/);
+
+    expect(() =>
+      validateEnv({
+        ...validMockEnv,
+        NODE_ENV: "production",
+        SESSION_SECRET: "development_session_secret_for_local_testing_only",
+      })
+    ).toThrowError(/SESSION_SECRET cannot use default or placeholder development secret in production/);
+  });
+
+  it("accepts strong production secret in production mode", () => {
+    const prodResult = validateEnv({
+      ...validMockEnv,
+      NODE_ENV: "production",
+      SESSION_SECRET: "7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a",
+    });
+    expect(prodResult.SESSION_SECRET).toBe(
+      "7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a"
+    );
+  });
 });
