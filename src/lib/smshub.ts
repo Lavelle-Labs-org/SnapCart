@@ -4,6 +4,8 @@
  * Sections 8.1, 8.2, 8.3, 8.5
  */
 
+import { env } from "@/env";
+
 export interface SMSHubSendOptions {
   msisdn: string;
   text: string;
@@ -58,9 +60,9 @@ export class SMSHubClient {
   private mode: "test" | "live";
 
   constructor(options?: { apiKey?: string; baseUrl?: string; mode?: "test" | "live" }) {
-    this.apiKey = options?.apiKey || process.env.SMSHUB_API_KEY || "";
+    this.apiKey = options?.apiKey ?? env.SMSHUB_API_KEY;
     this.baseUrl = (options?.baseUrl || "https://smshub.et").replace(/\/$/, "");
-    this.mode = options?.mode || (process.env.SMSHUB_MODE === "live" ? "live" : "test");
+    this.mode = options?.mode ?? env.SMSHUB_MODE;
   }
 
   private async request<T>(path: string, method: string = "GET", body?: any): Promise<T> {
