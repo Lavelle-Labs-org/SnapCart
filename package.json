@@ -2,9 +2,17 @@
   "name": "order-by-sms",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "next dev",
+    "dev:web": "npm --workspace=@order-by-sms/web run dev",
+    "dev:api": "npm --workspace=@order-by-sms/api run dev",
     "build": "next build",
+    "build:web": "npm --workspace=@order-by-sms/web run build",
+    "build:api": "npm --workspace=@order-by-sms/api run build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
