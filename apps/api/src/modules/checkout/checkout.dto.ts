@@ -59,5 +59,20 @@ export const ResendCheckoutOtpSchema = z
     path: ["draftId"],
   });
 
+export const VerifyCheckoutSchema = z
+  .object({
+    draftId: z.string().trim().min(1).optional(),
+    draft_id: z.string().trim().min(1).optional(),
+    code: z
+      .string({ required_error: "Verification code is required" })
+      .trim()
+      .min(1, { message: "Verification code cannot be empty" }),
+  })
+  .refine((data) => Boolean(data.draftId || data.draft_id), {
+    message: "draftId is required",
+    path: ["draftId"],
+  });
+
 export type CheckoutDto = z.infer<typeof CheckoutSchema>;
 export type ResendCheckoutOtpDto = z.infer<typeof ResendCheckoutOtpSchema>;
+export type VerifyCheckoutDto = z.infer<typeof VerifyCheckoutSchema>;

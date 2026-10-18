@@ -84,11 +84,28 @@ describe("NestJS Guest Checkout & OTP Dispatch API E2E (BE-008)", () => {
           })
         ),
       },
+      order: {
+        findFirst: vi.fn(),
+        create: vi.fn(),
+      },
+      suppressionList: {
+        findUnique: vi.fn().mockResolvedValue(null),
+      },
+      message: {
+        create: vi.fn().mockImplementation(({ data }) =>
+          Promise.resolve({ id: "msg-e2e-1", ...data })
+        ),
+      },
+      $transaction: vi.fn().mockImplementation(async (cb) => cb(prismaMock)),
     };
 
     smshubMock = {
       verifySend: vi.fn(),
       verifyCheck: vi.fn(),
+      sendSMS: vi.fn().mockResolvedValue({
+        status: "success",
+        data: { message_id: "msg-hub-seller-1", credits_used: 1 },
+      }),
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -254,6 +271,127 @@ describe("NestJS Guest Checkout & OTP Dispatch API E2E (BE-008)", () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.sent).toBe(true);
       expect(res.body.data.retryAfter).toBe(60);
+    });
+  });
+
+  describe("POST /api/checkout/verify", () => {
+    it("returns 400 when code is invalid or rejected by SMSHub", async () => {
+      prismaMock.phoneVerification.findUnique.mockResolvedValue({
+        id: "draft-e2e-123",
+        phone: "0911223344",
+        purpose: "buyer_checkout",
+        status: "pending",
+        verification_id: "ver-hub-e2e-999",
+        expires_at: new Date(Date.now() + 300 * 1000),
+        draft: JSON.stringify({ slug: "habesha-roasts", sellerId: demoSeller.id, items: [] }),
+      });
+
+      smshubMock.verifyCheck.mockResolvedValue({
+        status: "success",
+        data: {
+          valid: false,
+          verification_status: "failed",
+        },
+      });
+
+      const res = await request(app.getHttpServer())
+        .post("/api/checkout/verify")
+        .send({ draftId: "draft-e2e-123", code: "000000" })
+        .expect(400);
+
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.code).toBe("INVALID_CODE");
+    });
+
+    it("successfully validates OTP, creates order atomically, generates action token, and texts seller", async () => {
+      const draftPayload = {
+        sellerId: demoSeller.id,
+        slug: demoSeller.slug,
+        buyerName: "Almaz Ayele",
+        buyerPhone: "0911223344",
+        smsConsent: true,
+        consentWording: "Send me SMS updates about this order",
+        totalSantim: 95000,
+        items: [
+          {
+            productId: "prod-e2e-1",
+            name: "Yirgacheffe Single Origin",
+            unitPriceSantim: 40000,
+            quantity: 2,
+          },
+          {
+            productId: "prod-e2e-2",
+            name: "Traditional Clay Pot",
+            unitPriceSantim: 15000,
+            quantity: 1,
+          },
+        ],
+      };
+
+      prismaMock.phoneVerification.findUnique.mockResolvedValue({
+        id: "draft-e2e-123",
+        phone: "0911223344",
+        purpose: "buyer_checkout",
+        status: "pending",
+        verification_id: "ver-hub-e2e-999",
+        expires_at: new Date(Date.now() + 300 * 1000),
+        draft: JSON.stringify(draftPayload),
+      });
+
+      smshubMock.verifyCheck.mockResolvedValue({
+        status: "success",
+        data: {
+          valid: true,
+          verification_status: "approved",
+        },
+      });
+
+      prismaMock.order.findFirst.mockResolvedValue({ number: 1042 });
+      prismaMock.order.create.mockResolvedValue({
+        id: "ord-e2e-999",
+        seller_id: demoSeller.id,
+        number: 1043,
+        buyer_name: "Almaz Ayele",
+        buyer_phone: "0911223344",
+        sms_consent: true,
+        consent_wording: "Send me SMS updates about this order",
+        consent_at: new Date(),
+        state: "new",
+        total_santim: 95000,
+        created_at: new Date(),
+        order_items: [
+          {
+            id: "item-e2e-1",
+            order_id: "ord-e2e-999",
+            product_id: "prod-e2e-1",
+            name_at_order: "Yirgacheffe Single Origin",
+            unit_price_santim: 40000,
+            quantity: 2,
+          },
+        ],
+      });
+
+      const res = await request(app.getHttpServer())
+        .post("/api/checkout/verify")
+        .send({
+          draftId: "draft-e2e-123",
+          code: "482190",
+        })
+        .expect(200);
+
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.orderNumber).toBe(1043);
+      expect(res.body.data.orderId).toBe("ord-e2e-999");
+      expect(res.body.data.order.number).toBe(1043);
+      expect(res.body.data.order.state).toBe("new");
+
+      // Verify SMS was sent to the seller with action link
+      expect(smshubMock.sendSMS).toHaveBeenCalledWith(
+        expect.objectContaining({
+          msisdn: demoSeller.phone,
+          text: expect.stringContaining("New order #1043"),
+        })
+      );
     });
   });
 });
