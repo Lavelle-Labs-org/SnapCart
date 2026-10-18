@@ -15,12 +15,15 @@
     "@nestjs/platform-express": "^10.4.22",
     "@order-by-sms/contracts": "*",
     "@prisma/client": "^5.22.0",
+    "bcryptjs": "^3.0.3",
+    "jose": "^5.9.6",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "zod": "^3.25.76"
   },
   "devDependencies": {
     "@nestjs/testing": "^10.4.22",
+    "@types/bcryptjs": "^2.4.6",
     "@types/supertest": "^6.0.3",
     "supertest": "^7.3.1"
   }
