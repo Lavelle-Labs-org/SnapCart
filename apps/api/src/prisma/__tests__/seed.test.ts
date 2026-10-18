@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { seedDatabase, DEMO_SELLER, DEMO_PRODUCTS } from "../../../prisma/seed";
+import { seedDatabase, DEMO_SELLER, DEMO_PRODUCTS } from "../../../../../prisma/seed";
 
 describe("Database Seed Script Production Safety & Idempotency (INFRA-003)", () => {
   afterEach(() => {
