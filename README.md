@@ -84,9 +84,59 @@ cp .env.example .env
 ```
 Edit `.env` to configure your database URL and SMSHub credentials. Note that `SMSHUB_MODE="test"` runs all sends against the zero-credit test endpoint.
 
-### 4. Database Setup
+### 4. Database Setup (Local PostgreSQL or Docker)
+
+Order-by-SMS requires a PostgreSQL instance. You can run PostgreSQL either locally or via Docker:
+
+#### Option A: Docker (Recommended for quick local dev)
+Start a dedicated PostgreSQL 16 container matching `.env.example`:
 ```bash
-npx prisma db push
+docker run --name order-by-sms-db \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=order_by_sms \
+  -p 5432:5432 \
+  -d postgres:16-alpine
+```
+
+Or using Docker Compose:
+```yaml
+# docker-compose.yml
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: order-by-sms-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: order_by_sms
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+```
+Run `docker compose up -d` to launch the database container.
+
+#### Option B: Native PostgreSQL
+1. Ensure PostgreSQL service is running on your system (`localhost:5432`).
+2. Create the development database:
+```sql
+CREATE DATABASE order_by_sms;
+```
+3. Update `DATABASE_URL` in `.env` if using custom credentials.
+
+#### Apply Schema to Database
+Once your PostgreSQL instance is running, push the Prisma schema:
+```bash
+npm run prisma:push
+```
+To inspect your database visually:
+```bash
+npm run prisma:studio
 ```
 
 ### 5. Run the Application
