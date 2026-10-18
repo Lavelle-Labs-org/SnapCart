@@ -26,11 +26,15 @@ export interface SellerDto {
 export interface ProductDto {
   id: string;
   sellerId: string;
+  seller_id?: string;
   name: string;
   priceSantim: number;
+  price_santim?: number;
   available: boolean;
   createdAt: string;
+  created_at?: string;
   deletedAt?: string | null;
+  deleted_at?: string | null;
 }
 
 export interface OrderItemDto {
@@ -155,12 +159,15 @@ export interface VerifyCheckoutInput {
 
 export interface CreateProductInput {
   name: string;
-  priceSantim: number;
+  priceSantim?: number;
+  price_santim?: number;
+  available?: boolean;
 }
 
 export interface UpdateProductInput {
   name?: string;
   priceSantim?: number;
+  price_santim?: number;
   available?: boolean;
 }
 
