@@ -49,3 +49,10 @@ next-env.d.ts
 *.db-journal
 *.sqlite
 scratch/
+
+# Internal Hackathon Strategy, Submission Rubrics & Implementation Backlogs (Private)
+docs/12-build-plan-and-timeline.md
+docs/13-submission-and-judging.md
+docs/14-risks-and-decisions.md
+docs/Order-by-SMS End-to-End Product Document.md
+docs/implementation/
