@@ -17,6 +17,10 @@ import type {
   ApiResponse,
   ApiErrorResponse,
   ApiErrorCode,
+  SignupInput,
+  LoginInput,
+  StorefrontDto,
+  CheckoutResponse,
 } from "@order-by-sms/contracts";
 
 describe("Shared Contracts Package (@order-by-sms/contracts)", () => {
@@ -141,6 +145,34 @@ describe("Shared Contracts Package (@order-by-sms/contracts)", () => {
       };
       expect(order.number).toBe(1001);
       expect(order.items?.[0].quantity).toBe(1);
+
+      const signupInput: SignupInput = {
+        business_name: seller.businessName,
+        sms_name: seller.smsName,
+        phone: seller.phone,
+        password: "securepassword123",
+      };
+      expect(signupInput.business_name).toBe("Habesha Coffee");
+
+      const loginInput: LoginInput = {
+        phone: seller.phone,
+        password: "securepassword123",
+      };
+      expect(loginInput.phone).toBe("0911223344");
+
+      const storefront: StorefrontDto = {
+        seller,
+        products: [product],
+      };
+      expect(storefront.products).toHaveLength(1);
+
+      const checkoutRes: CheckoutResponse = {
+        draftId: "draft_123",
+        phone: order.buyerPhone,
+        expiresAt: new Date().toISOString(),
+      };
+      expect(checkoutRes.draftId).toBe("draft_123");
     });
   });
 });
+

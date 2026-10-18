@@ -7,10 +7,11 @@
 /coverage
 *.lcov
 
-# Next.js Build Outputs
-/.next/
-/out/
-/build
+# Next.js & NestJS Build Outputs
+.next/
+out/
+build/
+dist/
 
 # Environment files & Secrets (CRITICAL: Never commit real keys)
 .env

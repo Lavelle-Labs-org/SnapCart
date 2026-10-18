@@ -108,3 +108,64 @@ export interface VerificationDraftDto {
   lastSentAt: string;
   draft?: string | null;
 }
+
+export interface SignupInput {
+  business_name: string;
+  sms_name: string;
+  phone: string;
+  password: string;
+}
+
+export interface SellerSignupResponse {
+  sellerId: string;
+  phone: string;
+  verificationId: string;
+}
+
+export interface VerifyPhoneInput {
+  phone: string;
+  code: string;
+}
+
+export interface LoginInput {
+  phone: string;
+  password: string;
+}
+
+export interface AuthSessionResponse {
+  seller: SellerDto;
+  sessionToken?: string;
+}
+
+export interface StorefrontDto {
+  seller: SellerDto;
+  products: ProductDto[];
+}
+
+export interface CheckoutResponse {
+  draftId: string;
+  phone: string;
+  expiresAt: string;
+}
+
+export interface VerifyCheckoutInput {
+  draftId: string;
+  code: string;
+}
+
+export interface CreateProductInput {
+  name: string;
+  priceSantim: number;
+}
+
+export interface UpdateProductInput {
+  name?: string;
+  priceSantim?: number;
+  available?: boolean;
+}
+
+export interface ActionOrderDto {
+  order: OrderDto;
+  actionToken: string;
+}
+
