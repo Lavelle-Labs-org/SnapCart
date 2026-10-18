@@ -6,12 +6,20 @@ import { hashPassword } from "../src/lib/password";
  *
  * Seeds a clean, predictable demo seller ("habesha-cafe"), 3 catalog products,
  * and an initial sample order for immediate testing of storefront and checkout.
- * Designed to be completely idempotent: running multiple times never duplicates rows.
+ *
+ * SAFETY GUARDS:
+ * 1. Strictly forbidden in production environments (NODE_ENV === "production").
+ * 2. Idempotent: running multiple times never duplicates rows.
+ * 3. Never overwrites existing seller phone numbers, verification status, or passwords.
+ *
+ * DEMO CREDENTIALS NOTICE:
+ * The demo credentials (HabeshaDemo2026!, 0911223344) are strictly intended
+ * for local development and offline automated testing. Never use in production.
  *
  * References: docs/07 (Sec 10.4), docs/13 (Sec 16.3).
  */
 
-const DEMO_SELLER = {
+export const DEMO_SELLER = {
   business_name: "Habesha Cafe & Bakery",
   sms_name: "Habesha Cafe",
   slug: "habesha-cafe",
@@ -19,7 +27,7 @@ const DEMO_SELLER = {
   password_plain: "HabeshaDemo2026!",
 };
 
-const DEMO_PRODUCTS = [
+export const DEMO_PRODUCTS = [
   {
     name: "Special Combo Platter",
     price_santim: 35000, // 350.00 Birr
@@ -38,33 +46,43 @@ const DEMO_PRODUCTS = [
 ];
 
 export async function seedDatabase(prismaClient?: PrismaClient) {
+  // Production Safety Guard: Immediately reject execution in production before any DB operations
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "Production safety guard: Database seeding is strictly forbidden in production environments."
+    );
+  }
+
   const prisma = prismaClient ?? new PrismaClient();
 
   try {
-    console.log("🌱 Seeding database...");
+    console.log("🌱 Seeding database (Development/Test Mode)...");
 
-    // 1. Seed or update demo seller
-    const passwordHash = await hashPassword(DEMO_SELLER.password_plain);
-
-    const seller = await prisma.seller.upsert({
+    // 1. Seed demo seller safely without overwriting existing credentials
+    let seller = await prisma.seller.findUnique({
       where: { slug: DEMO_SELLER.slug },
-      update: {
-        business_name: DEMO_SELLER.business_name,
-        sms_name: DEMO_SELLER.sms_name,
-        phone: DEMO_SELLER.phone,
-        phone_verified_at: new Date("2026-10-18T00:00:00Z"),
-      },
-      create: {
-        business_name: DEMO_SELLER.business_name,
-        sms_name: DEMO_SELLER.sms_name,
-        slug: DEMO_SELLER.slug,
-        phone: DEMO_SELLER.phone,
-        phone_verified_at: new Date("2026-10-18T00:00:00Z"),
-        password_hash: passwordHash,
-      },
     });
 
-    console.log(`✔ Demo seller: ${seller.business_name} (/s/${seller.slug})`);
+    if (seller) {
+      console.log(
+        `✔ Existing seller '${seller.slug}' found. Preserving existing phone (${seller.phone}) and verification status.`
+      );
+    } else {
+      const passwordHash = await hashPassword(DEMO_SELLER.password_plain);
+
+      seller = await prisma.seller.create({
+        data: {
+          business_name: DEMO_SELLER.business_name,
+          sms_name: DEMO_SELLER.sms_name,
+          slug: DEMO_SELLER.slug,
+          phone: DEMO_SELLER.phone,
+          phone_verified_at: new Date("2026-10-18T00:00:00Z"),
+          password_hash: passwordHash,
+        },
+      });
+
+      console.log(`✔ Created demo seller: ${seller.business_name} (/s/${seller.slug})`);
+    }
 
     // 2. Seed or update demo products
     for (const prod of DEMO_PRODUCTS) {
