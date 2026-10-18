@@ -55,6 +55,18 @@ export function normalizeEthiopianPhone(input: string): PhoneValidationResult {
 }
 
 /**
+ * Normalizes an Ethiopian phone number to canonical 10-digit format (09... or 07...).
+ * Throws an Error if the phone number is invalid.
+ */
+export function normalizePhoneNumber(input: string): string {
+  const res = normalizeEthiopianPhone(input);
+  if (!res.isValid) {
+    throw new Error(res.error || `Invalid Ethiopian phone number: ${input}`);
+  }
+  return res.normalized;
+}
+
+/**
  * Masks a phone number for display/logging according to Section 9.4:
  * e.g. "0912345567" -> "09•• ••• 567"
  */
