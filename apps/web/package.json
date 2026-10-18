@@ -1,0 +1,12 @@
+{
+  "name": "@order-by-sms/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Order-by-SMS Next.js App Router Frontend",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  }
+}
