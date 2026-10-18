@@ -22,6 +22,7 @@ Welcome to the **Order-by-SMS** technical and product specification suite. The p
 | **[12. Build Plan & Timeline](file:///c:/Users/Student4/OneDrive/Documents/0%20-%20projects/order%20by%20sms/docs/12-build-plan-and-timeline.md)** | 11-Day Schedule | Day-by-day roadmap (18–28 Oct), solo builder allocation, cut line, checkpoints |
 | **[13. Submission & Judging](file:///c:/Users/Student4/OneDrive/Documents/0%20-%20projects/order%20by%20sms/docs/13-submission-and-judging.md)** | Competition Deliverables | 100-point rubric mapping, 3-minute video script, problem/solution narrative |
 | **[14. Risks & Decisions](file:///c:/Users/Student4/OneDrive/Documents/0%20-%20projects/order%20by%20sms/docs/14-risks-and-decisions.md)** | Contingencies | KYC approvals, credit budgets, carrier caveats, settled architectural choices |
+| **[15. Architecture Migration Plan](file:///c:/Users/Student4/OneDrive/Documents/0%20-%20projects/order%20by%20sms/docs/15-architecture-migration-plan.md)** | Backend Migration | Next.js to NestJS backend migration, monorepo structure, file map, migration backlog |
 
 ---
 
