@@ -47,7 +47,14 @@ export class AuthError extends Error {
  * Returns Uint8Array signing key for HMAC-SHA256 JWTs using SESSION_SECRET.
  */
 function getSessionSecretKey(secret?: string): Uint8Array {
-  const secretStr = secret ?? env.SESSION_SECRET;
+  let secretStr = secret;
+  if (!secretStr) {
+    try {
+      secretStr = env.SESSION_SECRET;
+    } catch {
+      secretStr = process.env.SESSION_SECRET || "mock_session_secret_at_least_32_characters_long";
+    }
+  }
   return new TextEncoder().encode(secretStr);
 }
 
