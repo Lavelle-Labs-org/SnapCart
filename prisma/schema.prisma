@@ -1,0 +1,203 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderState {
+  new
+  accepted
+  rejected
+  ready
+  completed
+}
+
+enum MessageStatus {
+  queued
+  sent
+  failed
+  unknown
+  skipped
+  test_passed
+}
+
+model Seller {
+  id                String     @id @default(uuid())
+  business_name     String
+  sms_name          String     @db.VarChar(20)
+  phone             String     @unique
+  phone_verified_at DateTime?
+  password_hash     String
+  slug              String     @unique
+  created_at        DateTime   @default(now())
+
+  products          Product[]
+  orders            Order[]
+  messages          Message[]
+
+  @@map("sellers")
+}
+
+model Product {
+  id           String      @id @default(uuid())
+  seller_id    String
+  name         String
+  price_santim Int
+  available    Boolean     @default(true)
+  created_at   DateTime    @default(now())
+  deleted_at   DateTime?
+
+  seller       Seller      @relation(fields: [seller_id], references: [id], onDelete: Cascade)
+  order_items  OrderItem[]
+
+  @@map("products")
+}
+
+model Order {
+  id              String       @id @default(uuid())
+  seller_id       String
+  number          Int
+  buyer_name      String
+  buyer_phone     String
+  sms_consent     Boolean      @default(false)
+  consent_wording String
+  consent_at      DateTime?
+  state           OrderState   @default(new)
+  total_santim    Int
+  created_at      DateTime     @default(now())
+
+  seller          Seller       @relation(fields: [seller_id], references: [id], onDelete: Cascade)
+  order_items     OrderItem[]
+  order_events    OrderEvent[]
+  pickup_code     PickupCode?
+  action_tokens   ActionToken[]
+  messages        Message[]
+
+  @@unique([seller_id, number])
+  @@map("orders")
+}
+
+model OrderItem {
+  id                 String   @id @default(uuid())
+  order_id           String
+  product_id         String?
+  name_at_order      String
+  unit_price_santim  Int
+  quantity           Int
+
+  order              Order    @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  product            Product? @relation(fields: [product_id], references: [id], onDelete: SetNull)
+
+  @@map("order_items")
+}
+
+model OrderEvent {
+  id         String   @id @default(uuid())
+  order_id   String
+  from_state String?
+  to_state   String
+  actor      String
+  created_at DateTime @default(now())
+
+  order      Order    @relation(fields: [order_id], references: [id], onDelete: Cascade)
+
+  @@map("order_events")
+}
+
+model PhoneVerification {
+  id              String   @id @default(uuid())
+  phone           String
+  purpose         String
+  verification_id String
+  status          String   @default("pending")
+  expires_at      DateTime
+  last_sent_at    DateTime @default(now())
+  draft           String?
+
+  @@map("phone_verifications")
+}
+
+model PickupCode {
+  id         String   @id @default(uuid())
+  order_id   String   @unique
+  code_hash  String
+  expires_at DateTime
+  attempts   Int      @default(0)
+  issued_at  DateTime @default(now())
+
+  order      Order    @relation(fields: [order_id], references: [id], onDelete: Cascade)
+
+  @@map("pickup_codes")
+}
+
+model ActionToken {
+  id         String    @id @default(uuid())
+  order_id   String
+  purpose    String
+  token_hash String    @unique
+  expires_at DateTime
+  revoked_at DateTime?
+
+  order      Order     @relation(fields: [order_id], references: [id], onDelete: Cascade)
+
+  @@map("action_tokens")
+}
+
+model Message {
+  id                String        @id @default(uuid())
+  seller_id         String?
+  order_id          String?
+  recipient_phone   String
+  event             String
+  text              String
+  status            MessageStatus @default(queued)
+  skip_reason       String?
+  smshub_message_id String?       @unique
+  request_id        String?
+  network           String?
+  credits_used      Int?
+  error_type        String?
+  attempts          Int           @default(0)
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
+
+  seller            Seller?       @relation(fields: [seller_id], references: [id], onDelete: SetNull)
+  order             Order?        @relation(fields: [order_id], references: [id], onDelete: SetNull)
+  message_events    MessageEvent[]
+
+  @@map("messages")
+}
+
+model MessageEvent {
+  id          String   @id @default(uuid())
+  message_id  String?
+  delivery_id String   @unique
+  event_type  String
+  raw_payload String
+  received_at DateTime @default(now())
+
+  message     Message? @relation(fields: [message_id], references: [id], onDelete: SetNull)
+
+  @@map("message_events")
+}
+
+model SuppressionList {
+  id         String   @id @default(uuid())
+  phone      String   @unique
+  reason     String
+  order_id   String?
+  created_at DateTime @default(now())
+
+  @@map("suppression_list")
+}
+
+model RateCounter {
+  key          String   @id
+  window_start DateTime
+  count        Int      @default(0)
+
+  @@map("rate_counters")
+}
