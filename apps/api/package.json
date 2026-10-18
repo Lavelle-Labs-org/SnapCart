@@ -13,6 +13,7 @@
     "@nestjs/common": "^10.4.22",
     "@nestjs/core": "^10.4.22",
     "@nestjs/platform-express": "^10.4.22",
+    "@order-by-sms/contracts": "*",
     "@prisma/client": "^5.22.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
