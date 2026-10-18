@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { AuthModule } from "./modules/auth/auth.module";
+import { CheckoutModule } from "./modules/checkout/checkout.module";
 import { CryptoModule } from "./modules/crypto/crypto.module";
 import { HealthModule } from "./modules/health/health.module";
 import { ProductsModule } from "./modules/products/products.module";
@@ -14,6 +15,7 @@ import { PrismaModule } from "./prisma/prisma.module";
     SMSHubModule,
     AuthModule,
     ProductsModule,
+    CheckoutModule,
     WebhooksModule,
     HealthModule,
   ],
