@@ -39,13 +39,17 @@ Order-by-SMS solves this end-to-end:
 ## Architecture & SMSHub Integration
 
 ```
-Buyer Mobile Browser ──► Next.js App Router ──► PostgreSQL (Prisma)
-                              │        ▲
-               Outbound SMS   │        │ Webhooks (HMAC-SHA256)
-                              ▼        │
-                         SMSHub Gateway (Ethio Telecom / Safaricom)
+Buyer / Seller Phone ──► Next.js Frontend (apps/web)
+                                │ (REST API / Proxy)
+                                ▼
+                       NestJS Backend (apps/api) ──► PostgreSQL (Prisma)
+                                │        ▲
+                Outbound SMS    │        │ Webhooks (HMAC-SHA256)
+                                ▼        │
+                          SMSHub Gateway (Ethio Telecom / Safaricom)
 ```
 
+- **Monorepo Structure:** Structured with npm workspaces (`apps/web`, `apps/api`, `packages/contracts`, `prisma/`).
 - **SMS Dispatch & Test Mode:** Supports `SMSHUB_MODE="test"` (calls `POST /api/test`, 0 credits) and `SMSHUB_MODE="live"` (calls `POST /api/sms`).
 - **OTP Verification:** Uses `POST /api/verify/send` and `POST /api/verify/check`.
 - **Signed Webhooks:** Validates `X-SMSHub-Signature` via HMAC-SHA256 with 5-minute replay attack protection.
@@ -55,12 +59,14 @@ Buyer Mobile Browser ──► Next.js App Router ──► PostgreSQL (Prisma)
 
 ## Tech Stack
 
-- **Framework:** Next.js (App Router) + TypeScript
+- **Monorepo:** npm workspaces (`apps/web`, `apps/api`, `packages/contracts`)
+- **Backend:** NestJS (Modular Monolith) + TypeScript
+- **Frontend:** Next.js (App Router) + TypeScript + React
 - **Database:** PostgreSQL + Prisma ORM
 - **Styling:** Tailwind CSS (mobile-first responsive)
 - **Validation:** Zod schemas
-- **Testing:** Vitest
-- **Security:** CSPRNG tokens, HMAC-SHA256, Argon2/bcrypt password hashing
+- **Testing:** Vitest & Supertest
+- **Security:** CSPRNG tokens, HMAC-SHA256, bcrypt password hashing, HttpOnly sessions
 
 ---
 

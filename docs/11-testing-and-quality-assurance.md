@@ -7,7 +7,9 @@ To protect the team's SMSHub credit budget, testing is organized across distinct
 | Tier | Focus | Infrastructure | Credit Cost |
 | --- | --- | --- | --- |
 | **Unit Tests** | State machines, phone normalization, cryptographic tokens, templating, money calculations | Vitest in-memory | 0 credits |
-| **Integration Tests** | Route handlers, session cookies, database cascade integrity | Local Postgres + Mock SMSHub Server | 0 credits |
+| **Backend Integration Tests** | NestJS controllers, `@nestjs/testing` module wiring, session guards, Prisma transactions | Local Postgres + Mock SMSHub Server | 0 credits |
+| **Backend E2E API Tests** | Supertest against NestJS HTTP endpoints, cookie flows, webhook signature checks | Supertest + NestJS Test Server | 0 credits |
+| **Frontend Component Tests** | Next.js App Router components, form validation, cart state | Vitest + React Testing Library | 0 credits |
 | **Template Validation** | SMS size and encoding limits across boundary cases | SMSHub `POST /api/test` endpoint | 0 credits |
 | **End-to-End Verification** | Full ordering, SMS delivery, pickup code completion | Real devices on live network | ~4–8 credits / run |
 
