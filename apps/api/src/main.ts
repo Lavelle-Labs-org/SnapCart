@@ -12,7 +12,7 @@ export async function bootstrap() {
   // Fail fast during boot if critical environment variables are missing
   validateEnv();
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   // Global API routing prefix
   app.setGlobalPrefix("api");

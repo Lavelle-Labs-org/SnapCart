@@ -3,10 +3,18 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { CryptoModule } from "./modules/crypto/crypto.module";
 import { HealthModule } from "./modules/health/health.module";
 import { SMSHubModule } from "./modules/smshub/smshub.module";
+import { WebhooksModule } from "./modules/webhooks/webhooks.module";
 import { PrismaModule } from "./prisma/prisma.module";
 
 @Module({
-  imports: [PrismaModule, CryptoModule, SMSHubModule, AuthModule, HealthModule],
+  imports: [
+    PrismaModule,
+    CryptoModule,
+    SMSHubModule,
+    AuthModule,
+    WebhooksModule,
+    HealthModule,
+  ],
   controllers: [],
   providers: [],
 })
