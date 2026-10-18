@@ -7,14 +7,14 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "next dev",
+    "dev": "npm run dev:web",
     "dev:web": "npm --workspace=@order-by-sms/web run dev",
     "dev:api": "npm --workspace=@order-by-sms/api run dev",
-    "build": "next build",
+    "build": "npm run build:web && npm run build:api",
     "build:web": "npm --workspace=@order-by-sms/web run build",
     "build:api": "npm --workspace=@order-by-sms/api run build",
-    "start": "next start",
-    "lint": "next lint",
+    "start": "npm --workspace=@order-by-sms/web run start",
+    "lint": "npm --workspace=@order-by-sms/web run lint",
     "test": "vitest run",
     "test:watch": "vitest",
     "prisma:generate": "prisma generate",

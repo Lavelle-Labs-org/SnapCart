@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { hashPassword } from "../src/lib/password";
+import { hashPassword } from "../apps/api/src/modules/auth/password";
 
 /**
  * Database Seed Script (INFRA-003)

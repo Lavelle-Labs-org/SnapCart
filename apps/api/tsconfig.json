@@ -18,7 +18,6 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@/*": ["../../src/*"],
       "@order-by-sms/contracts": ["../../packages/contracts/src/index.ts"]
     }
   },

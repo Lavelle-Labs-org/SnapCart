@@ -14,7 +14,7 @@ import {
   SMS_TEMPLATES,
   detectEncoding,
   RenderTemplateOptions,
-} from "../src/lib/templates";
+} from "../apps/api/src/modules/smshub/templates";
 
 const DEFAULT_SIGNATURE_LENGTH = 25; // per docs/04 Section 3 (~25 chars legal name)
 const SEPARATOR_LENGTH = 2; // "\n\n" between text and signature
