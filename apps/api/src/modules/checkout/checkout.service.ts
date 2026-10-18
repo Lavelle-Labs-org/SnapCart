@@ -1,18 +1,26 @@
 import {
   Injectable,
   Inject,
+  Optional,
   HttpException,
   HttpStatus,
   Logger,
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import { SMSHubService } from "../smshub/smshub.service";
+import { SMSOrchestratorService } from "../smshub/sms-orchestrator.service";
+import {
+  CryptoService,
+  generateActionToken,
+  hashActionToken,
+} from "../crypto/crypto.service";
 import { truncateShopName } from "../smshub/templates";
 import { normalizeEthiopianPhone } from "@order-by-sms/contracts";
-import type { CheckoutResponse } from "@order-by-sms/contracts";
+import type { CheckoutResponse, OrderDto } from "@order-by-sms/contracts";
 import {
   CheckoutSchema,
   ResendCheckoutOtpSchema,
+  VerifyCheckoutSchema,
 } from "./checkout.dto";
 
 @Injectable()
@@ -23,7 +31,13 @@ export class CheckoutService {
     @Inject(PrismaService)
     private readonly prisma: PrismaService,
     @Inject(SMSHubService)
-    private readonly smshubService: SMSHubService
+    private readonly smshubService: SMSHubService,
+    @Optional()
+    @Inject(SMSOrchestratorService)
+    private readonly smsOrchestrator?: SMSOrchestratorService,
+    @Optional()
+    @Inject(CryptoService)
+    private readonly cryptoService?: CryptoService
   ) {}
 
   /**
@@ -313,6 +327,285 @@ export class CheckoutService {
     return {
       sent: true,
       retryAfter: COOLDOWN_SECONDS,
+    };
+  }
+
+  /**
+   * Phone Verification & Authoritative Order Creation (BE-009, FR-10, FR-14, FR-21)
+   * 1. Validates OTP via SMSHub verifyCheck.
+   * 2. Recalculates cart total from active database products.
+   * 3. Atomically creates order, order items, order event, and action token.
+   * 4. Dispatches new-order alert SMS with action link to the seller.
+   * 5. Returns order details with orderId and orderNumber.
+   */
+  async verifyCheckout(input: any): Promise<{
+    orderNumber: number;
+    orderId: string;
+    order: OrderDto;
+  }> {
+    const rawDraftId = input?.draftId ?? input?.draft_id;
+    const parseResult = VerifyCheckoutSchema.safeParse({
+      draftId: rawDraftId,
+      code: input?.code,
+    });
+
+    if (!parseResult.success) {
+      const firstError =
+        parseResult.error.errors[0]?.message || "Invalid verification input";
+      throw new HttpException(
+        {
+          code: "VALIDATION_ERROR",
+          message: firstError,
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    const { draftId, code } = parseResult.data;
+
+    // 1. Look up verification draft
+    const verification = await this.prisma.phoneVerification.findUnique({
+      where: { id: draftId },
+    });
+
+    if (!verification || verification.purpose !== "buyer_checkout") {
+      throw new HttpException(
+        {
+          code: "NOT_FOUND",
+          message: "Verification draft not found",
+        },
+        HttpStatus.NOT_FOUND
+      );
+    }
+
+    if (verification.status === "approved") {
+      throw new HttpException(
+        {
+          code: "ALREADY_VERIFIED",
+          message: "This checkout verification has already been completed",
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    if (verification.status !== "pending") {
+      throw new HttpException(
+        {
+          code: "VERIFICATION_NOT_PENDING",
+          message: "Verification is not pending",
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    if (verification.expires_at < new Date()) {
+      throw new HttpException(
+        {
+          code: "CODE_EXPIRED",
+          message: "Verification code has expired. Please request a new code.",
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    // 2. Call SMSHub verifyCheck to validate OTP
+    let checkRes;
+    try {
+      checkRes = await this.smshubService.verifyCheck(
+        verification.verification_id,
+        code.trim()
+      );
+    } catch (err: any) {
+      this.logger.error(
+        `Failed to verify OTP with SMSHub for draft ${draftId}: ${err?.message || err}`,
+        err?.stack
+      );
+      throw new HttpException(
+        {
+          code: "VERIFICATION_SERVICE_ERROR",
+          message:
+            err?.message || "Failed to contact SMSHub verification service",
+        },
+        HttpStatus.BAD_GATEWAY
+      );
+    }
+
+    if (
+      !checkRes.data?.valid ||
+      checkRes.data?.verification_status !== "approved"
+    ) {
+      throw new HttpException(
+        {
+          code: "INVALID_CODE",
+          message:
+            "Invalid or expired verification code. Please check and try again.",
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    // 3. Parse serialized draft payload
+    let draftData: any;
+    try {
+      draftData = JSON.parse(verification.draft || "{}");
+    } catch {
+      throw new HttpException(
+        {
+          code: "DRAFT_CORRUPTED",
+          message: "Failed to parse checkout draft data",
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+
+    // 4. Recalculate item prices from database for authoritative total
+    const productIds: string[] = draftData.items.map((i: any) => i.productId);
+    const currentProducts = await this.prisma.product.findMany({
+      where: {
+        id: { in: productIds },
+        seller_id: draftData.sellerId,
+      },
+    });
+
+    const productMap = new Map(currentProducts.map((p) => [p.id, p]));
+    let totalSantim = 0;
+    const finalItems = draftData.items.map((item: any) => {
+      const prod = productMap.get(item.productId);
+      const unitPriceSantim = prod ? prod.price_santim : item.unitPriceSantim;
+      totalSantim += unitPriceSantim * item.quantity;
+      return {
+        productId: item.productId,
+        name: prod ? prod.name : item.name,
+        unitPriceSantim,
+        quantity: item.quantity,
+      };
+    });
+
+    // 5. Generate 22-character action token & SHA-256 hash
+    const actionToken = this.cryptoService
+      ? this.cryptoService.generateActionToken()
+      : generateActionToken();
+    const tokenHash = this.cryptoService
+      ? this.cryptoService.hashActionToken(actionToken)
+      : hashActionToken(actionToken);
+    const tokenExpiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48h
+
+    // 6. Execute atomic database transaction
+    const createdOrder = await this.prisma.$transaction(async (tx) => {
+      // Find highest order number for this seller
+      const lastOrder = await tx.order.findFirst({
+        where: { seller_id: draftData.sellerId },
+        orderBy: { number: "desc" },
+        select: { number: true },
+      });
+      const orderNumber = lastOrder ? lastOrder.number + 1 : 1001;
+
+      // Create order with nested order_items, order_events, and action_tokens
+      const order = await tx.order.create({
+        data: {
+          seller_id: draftData.sellerId,
+          number: orderNumber,
+          buyer_name: draftData.buyerName,
+          buyer_phone: draftData.buyerPhone,
+          sms_consent: draftData.smsConsent,
+          consent_wording: draftData.consentWording,
+          consent_at: draftData.smsConsent ? new Date() : null,
+          state: "new",
+          total_santim: totalSantim,
+          order_items: {
+            create: finalItems.map((item: any) => ({
+              product_id: item.productId,
+              name_at_order: item.name,
+              unit_price_santim: item.unitPriceSantim,
+              quantity: item.quantity,
+            })),
+          },
+          order_events: {
+            create: {
+              from_state: null,
+              to_state: "new",
+              actor: "buyer",
+            },
+          },
+          action_tokens: {
+            create: {
+              purpose: "seller_action",
+              token_hash: tokenHash,
+              expires_at: tokenExpiresAt,
+            },
+          },
+        },
+        include: {
+          order_items: true,
+        },
+      });
+
+      // Mark verification draft as approved
+      await tx.phoneVerification.update({
+        where: { id: verification.id },
+        data: { status: "approved" },
+      });
+
+      return order;
+    });
+
+    // 7. Dispatch new-order alert SMS with action link to seller
+    const seller = await this.prisma.seller.findUnique({
+      where: { id: draftData.sellerId },
+    });
+
+    if (seller && this.smsOrchestrator) {
+      const appUrl =
+        process.env.NEXT_PUBLIC_APP_URL ||
+        process.env.FRONTEND_URL ||
+        "http://localhost:3000";
+      const actionLink = `${appUrl}/a/${actionToken}`;
+
+      await this.smsOrchestrator.sendOrderSMS({
+        sellerId: seller.id,
+        orderId: createdOrder.id,
+        recipientPhone: seller.phone,
+        event: "seller_new_order",
+        shopName: seller.sms_name || seller.business_name,
+        orderNumber: createdOrder.number,
+        itemCount: finalItems.reduce(
+          (sum: number, i: any) => sum + i.quantity,
+          0
+        ),
+        totalBirr: totalSantim / 100,
+        link: actionLink,
+        throwOnError: false, // Don't abort buyer's confirmed order if outbound carrier SMS fails
+      });
+    }
+
+    this.logger.log(
+      `Order #${createdOrder.number} (${createdOrder.id}) created for seller ${draftData.sellerId} by buyer ${draftData.buyerPhone}`
+    );
+
+    return {
+      orderNumber: createdOrder.number,
+      orderId: createdOrder.id,
+      order: {
+        id: createdOrder.id,
+        sellerId: createdOrder.seller_id,
+        number: createdOrder.number,
+        buyerName: createdOrder.buyer_name,
+        buyerPhone: createdOrder.buyer_phone,
+        smsConsent: createdOrder.sms_consent,
+        consentWording: createdOrder.consent_wording,
+        consentAt: createdOrder.consent_at?.toISOString() ?? null,
+        state: createdOrder.state as any,
+        totalSantim: createdOrder.total_santim,
+        createdAt: createdOrder.created_at.toISOString(),
+        items: createdOrder.order_items.map((i: any) => ({
+          id: i.id,
+          orderId: i.order_id,
+          productId: i.product_id,
+          nameAtOrder: i.name_at_order,
+          unitPriceSantim: i.unit_price_santim,
+          quantity: i.quantity,
+        })),
+      },
     };
   }
 }

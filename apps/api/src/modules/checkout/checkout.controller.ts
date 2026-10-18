@@ -26,4 +26,10 @@ export class CheckoutController {
   async resendCheckoutOtp(@Body() body: any) {
     return this.checkoutService.resendCheckoutOtp(body);
   }
+
+  @Post("verify")
+  @HttpCode(HttpStatus.OK)
+  async verifyCheckout(@Body() body: any) {
+    return this.checkoutService.verifyCheckout(body);
+  }
 }
