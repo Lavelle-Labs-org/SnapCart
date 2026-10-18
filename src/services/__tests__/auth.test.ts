@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   createSessionToken,
   verifySessionToken,
@@ -12,10 +12,16 @@ import {
   SESSION_DURATION_SECONDS,
 } from "@/services/auth";
 import { db } from "@/lib/db";
+import { SignJWT } from "jose";
 
 describe("Seller Authentication & Session Management Service (BE-004)", () => {
   const TEST_SECRET = "super_secret_session_key_at_least_32_characters_long!";
   const TEST_SELLER_ID = "seller-uuid-1234-5678";
+
+  afterEach(() => {
+    // Restore all spies and mocks cleanly after each test
+    vi.restoreAllMocks();
+  });
 
   describe("Cookie Configuration", () => {
     it("creates cookie with HttpOnly, SameSite=Lax, and 7-day maxAge", () => {
@@ -46,13 +52,9 @@ describe("Seller Authentication & Session Management Service (BE-004)", () => {
   });
 
   describe("Token Signing & Verification", () => {
-    it("signs and decodes valid session token with seller ID", async () => {
+    it("signs and decodes valid session token containing only minimal sellerId claim", async () => {
       const token = await createSessionToken(
-        {
-          sellerId: TEST_SELLER_ID,
-          phone: "0911223344",
-          slug: "habesha-cafe",
-        },
+        { sellerId: TEST_SELLER_ID },
         { secret: TEST_SECRET }
       );
 
@@ -61,8 +63,9 @@ describe("Seller Authentication & Session Management Service (BE-004)", () => {
 
       const decoded = await verifySessionToken(token, { secret: TEST_SECRET });
       expect(decoded.sellerId).toBe(TEST_SELLER_ID);
-      expect(decoded.phone).toBe("0911223344");
-      expect(decoded.slug).toBe("habesha-cafe");
+      // Confirms phone and slug are NOT stored in the token claims
+      expect((decoded as any).phone).toBeUndefined();
+      expect((decoded as any).slug).toBeUndefined();
     });
 
     it("rejects expired sessions with 401 AuthError", async () => {
@@ -100,6 +103,59 @@ describe("Seller Authentication & Session Management Service (BE-004)", () => {
     it("rejects malformed or empty tokens", async () => {
       await expect(verifySessionToken("", { secret: TEST_SECRET })).rejects.toThrow(AuthError);
       await expect(verifySessionToken("not-a-jwt", { secret: TEST_SECRET })).rejects.toThrow(AuthError);
+    });
+  });
+
+  describe("Seller ID Validation & Non-Empty Checks", () => {
+    it("refuses to create token with empty or whitespace sellerId", async () => {
+      await expect(
+        createSessionToken({ sellerId: "" }, { secret: TEST_SECRET })
+      ).rejects.toThrow(AuthError);
+
+      await expect(
+        createSessionToken({ sellerId: "   " }, { secret: TEST_SECRET })
+      ).rejects.toThrow(AuthError);
+
+      await expect(
+        createSessionToken({ sellerId: null as any }, { secret: TEST_SECRET })
+      ).rejects.toThrow(AuthError);
+    });
+
+    it("rejects verified tokens with missing or empty sellerId claim", async () => {
+      const secretKey = new TextEncoder().encode(TEST_SECRET);
+
+      // Forge a token with empty sellerId
+      const emptyIdToken = await new SignJWT({ sellerId: "" })
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setExpirationTime("7d")
+        .sign(secretKey);
+
+      await expect(
+        verifySessionToken(emptyIdToken, { secret: TEST_SECRET })
+      ).rejects.toThrowError(/missing valid non-empty sellerId/);
+
+      // Forge a token with whitespace-only sellerId
+      const whitespaceIdToken = await new SignJWT({ sellerId: "   " })
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setExpirationTime("7d")
+        .sign(secretKey);
+
+      await expect(
+        verifySessionToken(whitespaceIdToken, { secret: TEST_SECRET })
+      ).rejects.toThrowError(/missing valid non-empty sellerId/);
+
+      // Forge a token with non-string sellerId (e.g. number)
+      const numberIdToken = await new SignJWT({ sellerId: 12345 })
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setExpirationTime("7d")
+        .sign(secretKey);
+
+      await expect(
+        verifySessionToken(numberIdToken, { secret: TEST_SECRET })
+      ).rejects.toThrowError(/missing valid non-empty sellerId/);
     });
   });
 
@@ -175,13 +231,9 @@ describe("Seller Authentication & Session Management Service (BE-004)", () => {
       expect(thrownError.code).toBe("SESSION_EXPIRED");
     });
 
-    it("returns authenticated seller payload when token is valid", async () => {
+    it("returns authenticated sellerId when token is valid", async () => {
       const validToken = await createSessionToken(
-        {
-          sellerId: TEST_SELLER_ID,
-          phone: "0911223344",
-          slug: "habesha-cafe",
-        },
+        { sellerId: TEST_SELLER_ID },
         { secret: TEST_SECRET }
       );
 
@@ -191,11 +243,9 @@ describe("Seller Authentication & Session Management Service (BE-004)", () => {
 
       const auth = await requireSeller(req, { secret: TEST_SECRET });
       expect(auth.sellerId).toBe(TEST_SELLER_ID);
-      expect(auth.phone).toBe("0911223344");
-      expect(auth.slug).toBe("habesha-cafe");
     });
 
-    it("fetches full seller entity from database when fetchSeller is true", async () => {
+    it("resolves current seller details from database when fetchSeller is true", async () => {
       const validToken = await createSessionToken(
         { sellerId: TEST_SELLER_ID },
         { secret: TEST_SECRET }
@@ -222,9 +272,11 @@ describe("Seller Authentication & Session Management Service (BE-004)", () => {
       expect(auth.sellerId).toBe(TEST_SELLER_ID);
       expect(auth.seller?.business_name).toBe("Habesha Cafe & Bakery");
       expect(auth.seller?.slug).toBe("habesha-cafe");
+      expect(auth.phone).toBe("0911223344");
+      expect(auth.slug).toBe("habesha-cafe");
     });
 
-    it("throws 401 when fetchSeller is true but seller was not found in database", async () => {
+    it("throws 401 when fetchSeller is true but seller is missing from database", async () => {
       const validToken = await createSessionToken(
         { sellerId: "deleted-seller-uuid" },
         { secret: TEST_SECRET }
@@ -236,9 +288,17 @@ describe("Seller Authentication & Session Management Service (BE-004)", () => {
       headers.set("cookie", `${SESSION_COOKIE_NAME}=${validToken}`);
       const req = new Request("https://example.com/api/dashboard", { headers });
 
-      await expect(
-        requireSeller(req, { secret: TEST_SECRET, fetchSeller: true })
-      ).rejects.toThrow(AuthError);
+      let thrownError: any = null;
+      try {
+        await requireSeller(req, { secret: TEST_SECRET, fetchSeller: true });
+      } catch (err) {
+        thrownError = err;
+      }
+
+      expect(thrownError).toBeInstanceOf(AuthError);
+      expect(thrownError.status).toBe(401);
+      expect(thrownError.code).toBe("SELLER_NOT_FOUND");
+      expect(thrownError.message).toContain("Seller account not found");
     });
   });
 
@@ -251,7 +311,7 @@ describe("Seller Authentication & Session Management Service (BE-004)", () => {
 
     it("returns session payload when valid token is present", async () => {
       const token = await createSessionToken(
-        { sellerId: TEST_SELLER_ID, slug: "habesha-cafe" },
+        { sellerId: TEST_SELLER_ID },
         { secret: TEST_SECRET }
       );
 
@@ -261,7 +321,6 @@ describe("Seller Authentication & Session Management Service (BE-004)", () => {
 
       const session = await getSession(req, { secret: TEST_SECRET });
       expect(session?.sellerId).toBe(TEST_SELLER_ID);
-      expect(session?.slug).toBe("habesha-cafe");
     });
   });
 });

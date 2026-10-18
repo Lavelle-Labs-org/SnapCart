@@ -7,53 +7,78 @@ import { z } from "zod";
  * and fails fast with actionable errors during server startup.
  * References: docs/05, docs/06, docs/07.
  */
-export const envSchema = z.object({
-  // SMSHub API Credentials (never commit live keys)
-  SMSHUB_API_KEY: z
-    .string()
-    .min(1, "SMSHUB_API_KEY is required and cannot be empty"),
-  SMSHUB_WEBHOOK_SECRET: z.string().optional(),
+export const envSchema = z
+  .object({
+    NODE_ENV: z.enum(["development", "test", "production"]).optional(),
 
-  // SMSHub Execution Mode: "test" (calls /api/test, 0 credits) or "live" (calls /api/sms)
-  SMSHUB_MODE: z
-    .enum(["test", "live"], {
-      errorMap: () => ({ message: "SMSHUB_MODE must be either 'test' or 'live'" }),
-    })
-    .default("test"),
+    // SMSHub API Credentials (never commit live keys)
+    SMSHUB_API_KEY: z
+      .string()
+      .min(1, "SMSHUB_API_KEY is required and cannot be empty"),
+    SMSHUB_WEBHOOK_SECRET: z.string().optional(),
 
-  // Security Secrets
-  SESSION_SECRET: z
-    .string()
-    .min(32, "SESSION_SECRET must be at least 32 characters long for secure session cookies"),
-  PICKUP_CODE_SECRET: z
-    .string()
-    .min(32, "PICKUP_CODE_SECRET must be at least 32 characters long for HMAC pickup code hashing"),
+    // SMSHub Execution Mode: "test" (calls /api/test, 0 credits) or "live" (calls /api/sms)
+    SMSHUB_MODE: z
+      .enum(["test", "live"], {
+        errorMap: () => ({ message: "SMSHUB_MODE must be either 'test' or 'live'" }),
+      })
+      .default("test"),
 
-  // Database Connection
-  DATABASE_URL: z
-    .string()
-    .min(1, "DATABASE_URL is required"),
+    // Security Secrets
+    SESSION_SECRET: z
+      .string()
+      .min(32, "SESSION_SECRET must be at least 32 characters long for secure session cookies"),
+    PICKUP_CODE_SECRET: z
+      .string()
+      .min(32, "PICKUP_CODE_SECRET must be at least 32 characters long for HMAC pickup code hashing"),
 
-  // Public Application URL
-  NEXT_PUBLIC_APP_URL: z
-    .string()
-    .url("NEXT_PUBLIC_APP_URL must be a valid URL (e.g. https://ord.et)"),
+    // Database Connection
+    DATABASE_URL: z
+      .string()
+      .min(1, "DATABASE_URL is required"),
 
-  // Abuse & Rate Guardrails (optional / with sensible defaults)
-  SMS_ALLOWLIST: z.string().optional(),
-  SMS_DAILY_CAP: z.coerce
-    .number()
-    .int()
-    .positive("SMS_DAILY_CAP must be a positive integer")
-    .default(50),
-  SMS_SENDING_PAUSED: z
-    .preprocess((val) => {
-      if (typeof val === "boolean") return val;
-      if (typeof val === "string") return val.toLowerCase() === "true";
-      return false;
-    }, z.boolean())
-    .default(false),
-});
+    // Public Application URL
+    NEXT_PUBLIC_APP_URL: z
+      .string()
+      .url("NEXT_PUBLIC_APP_URL must be a valid URL (e.g. https://ord.et)"),
+
+    // Abuse & Rate Guardrails (optional / with sensible defaults)
+    SMS_ALLOWLIST: z.string().optional(),
+    SMS_DAILY_CAP: z.coerce
+      .number()
+      .int()
+      .positive("SMS_DAILY_CAP must be a positive integer")
+      .default(50),
+    SMS_SENDING_PAUSED: z
+      .preprocess((val) => {
+        if (typeof val === "boolean") return val;
+        if (typeof val === "string") return val.toLowerCase() === "true";
+        return false;
+      }, z.boolean())
+      .default(false),
+  })
+  .superRefine((data, ctx) => {
+    const isProd = data.NODE_ENV === "production" || process.env.NODE_ENV === "production";
+    if (isProd) {
+      const lower = data.SESSION_SECRET.toLowerCase();
+      const isPlaceholder =
+        lower.includes("replace_with") ||
+        lower.includes("mock_session") ||
+        lower.includes("development") ||
+        lower.includes("changeme") ||
+        lower.includes("example") ||
+        lower.includes("secret_at_least_32");
+
+      if (isPlaceholder) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["SESSION_SECRET"],
+          message:
+            "SESSION_SECRET cannot use default or placeholder development secret in production",
+        });
+      }
+    }
+  });
 
 export type Env = z.infer<typeof envSchema>;
 

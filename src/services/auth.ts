@@ -17,11 +17,8 @@ export const SESSION_DURATION_SECONDS = 7 * 24 * 60 * 60; // 7 days in seconds
 
 export interface SessionPayload {
   sellerId: string;
-  phone?: string;
-  slug?: string;
   iat?: number;
   exp?: number;
-  [key: string]: any;
 }
 
 export interface SessionCookieOptions {
@@ -56,21 +53,27 @@ function getSessionSecretKey(secret?: string): Uint8Array {
 
 /**
  * Signs and creates a cryptographically secure session JWT for a seller.
+ * Claims are minimal (sellerId only); mutable fields like phone or slug are resolved
+ * authoritatively from the database as needed.
  */
 export async function createSessionToken(
-  payload: SessionPayload,
+  payload: { sellerId: string },
   options?: {
     expiresIn?: string | number;
     secret?: string;
   }
 ): Promise<string> {
+  const rawId = payload?.sellerId;
+  const sellerId = typeof rawId === "string" ? rawId.trim() : "";
+  if (!sellerId) {
+    throw new AuthError("Cannot create session token: sellerId must be a non-empty string", 400, "INVALID_SELLER_ID");
+  }
+
   const secretKey = getSessionSecretKey(options?.secret);
   const expiration = options?.expiresIn ?? "7d";
 
   return await new SignJWT({
-    sellerId: payload.sellerId,
-    phone: payload.phone,
-    slug: payload.slug,
+    sellerId,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -80,7 +83,8 @@ export async function createSessionToken(
 
 /**
  * Verifies a session JWT, confirms signature and expiration, and returns the payload.
- * Throws 401 AuthError if the token is invalid, tampered with, or expired.
+ * Validates that sellerId is a non-empty string before accepting the session.
+ * Throws 401 AuthError if the token is invalid, tampered with, expired, or malformed.
  */
 export async function verifySessionToken(
   token: string,
@@ -97,15 +101,14 @@ export async function verifySessionToken(
       algorithms: ["HS256"],
     });
 
-    const sellerId = payload.sellerId as string;
+    const rawSellerId = payload.sellerId;
+    const sellerId = typeof rawSellerId === "string" ? rawSellerId.trim() : "";
     if (!sellerId) {
-      throw new AuthError("Token payload missing sellerId", 401, "MALFORMED_SESSION");
+      throw new AuthError("Token payload missing valid non-empty sellerId", 401, "MALFORMED_SESSION");
     }
 
     return {
       sellerId,
-      phone: payload.phone as string | undefined,
-      slug: payload.slug as string | undefined,
       iat: payload.iat,
       exp: payload.exp,
     };
@@ -122,7 +125,7 @@ export async function verifySessionToken(
 
 /**
  * Generates cookie attributes matching security criteria:
- * HttpOnly: true, SameSite: Lax, Secure: true in production.
+ * HttpOnly: true, SameSite: Lax, Secure: true in production, maxAge: 7 days.
  */
 export function createSessionCookie(
   token: string,
@@ -206,7 +209,8 @@ export interface RequireSellerOptions {
 
 /**
  * Route authorization guard. Verifies the request session and returns the seller identity.
- * Throws an HTTP 401 AuthError if unauthenticated or session expired.
+ * Resolves current seller details from the database when fetchSeller is true.
+ * Throws an HTTP 401 AuthError if unauthenticated, session expired, or seller not found.
  */
 export async function requireSeller(
   req?: Request | NextRequest,
@@ -247,8 +251,6 @@ export async function requireSeller(
 
   return {
     sellerId: session.sellerId,
-    phone: session.phone,
-    slug: session.slug,
   };
 }
 
