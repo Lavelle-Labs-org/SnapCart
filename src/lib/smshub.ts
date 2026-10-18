@@ -11,6 +11,8 @@ export interface SMSHubSendOptions {
   msisdn: string;
   text: string;
   trackLinks?: boolean;
+  /** Optional idempotency key for live SMS dispatch deduplication */
+  idempotencyKey?: string;
 }
 
 export interface SMSHubSendResponse {
@@ -72,6 +74,7 @@ export class SMSHubError extends Error {
   public readonly requestId?: string;
   public readonly retryAfterSeconds?: number;
   public readonly retryable: boolean;
+  public readonly uncertainAcceptance?: boolean;
   public readonly data?: any;
 
   constructor(options: {
@@ -80,6 +83,7 @@ export class SMSHubError extends Error {
     errorType?: string;
     requestId?: string;
     retryAfterSeconds?: number;
+    uncertainAcceptance?: boolean;
     data?: any;
   }) {
     super(options.message);
@@ -88,7 +92,8 @@ export class SMSHubError extends Error {
     this.errorType = options.errorType;
     this.requestId = options.requestId;
     this.retryAfterSeconds = options.retryAfterSeconds;
-    this.retryable = [429, 500, 502, 503, 408].includes(options.status);
+    this.uncertainAcceptance = options.uncertainAcceptance;
+    this.retryable = [429, 500, 502, 503, 408].includes(options.status) && !options.uncertainAcceptance;
     this.data = options.data;
   }
 }
@@ -101,22 +106,65 @@ export interface SMSHubClientOptions {
   retryDelays?: number[];
   maxRetries?: number;
   timeoutMs?: number;
+  /**
+   * Minimum interval in milliseconds between outgoing request dispatches.
+   * Default: 1000ms (< 60 req/min) in production, 0 in test unless specified.
+   */
   minRequestIntervalMs?: number;
+  /**
+   * Maximum allowed wait time in seconds for HTTP 429 / 503 Retry-After headers.
+   * If Retry-After exceeds this value, the request fails fast rather than blocking.
+   * Default: 60 seconds.
+   */
+  maxRetryAfterSeconds?: number;
   sleepFn?: (ms: number) => Promise<void>;
 }
 
-function parseRetryAfter(headerValue: string | null): number | null {
-  if (!headerValue) return null;
-  const seconds = parseInt(headerValue, 10);
-  if (!isNaN(seconds) && seconds >= 0) {
-    return seconds;
+export interface ParsedRetryAfter {
+  seconds: number | null;
+  exceedsMax?: boolean;
+  isMalformed?: boolean;
+}
+
+/**
+ * Parses and validates HTTP Retry-After header.
+ * Supports integer seconds and standard HTTP-date formats.
+ * Guards against negative, malformed, and excessively large values.
+ */
+export function parseRetryAfter(headerValue: string | null, maxSeconds: number = 60): ParsedRetryAfter {
+  if (!headerValue || typeof headerValue !== "string" || headerValue.trim() === "") {
+    return { seconds: null };
   }
-  const dateMs = Date.parse(headerValue);
+
+  const trimmed = headerValue.trim();
+
+  // Try parsing integer seconds
+  if (/^-?\d+$/.test(trimmed)) {
+    const seconds = parseInt(trimmed, 10);
+    if (isNaN(seconds) || seconds < 0) {
+      return { seconds: null, isMalformed: true };
+    }
+    if (seconds > maxSeconds) {
+      return { seconds, exceedsMax: true };
+    }
+    return { seconds };
+  }
+
+  // Try parsing HTTP-date format
+  const dateMs = Date.parse(trimmed);
   if (!isNaN(dateMs)) {
     const diffSeconds = Math.ceil((dateMs - Date.now()) / 1000);
-    return Math.max(0, diffSeconds);
+    if (diffSeconds <= 0) {
+      return { seconds: 0 };
+    }
+    if (diffSeconds > maxSeconds) {
+      return { seconds: diffSeconds, exceedsMax: true };
+    }
+    return { seconds: diffSeconds };
   }
-  return null;
+
+  // Malformed string
+  return { seconds: null, isMalformed: true };
 }
 
 export class SMSHubClient {
@@ -128,8 +176,12 @@ export class SMSHubClient {
   private maxRetries: number;
   private timeoutMs: number;
   private minRequestIntervalMs: number;
+  private maxRetryAfterSeconds: number;
   private sleep: (ms: number) => Promise<void>;
-  private nextAvailableTime = 0;
+
+  // Concurrency-safe rate pacing queue
+  private pacingLock: Promise<void> = Promise.resolve();
+  private nextAvailableStartTime = 0;
 
   constructor(options?: SMSHubClientOptions) {
     this.explicitApiKey = options?.apiKey;
@@ -140,6 +192,7 @@ export class SMSHubClient {
     this.retryDelays = options?.retryDelays ?? [1000, 4000];
     this.maxRetries = options?.maxRetries ?? 3;
     this.timeoutMs = options?.timeoutMs ?? 30000; // 30s timeout
+    this.maxRetryAfterSeconds = options?.maxRetryAfterSeconds ?? 60;
     this.sleep = options?.sleepFn ?? ((ms: number) => new Promise((resolve) => setTimeout(resolve, ms)));
 
     if (options?.minRequestIntervalMs !== undefined) {
@@ -173,20 +226,39 @@ export class SMSHubClient {
   }
 
   /**
-   * Rate pacing: guarantees at least `minRequestIntervalMs` between consecutive outgoing requests.
+   * Concurrency-safe rate pacing: guarantees that outgoing request starts
+   * are strictly scheduled at least `minRequestIntervalMs` apart in FIFO order.
    */
-  private async pace(): Promise<void> {
+  private async scheduleRequestSlot(): Promise<void> {
     if (this.minRequestIntervalMs <= 0) return;
-    const now = Date.now();
-    const scheduledTime = Math.max(now, this.nextAvailableTime);
-    this.nextAvailableTime = scheduledTime + this.minRequestIntervalMs;
-    const waitMs = scheduledTime - now;
-    if (waitMs > 0) {
-      await this.sleep(waitMs);
+
+    // Chain onto the previous pacing reservation
+    const previousSlot = this.pacingLock;
+    let releaseSlot: () => void;
+    this.pacingLock = new Promise<void>((resolve) => {
+      releaseSlot = resolve;
+    });
+
+    await previousSlot;
+
+    try {
+      const now = Date.now();
+      const waitMs = Math.max(0, this.nextAvailableStartTime - now);
+      if (waitMs > 0) {
+        await this.sleep(waitMs);
+      }
+      this.nextAvailableStartTime = Date.now() + this.minRequestIntervalMs;
+    } finally {
+      releaseSlot!();
     }
   }
 
-  private async request<T>(path: string, method: string = "GET", body?: any): Promise<T> {
+  private async request<T>(
+    path: string,
+    method: string = "GET",
+    body?: any,
+    options?: { idempotencyKey?: string }
+  ): Promise<T> {
     const url = `${this.baseUrl}${path}`;
     const apiKey = this.getApiKey();
     const headers: Record<string, string> = {
@@ -195,12 +267,22 @@ export class SMSHubClient {
       Accept: "application/json",
     };
 
+    if (options?.idempotencyKey) {
+      headers["Idempotency-Key"] = options.idempotencyKey;
+    }
+
+    // Identify if this operation is a live SMS send where blind resends risk duplicate SMS
+    const isLiveSmsSend = path === "/api/sms";
+    const hasIdempotency = Boolean(options?.idempotencyKey);
+
     let attempt = 0;
     let timeoutRetries = 0;
 
     while (attempt < this.maxRetries) {
       attempt++;
-      await this.pace();
+
+      // Wait for our concurrency-safe rate pacing dispatch slot before starting fetch
+      await this.scheduleRequestSlot();
 
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
@@ -242,14 +324,46 @@ export class SMSHubClient {
         const message =
           json?.message || `SMSHub HTTP ${res.status}: ${res.statusText || rawText.slice(0, 100)}`;
         const retryAfterHeader = res.headers.get("retry-after");
-        const retryAfterSec = parseRetryAfter(retryAfterHeader);
+        const parsedRetryAfter = parseRetryAfter(retryAfterHeader, this.maxRetryAfterSeconds);
+
+        // Check if Retry-After exceeds our bounded maximum
+        if (parsedRetryAfter.exceedsMax) {
+          throw new SMSHubError({
+            message: `SMSHub Retry-After (${parsedRetryAfter.seconds}s) exceeds maximum allowed wait of ${this.maxRetryAfterSeconds}s`,
+            status: res.status,
+            errorType: "retry_after_exceeded",
+            requestId,
+            retryAfterSeconds: parsedRetryAfter.seconds ?? undefined,
+            data: json,
+          });
+        }
+
+        // 1. Live SMS send duplicate prevention:
+        // On POST /api/sms without an idempotency key, ambiguous gateway errors (500 or 502 without carrier rejection confirmation)
+        // must NOT be blindly retried because acceptance is uncertain and carrier may have already dispatched the SMS.
+        if (isLiveSmsSend && !hasIdempotency) {
+          // 429 is throttled before dispatch -> safe to retry
+          // 502 with error_type === "provider_error" is explicitly confirmed rejected with credit refunded -> safe to retry
+          const isSafeToRetryLive = res.status === 429 || (res.status === 502 && errorType === "provider_error");
+
+          if (!isSafeToRetryLive && (res.status === 500 || res.status === 502 || res.status === 503)) {
+            throw new SMSHubError({
+              message: `${message} (acceptance uncertain on live SMS send; not retried to prevent duplicate SMS)`,
+              status: res.status,
+              errorType: errorType ?? "uncertain_gateway_error",
+              requestId,
+              uncertainAcceptance: true,
+              data: json,
+            });
+          }
+        }
 
         const error = new SMSHubError({
           message,
           status: res.status,
           errorType,
           requestId,
-          retryAfterSeconds: retryAfterSec ?? undefined,
+          retryAfterSeconds: parsedRetryAfter.seconds ?? undefined,
           data: json,
         });
 
@@ -259,13 +373,15 @@ export class SMSHubClient {
         if (isRetryableStatus && attempt < this.maxRetries) {
           if (res.status === 429) {
             const pauseSeconds =
-              retryAfterSec !== null && retryAfterSec > 0 ? retryAfterSec : 1;
+              parsedRetryAfter.seconds !== null && parsedRetryAfter.seconds >= 0
+                ? parsedRetryAfter.seconds
+                : 1;
             await this.sleep(pauseSeconds * 1000);
             continue;
           }
 
-          if (res.status === 503 && retryAfterSec !== null && retryAfterSec > 0) {
-            await this.sleep(retryAfterSec * 1000);
+          if (res.status === 503 && parsedRetryAfter.seconds !== null && parsedRetryAfter.seconds >= 0) {
+            await this.sleep(parsedRetryAfter.seconds * 1000);
             continue;
           }
 
@@ -294,8 +410,19 @@ export class SMSHubClient {
           controller.signal.aborted;
 
         if (isTimeout) {
+          // If sending live SMS without idempotency, timeout means carrier acceptance is uncertain.
+          // Blind resend could cause customer to receive duplicate SMS.
+          if (isLiveSmsSend && !hasIdempotency) {
+            throw new SMSHubError({
+              message: `SMSHub request timed out after ${this.timeoutMs}ms (acceptance uncertain on live SMS send; not retried to prevent duplicate SMS)`,
+              status: 408,
+              errorType: "timeout",
+              uncertainAcceptance: true,
+            });
+          }
+
           timeoutRetries++;
-          // Invariant Section 11: Connection timeouts (maximum 1 retry)
+          // Invariant Section 11: Connection timeouts (maximum 1 retry for idempotent / test operations)
           if (timeoutRetries <= 1 && attempt < this.maxRetries) {
             const delayIndex = attempt - 1;
             const delayMs = this.retryDelays[delayIndex] ?? 1000;
@@ -311,6 +438,15 @@ export class SMSHubClient {
         }
 
         // Other network errors (e.g. DNS / socket drop)
+        if (isLiveSmsSend && !hasIdempotency) {
+          throw new SMSHubError({
+            message: `SMSHub network failure: ${err?.message || "connection dropped"} (acceptance uncertain; not retried to prevent duplicate SMS)`,
+            status: 500,
+            errorType: "uncertain_network_error",
+            uncertainAcceptance: true,
+          });
+        }
+
         if (attempt < this.maxRetries) {
           const delayIndex = attempt - 1;
           const delayMs = this.retryDelays[delayIndex] ?? 1000;
@@ -339,11 +475,16 @@ export class SMSHubClient {
    */
   async sendSMS(options: SMSHubSendOptions): Promise<SMSHubSendResponse> {
     const endpoint = this.getMode() === "live" ? "/api/sms" : "/api/test";
-    return this.request<SMSHubSendResponse>(endpoint, "POST", {
-      msisdn: options.msisdn,
-      text: options.text,
-      track_links: options.trackLinks ?? false,
-    });
+    return this.request<SMSHubSendResponse>(
+      endpoint,
+      "POST",
+      {
+        msisdn: options.msisdn,
+        text: options.text,
+        track_links: options.trackLinks ?? false,
+      },
+      { idempotencyKey: options.idempotencyKey }
+    );
   }
 
   /**

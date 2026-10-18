@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-import { SMSHubClient, SMSHubError } from "@/lib/smshub";
+import { describe, it, expect } from "vitest";
+import { SMSHubClient, SMSHubError, parseRetryAfter } from "@/lib/smshub";
 
 describe("SMSHubClient (BE-003)", () => {
   const MOCK_API_KEY = "mock_api_key_test_123";
@@ -274,100 +274,71 @@ describe("SMSHubClient (BE-003)", () => {
     });
   });
 
-  describe("500 & 503 transient errors", () => {
-    it("retries 500 server error with exponential backoff", async () => {
-      let callCount = 0;
-      const sleepDelays: number[] = [];
-
-      const mockFetch: typeof fetch = async () => {
-        callCount++;
-        return new Response("Internal Server Error", {
-          status: 500,
-          statusText: "Internal Server Error",
-        });
-      };
-
-      const client = new SMSHubClient({
-        apiKey: MOCK_API_KEY,
-        fetch: mockFetch,
-        retryDelays: [1000, 4000],
-        maxRetries: 3,
-        minRequestIntervalMs: 0,
-        sleepFn: async (ms) => {
-          sleepDelays.push(ms);
-        },
+  describe("Bounded Retry-After Validation", () => {
+    describe("parseRetryAfter helper", () => {
+      it("returns null for empty or null header", () => {
+        expect(parseRetryAfter(null)).toEqual({ seconds: null });
+        expect(parseRetryAfter("")).toEqual({ seconds: null });
+        expect(parseRetryAfter("   ")).toEqual({ seconds: null });
       });
 
-      await expect(
-        client.sendSMS({ msisdn: "0911234567", text: "Hello" })
-      ).rejects.toThrow(SMSHubError);
+      it("parses valid integer seconds within bound", () => {
+        expect(parseRetryAfter("30", 60)).toEqual({ seconds: 30 });
+        expect(parseRetryAfter("0", 60)).toEqual({ seconds: 0 });
+      });
 
-      expect(callCount).toBe(3);
-      expect(sleepDelays).toEqual([1000, 4000]);
+      it("flags excessively large Retry-After values exceeding maxSeconds", () => {
+        const result = parseRetryAfter("3600", 60);
+        expect(result.exceedsMax).toBe(true);
+        expect(result.seconds).toBe(3600);
+      });
+
+      it("flags negative or malformed integer values", () => {
+        expect(parseRetryAfter("-10", 60).isMalformed).toBe(true);
+        expect(parseRetryAfter("abc", 60).isMalformed).toBe(true);
+        expect(parseRetryAfter("NaN", 60).isMalformed).toBe(true);
+      });
+
+      it("parses valid future HTTP-date strings", () => {
+        const futureDate = new Date(Date.now() + 15000).toUTCString();
+        const res = parseRetryAfter(futureDate, 60);
+        expect(res.seconds).toBeGreaterThanOrEqual(14);
+        expect(res.seconds).toBeLessThanOrEqual(16);
+      });
+
+      it("clamps past HTTP-date strings to 0 seconds", () => {
+        const pastDate = new Date(Date.now() - 5000).toUTCString();
+        const res = parseRetryAfter(pastDate, 60);
+        expect(res.seconds).toBe(0);
+      });
     });
 
-    it("respects Retry-After header on 503 Service Unavailable", async () => {
+    it("rejects immediately with SMSHubError when Retry-After exceeds maxRetryAfterSeconds", async () => {
       let callCount = 0;
       const sleepDelays: number[] = [];
 
       const mockFetch: typeof fetch = async () => {
         callCount++;
-        if (callCount === 1) {
-          return new Response(
-            JSON.stringify({
-              status: "error",
-              error_type: "maintenance",
-              message: "Scheduled maintenance",
-            }),
-            {
-              status: 503,
-              headers: {
-                "Content-Type": "application/json",
-                "Retry-After": "5",
-              },
-            }
-          );
-        }
         return new Response(
-          JSON.stringify({ status: "success", data: { message_id: "msg_503_recovered" } }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
+          JSON.stringify({
+            status: "error",
+            error_type: "maintenance",
+            message: "Scheduled maintenance",
+          }),
+          {
+            status: 503,
+            headers: {
+              "Content-Type": "application/json",
+              "Retry-After": "900", // 15 minutes wait requested
+            },
+          }
         );
       };
 
       const client = new SMSHubClient({
         apiKey: MOCK_API_KEY,
         fetch: mockFetch,
-        maxRetries: 3,
-        minRequestIntervalMs: 0,
-        sleepFn: async (ms) => {
-          sleepDelays.push(ms);
-        },
-      });
-
-      const res = await client.sendSMS({ msisdn: "0911234567", text: "Hello" });
-      expect(callCount).toBe(2);
-      expect(sleepDelays).toEqual([5000]);
-      expect(res.data?.message_id).toBe("msg_503_recovered");
-    });
-  });
-
-  describe("Timeout handling (maximum 1 retry)", () => {
-    it("retries at most once on timeout before throwing", async () => {
-      let callCount = 0;
-      const sleepDelays: number[] = [];
-
-      const mockFetch: typeof fetch = async () => {
-        callCount++;
-        const err = new Error("The operation was aborted");
-        err.name = "AbortError";
-        throw err;
-      };
-
-      const client = new SMSHubClient({
-        apiKey: MOCK_API_KEY,
-        fetch: mockFetch,
-        retryDelays: [500, 1000],
-        maxRetries: 3,
+        maxRetryAfterSeconds: 60, // bound at 60s
         minRequestIntervalMs: 0,
         sleepFn: async (ms) => {
           sleepDelays.push(ms);
@@ -381,12 +352,201 @@ describe("SMSHubClient (BE-003)", () => {
         thrownError = err;
       }
 
-      // Maximum 1 timeout retry means 2 attempts total
-      expect(callCount).toBe(2);
-      expect(sleepDelays).toEqual([500]);
+      // Must fail fast without sleeping for 900 seconds
+      expect(callCount).toBe(1);
+      expect(sleepDelays).toEqual([]);
+      expect(thrownError).toBeInstanceOf(SMSHubError);
+      expect(thrownError.status).toBe(503);
+      expect(thrownError.errorType).toBe("retry_after_exceeded");
+      expect(thrownError.message).toContain("exceeds maximum allowed wait of 60s");
+    });
+  });
+
+  describe("Duplicate SMS Prevention on Uncertain Failures", () => {
+    it("never retries live POST /api/sms after a timeout without idempotency key", async () => {
+      let callCount = 0;
+
+      const mockFetch: typeof fetch = async () => {
+        callCount++;
+        const err = new Error("The operation was aborted");
+        err.name = "AbortError";
+        throw err;
+      };
+
+      const client = new SMSHubClient({
+        apiKey: MOCK_API_KEY,
+        mode: "live",
+        fetch: mockFetch,
+        maxRetries: 3,
+        minRequestIntervalMs: 0,
+      });
+
+      let thrownError: any = null;
+      try {
+        await client.sendSMS({ msisdn: "0911234567", text: "Live SMS" });
+      } catch (err) {
+        thrownError = err;
+      }
+
+      // Must fail after attempt 1 and NOT retry to prevent duplicate SMS
+      expect(callCount).toBe(1);
       expect(thrownError).toBeInstanceOf(SMSHubError);
       expect(thrownError.status).toBe(408);
-      expect(thrownError.errorType).toBe("timeout");
+      expect(thrownError.uncertainAcceptance).toBe(true);
+      expect(thrownError.retryable).toBe(false);
+      expect(thrownError.message).toContain("acceptance uncertain");
+    });
+
+    it("never retries live POST /api/sms after ambiguous 500 server error without idempotency key", async () => {
+      let callCount = 0;
+
+      const mockFetch: typeof fetch = async () => {
+        callCount++;
+        return new Response("Internal Server Error", {
+          status: 500,
+          statusText: "Internal Server Error",
+        });
+      };
+
+      const client = new SMSHubClient({
+        apiKey: MOCK_API_KEY,
+        mode: "live",
+        fetch: mockFetch,
+        maxRetries: 3,
+        minRequestIntervalMs: 0,
+      });
+
+      let thrownError: any = null;
+      try {
+        await client.sendSMS({ msisdn: "0911234567", text: "Live SMS" });
+      } catch (err) {
+        thrownError = err;
+      }
+
+      // Must NOT blindly resend live SMS on ambiguous 500
+      expect(callCount).toBe(1);
+      expect(thrownError).toBeInstanceOf(SMSHubError);
+      expect(thrownError.status).toBe(500);
+      expect(thrownError.uncertainAcceptance).toBe(true);
+      expect(thrownError.retryable).toBe(false);
+    });
+
+    it("DOES retry live POST /api/sms when 502 explicitly confirms provider_error and refund", async () => {
+      let callCount = 0;
+      const sleepDelays: number[] = [];
+
+      const mockFetch: typeof fetch = async () => {
+        callCount++;
+        if (callCount === 1) {
+          return new Response(
+            JSON.stringify({
+              status: "error",
+              error_type: "provider_error",
+              message: "Carrier did not accept message. Credit refunded.",
+            }),
+            { status: 502, headers: { "Content-Type": "application/json" } }
+          );
+        }
+        return new Response(
+          JSON.stringify({
+            status: "success",
+            data: { message_id: "msg_recovered", message_status: "sent" },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        );
+      };
+
+      const client = new SMSHubClient({
+        apiKey: MOCK_API_KEY,
+        mode: "live",
+        fetch: mockFetch,
+        maxRetries: 3,
+        minRequestIntervalMs: 0,
+        sleepFn: async (ms) => {
+          sleepDelays.push(ms);
+        },
+      });
+
+      const res = await client.sendSMS({ msisdn: "0911234567", text: "Live SMS" });
+
+      expect(callCount).toBe(2);
+      expect(sleepDelays).toEqual([1000]);
+      expect(res.data?.message_id).toBe("msg_recovered");
+    });
+
+    it("DOES retry live POST /api/sms on timeout when idempotencyKey is supplied", async () => {
+      let callCount = 0;
+      let lastHeaders: any = null;
+
+      const mockFetch: typeof fetch = async (url, init) => {
+        callCount++;
+        lastHeaders = init?.headers;
+        if (callCount === 1) {
+          const err = new Error("Abort");
+          err.name = "AbortError";
+          throw err;
+        }
+        return new Response(
+          JSON.stringify({
+            status: "success",
+            data: { message_id: "msg_idempotent_ok", message_status: "sent" },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        );
+      };
+
+      const client = new SMSHubClient({
+        apiKey: MOCK_API_KEY,
+        mode: "live",
+        fetch: mockFetch,
+        maxRetries: 3,
+        minRequestIntervalMs: 0,
+        sleepFn: async () => {},
+      });
+
+      const res = await client.sendSMS({
+        msisdn: "0911234567",
+        text: "Idempotent SMS",
+        idempotencyKey: "idem_abc_123",
+      });
+
+      expect(callCount).toBe(2);
+      expect(lastHeaders["Idempotency-Key"]).toBe("idem_abc_123");
+      expect(res.data?.message_id).toBe("msg_idempotent_ok");
+    });
+
+    it("DOES retry POST /api/test on timeout because test mode never sends real SMS", async () => {
+      let callCount = 0;
+
+      const mockFetch: typeof fetch = async () => {
+        callCount++;
+        if (callCount === 1) {
+          const err = new Error("Abort");
+          err.name = "AbortError";
+          throw err;
+        }
+        return new Response(
+          JSON.stringify({
+            status: "success",
+            data: { would_send: true, message_status: "test_passed" },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        );
+      };
+
+      const client = new SMSHubClient({
+        apiKey: MOCK_API_KEY,
+        mode: "test",
+        fetch: mockFetch,
+        maxRetries: 3,
+        minRequestIntervalMs: 0,
+        sleepFn: async () => {},
+      });
+
+      const res = await client.sendSMS({ msisdn: "0911234567", text: "Test SMS" });
+
+      expect(callCount).toBe(2);
+      expect(res.data?.would_send).toBe(true);
     });
   });
 
@@ -496,15 +656,18 @@ describe("SMSHubClient (BE-003)", () => {
     });
   });
 
-  describe("Rate pacing mechanism", () => {
-    it("spaces out rapid sequential requests by minRequestIntervalMs", async () => {
-      const sleepDelays: number[] = [];
+  describe("Concurrency-Safe Rate Pacing Mechanism", () => {
+    it("guarantees concurrent requests actually start at least minRequestIntervalMs apart in FIFO order", async () => {
+      const startTimes: { id: string; time: number }[] = [];
+      const PACE_MS = 50;
 
-      const mockFetch: typeof fetch = async () => {
+      const mockFetch: typeof fetch = async (url, init) => {
+        const body = JSON.parse((init?.body as string) || "{}");
+        startTimes.push({ id: body.text, time: Date.now() });
         return new Response(
           JSON.stringify({
             status: "success",
-            data: { message_id: "msg_pacing" },
+            data: { message_id: `msg_${body.text}` },
           }),
           { status: 200, headers: { "Content-Type": "application/json" } }
         );
@@ -513,23 +676,28 @@ describe("SMSHubClient (BE-003)", () => {
       const client = new SMSHubClient({
         apiKey: MOCK_API_KEY,
         fetch: mockFetch,
-        minRequestIntervalMs: 1000,
-        sleepFn: async (ms) => {
-          sleepDelays.push(ms);
-        },
+        minRequestIntervalMs: PACE_MS,
       });
 
-      // Call 3 requests back to back
+      // Launch 3 requests concurrently
       await Promise.all([
-        client.sendSMS({ msisdn: "0911234567", text: "1" }),
-        client.sendSMS({ msisdn: "0911234567", text: "2" }),
-        client.sendSMS({ msisdn: "0911234567", text: "3" }),
+        client.sendSMS({ msisdn: "0911234567", text: "req_1" }),
+        client.sendSMS({ msisdn: "0911234567", text: "req_2" }),
+        client.sendSMS({ msisdn: "0911234567", text: "req_3" }),
       ]);
 
-      // At least 2 requests must have been delayed to respect the 1000ms pace
-      expect(sleepDelays.length).toBe(2);
-      expect(sleepDelays[0]).toBeGreaterThanOrEqual(900);
-      expect(sleepDelays[1]).toBeGreaterThanOrEqual(1800);
+      expect(startTimes.length).toBe(3);
+
+      // Verify FIFO ordering
+      expect(startTimes.map((s) => s.id)).toEqual(["req_1", "req_2", "req_3"]);
+
+      // Verify each outgoing request started at least PACE_MS after the previous one started
+      const diff1 = startTimes[1].time - startTimes[0].time;
+      const diff2 = startTimes[2].time - startTimes[1].time;
+
+      // Allow 5ms tolerance for system timer resolution
+      expect(diff1).toBeGreaterThanOrEqual(PACE_MS - 5);
+      expect(diff2).toBeGreaterThanOrEqual(PACE_MS - 5);
     });
   });
 
