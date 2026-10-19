@@ -22,7 +22,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:studio": "prisma studio",
-    "template:check": "tsx scripts/check-templates.ts"
+    "template:check": "tsx scripts/check-templates.ts",
+    "check:secrets": "tsx scripts/check-secrets.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
