@@ -5,9 +5,10 @@ import { OrdersController } from "./orders.controller";
 import { PrismaModule } from "../../prisma/prisma.module";
 import { SMSHubModule } from "../smshub/smshub.module";
 import { CryptoModule } from "../crypto/crypto.module";
+import { AuthModule } from "../auth/auth.module";
 
 @Module({
-  imports: [PrismaModule, SMSHubModule, CryptoModule],
+  imports: [PrismaModule, SMSHubModule, CryptoModule, AuthModule],
   controllers: [ActionLinksController, OrdersController],
   providers: [OrdersService],
   exports: [OrdersService],
