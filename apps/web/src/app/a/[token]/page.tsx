@@ -1,4 +1,10 @@
-import { Phone, Check, X, BellRing, PackageCheck, AlertCircle } from "lucide-react";
+import React from "react";
+import Link from "next/link";
+import crypto from "crypto";
+import { AlertCircle, ArrowRight } from "lucide-react";
+import { prisma } from "../../../lib/prisma";
+import { toBirr } from "@order-by-sms/contracts";
+import { SellerActionClient, ActionOrderData } from "./action-client";
 
 interface ActionPageProps {
   params: Promise<{ token: string }>;
@@ -7,128 +13,127 @@ interface ActionPageProps {
 export default async function ActionPage({ params }: ActionPageProps) {
   const { token } = await params;
 
-  // Placeholder mock order details for scaffold demo
-  const mockOrder = {
-    number: 1043,
-    buyerName: "Abebe Bikila",
-    buyerPhone: "0911223344",
-    items: [
-      { name: "Special Combo Platter", quantity: 2, priceBirr: 350 },
-      { name: "Spiced Tea", quantity: 3, priceBirr: 50 },
-    ],
-    totalBirr: 850,
-    state: "new" as "new" | "accepted" | "ready" | "completed" | "rejected",
+  if (!token || typeof token !== "string") {
+    return renderInvalidTokenView();
+  }
+
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+  let tokenRecord = null;
+  try {
+    tokenRecord = await prisma.actionToken.findUnique({
+      where: { token_hash: tokenHash },
+      include: {
+        order: {
+          include: {
+            seller: true,
+            order_items: true,
+          },
+        },
+      },
+    });
+  } catch (dbErr) {
+    // Fallback: If direct DB access is unavailable, fetch from API
+    try {
+      const apiUrl = process.env.INTERNAL_API_URL || "http://localhost:4000";
+      const res = await fetch(`${apiUrl}/api/a/${encodeURIComponent(token)}`, {
+        cache: "no-store",
+      });
+
+      if (!res.ok) {
+        return renderInvalidTokenView();
+      }
+
+      const body = await res.json();
+      const orderDto = body.data || body;
+
+      const orderData: ActionOrderData = {
+        id: orderDto.id,
+        number: orderDto.number,
+        buyerName: orderDto.buyerName,
+        buyerPhone: orderDto.buyerPhone,
+        smsConsent: Boolean(orderDto.smsConsent),
+        state: orderDto.state,
+        totalBirr: toBirr(orderDto.totalSantim),
+        items: (orderDto.items || []).map((item: any) => ({
+          id: item.id,
+          name: item.nameAtOrder,
+          quantity: item.quantity,
+          priceBirr: toBirr(item.unitPriceSantim),
+        })),
+        shopName: orderDto.seller?.smsName || orderDto.seller?.businessName,
+      };
+
+      return <SellerActionClient token={token} order={orderData} />;
+    } catch {
+      return renderInvalidTokenView();
+    }
+  }
+
+  // Validate token freshness & validity
+  if (!tokenRecord || !tokenRecord.order) {
+    return renderInvalidTokenView();
+  }
+
+  if (tokenRecord.purpose !== "seller_action") {
+    return renderInvalidTokenView();
+  }
+
+  if (tokenRecord.expires_at < new Date()) {
+    return renderInvalidTokenView("This link has expired (links are valid for 48 hours).");
+  }
+
+  if (tokenRecord.revoked_at !== null) {
+    return renderInvalidTokenView("This link has already been used or completed.");
+  }
+
+  const order = tokenRecord.order;
+  const formattedOrder: ActionOrderData = {
+    id: order.id,
+    number: order.number,
+    buyerName: order.buyer_name,
+    buyerPhone: order.buyer_phone,
+    smsConsent: order.sms_consent,
+    state: order.state as any,
+    totalBirr: toBirr(order.total_santim),
+    items: (order.order_items || []).map((item: any) => ({
+      id: item.id,
+      name: item.name_at_order,
+      quantity: item.quantity,
+      priceBirr: toBirr(item.unit_price_santim),
+    })),
+    shopName: order.seller?.sms_name || order.seller?.business_name,
   };
 
+  return <SellerActionClient token={token} order={formattedOrder} />;
+}
+
+function renderInvalidTokenView(reason?: string) {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between max-w-md mx-auto border-x border-slate-200">
-      {/* Header */}
-      <header className="bg-white border-b px-4 py-3 flex items-center justify-between sticky top-0 z-10">
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-6 text-center max-w-md mx-auto border-x border-slate-200">
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm w-full space-y-4">
+        <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto">
+          <AlertCircle className="w-7 h-7" />
+        </div>
+
         <div>
-          <span className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Seller Action</span>
-          <h1 className="text-lg font-bold text-slate-900">Order #{mockOrder.number}</h1>
+          <h1 className="text-xl font-bold text-slate-900">Invalid or Expired Link</h1>
+          <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+            {reason ||
+              "This seller order link is no longer valid, has expired, or has already been used."}
+          </p>
         </div>
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 uppercase">
-          {mockOrder.state}
-        </span>
-      </header>
 
-      {/* Main Order Card */}
-      <main className="p-4 space-y-4 flex-1">
-        {/* Buyer Contact */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center justify-between">
-          <div>
-            <p className="text-xs text-slate-500">Customer</p>
-            <p className="font-semibold text-slate-900">{mockOrder.buyerName}</p>
-            <p className="text-xs text-slate-600 font-mono">{mockOrder.buyerPhone}</p>
-          </div>
-          <a
-            href={`tel:${mockOrder.buyerPhone}`}
-            className="flex items-center space-x-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3 py-2 rounded-lg text-sm font-medium transition"
+        <div className="pt-2">
+          <Link
+            href="/dashboard"
+            className="w-full inline-flex items-center justify-center space-x-2 bg-slate-900 hover:bg-slate-800 text-white font-medium px-4 py-3 rounded-xl transition text-sm min-h-[44px]"
           >
-            <Phone className="w-4 h-4" />
-            <span>Call</span>
-          </a>
+            <span>Go to Seller Dashboard</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
-
-        {/* Item Breakdown */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
-          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ordered Items</h2>
-          <div className="space-y-2 text-sm">
-            {mockOrder.items.map((item, idx) => (
-              <div key={idx} className="flex justify-between items-center py-1">
-                <span>
-                  <strong className="text-slate-900">{item.quantity}x</strong> {item.name}
-                </span>
-                <span className="font-medium text-slate-700">{item.quantity * item.priceBirr} ETB</span>
-              </div>
-            ))}
-          </div>
-          <div className="border-t pt-3 flex justify-between items-center font-bold text-base text-slate-900">
-            <span>Total Payable (Cash)</span>
-            <span className="text-emerald-600 text-lg">{mockOrder.totalBirr} ETB</span>
-          </div>
-        </div>
-
-        {/* State Information */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-800 flex items-start space-x-2">
-          <AlertCircle className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-          <span>
-            Tapping <strong>Accept</strong> triggers an automated SMS notification to the customer.
-          </span>
-        </div>
-      </main>
-
-      {/* Action Footer Buttons (Thumb-friendly) */}
-      <footer className="bg-white border-t p-4 sticky bottom-0 space-y-2">
-        {mockOrder.state === "new" && (
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              className="col-span-1 bg-rose-50 text-rose-700 hover:bg-rose-100 font-medium py-3 rounded-xl transition flex items-center justify-center space-x-1"
-            >
-              <X className="w-4 h-4" />
-              <span>Reject</span>
-            </button>
-            <button
-              type="button"
-              className="col-span-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-xl transition shadow-md flex items-center justify-center space-x-2"
-            >
-              <Check className="w-5 h-5" />
-              <span>Accept Order</span>
-            </button>
-          </div>
-        )}
-
-        {mockOrder.state === "accepted" && (
-          <button
-            type="button"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3.5 rounded-xl transition shadow-md flex items-center justify-center space-x-2"
-          >
-            <BellRing className="w-5 h-5" />
-            <span>Mark Ready & Send Pickup Code</span>
-          </button>
-        )}
-
-        {mockOrder.state === "ready" && (
-          <div className="space-y-3">
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={4}
-              placeholder="Enter 4-Digit Pickup Code"
-              className="w-full text-center text-2xl font-mono tracking-widest py-2.5 border-2 border-slate-300 rounded-xl focus:border-emerald-500 focus:outline-none"
-            />
-            <button
-              type="button"
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3.5 rounded-xl transition shadow-md flex items-center justify-center space-x-2"
-            >
-              <PackageCheck className="w-5 h-5" />
-              <span>Complete Handover</span>
-            </button>
-          </div>
-        )}
-      </footer>
+      </div>
     </div>
   );
 }
