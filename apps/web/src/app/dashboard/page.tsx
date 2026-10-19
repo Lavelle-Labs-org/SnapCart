@@ -93,10 +93,10 @@ export default function OrdersDashboardPage() {
                   <td className="px-4 py-3.5 text-xs text-slate-500">{order.createdAt}</td>
                   <td className="px-4 py-3.5 text-right">
                     <Link
-                      href={`/a/mock-action-token`}
+                      href={`/dashboard/orders/${order.id}`}
                       className="inline-flex items-center space-x-1 text-xs font-semibold text-emerald-600 hover:text-emerald-800"
                     >
-                      <span>Action Link</span>
+                      <span>View Details</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </td>
