@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
 import { Test, TestingModule } from "@nestjs/testing";
 import { INestApplication } from "@nestjs/common";
 import request from "supertest";
@@ -9,7 +9,7 @@ import { TransformInterceptor } from "../src/common/interceptors/transform.inter
 import { HttpExceptionFilter } from "../src/common/filters/http-exception.filter";
 import { PrismaService } from "../src/prisma/prisma.service";
 
-describe("NestJS SMSHub Webhook API E2E (MIG-007)", () => {
+describe("NestJS SMSHub Webhook API E2E (BE-014)", () => {
   let app: INestApplication;
   let prismaMock: any;
   const WEBHOOK_SECRET = "test_webhook_secret_for_e2e_testing";
@@ -54,6 +54,10 @@ describe("NestJS SMSHub Webhook API E2E (MIG-007)", () => {
     }
   });
 
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   function generateSignature(bodyStr: string, timestamp: number, secret: string = WEBHOOK_SECRET): string {
     const data = `${timestamp}.${bodyStr}`;
     const hash = crypto.createHmac("sha256", secret).update(data).digest("hex");
@@ -81,12 +85,93 @@ describe("NestJS SMSHub Webhook API E2E (MIG-007)", () => {
       .set("X-SMSHub-Event", "message.sent")
       .set("X-SMSHub-Delivery", "deliv-uuid-fresh-1")
       .send(bodyStr)
-      .expect(201);
+      .expect(200);
 
     expect(res.body.success).toBe(true);
     expect(res.body.data.received).toBe(true);
     expect(res.body.data.event).toBe("message.sent");
     expect(res.body.data.deliveryId).toBe("deliv-uuid-fresh-1");
+
+    expect(prismaMock.message.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "msg-1" },
+        data: expect.objectContaining({ status: "sent" }),
+      })
+    );
+  });
+
+  it("updates message to failed status with error_type on message.failed event", async () => {
+    prismaMock.messageEvent.findUnique.mockResolvedValue(null);
+    prismaMock.message.findUnique.mockResolvedValue({ id: "msg-failed-1" });
+    prismaMock.message.update.mockResolvedValue({});
+    prismaMock.messageEvent.create.mockResolvedValue({});
+
+    const bodyObj = {
+      event: "message.failed",
+      data: {
+        message_id: "smshub_fail_999",
+        error_type: "insufficient_credits",
+      },
+    };
+    const bodyStr = JSON.stringify(bodyObj);
+    const now = Math.floor(Date.now() / 1000);
+    const signature = generateSignature(bodyStr, now);
+
+    const res = await request(app.getHttpServer())
+      .post("/api/webhooks/smshub")
+      .set("Content-Type", "application/json")
+      .set("X-SMSHub-Signature", signature)
+      .set("X-SMSHub-Event", "message.failed")
+      .set("X-SMSHub-Delivery", "deliv-fail-1")
+      .send(bodyStr)
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(prismaMock.message.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "msg-failed-1" },
+        data: expect.objectContaining({
+          status: "failed",
+          error_type: "insufficient_credits",
+        }),
+      })
+    );
+  });
+
+  it("strips sensitive codes from payload before persisting to message_events", async () => {
+    prismaMock.messageEvent.findUnique.mockResolvedValue(null);
+    prismaMock.message.findUnique.mockResolvedValue(null);
+    prismaMock.messageEvent.create.mockResolvedValue({});
+
+    const bodyObj = {
+      event: "message.sent",
+      data: {
+        message_id: "smshub_sec_1",
+        code: "4821",
+        text: "Habesha Cafe: order #1001 is ready. Pickup code: 4821.",
+      },
+    };
+    const bodyStr = JSON.stringify(bodyObj);
+    const now = Math.floor(Date.now() / 1000);
+    const signature = generateSignature(bodyStr, now);
+
+    const res = await request(app.getHttpServer())
+      .post("/api/webhooks/smshub")
+      .set("Content-Type", "application/json")
+      .set("X-SMSHub-Signature", signature)
+      .set("X-SMSHub-Event", "message.sent")
+      .set("X-SMSHub-Delivery", "deliv-sec-1")
+      .send(bodyStr)
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(prismaMock.messageEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          raw_payload: expect.not.stringContaining("4821"),
+        }),
+      })
+    );
   });
 
   it("rejects request missing X-SMSHub-Signature header with 400", async () => {
@@ -149,10 +234,11 @@ describe("NestJS SMSHub Webhook API E2E (MIG-007)", () => {
       .set("X-SMSHub-Event", "message.sent")
       .set("X-SMSHub-Delivery", "deliv-uuid-dup")
       .send(bodyStr)
-      .expect(201);
+      .expect(200);
 
     expect(res.body.success).toBe(true);
     expect(res.body.data.received).toBe(true);
     expect(res.body.data.duplicate).toBe(true);
+    expect(prismaMock.message.update).not.toHaveBeenCalled();
   });
 });

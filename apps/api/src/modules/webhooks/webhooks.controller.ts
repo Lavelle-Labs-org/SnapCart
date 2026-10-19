@@ -5,6 +5,8 @@ import {
   Body,
   Req,
   UseGuards,
+  HttpCode,
+  HttpStatus,
   Inject,
 } from "@nestjs/common";
 import type { Request } from "express";
@@ -19,6 +21,7 @@ export class WebhooksController {
   ) {}
 
   @Post("smshub")
+  @HttpCode(HttpStatus.OK)
   @UseGuards(WebhookSignatureGuard)
   async handleSMSHub(
     @Headers("x-smshub-event") eventHeader: string | undefined,
