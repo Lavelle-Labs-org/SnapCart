@@ -156,6 +156,12 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 npm test
 ```
 
+### 7. Secret Scanning & Repository Hygiene
+To verify that no live production secrets (`sk_live_...`, `whsec_...`) or unencrypted credential files are staged before committing:
+```bash
+npm run check:secrets
+```
+
 ---
 
 ## Documentation Suite
