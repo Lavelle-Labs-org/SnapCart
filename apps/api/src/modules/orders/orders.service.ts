@@ -12,6 +12,7 @@ import {
   CryptoService,
   generatePickupCode as defaultGeneratePickupCode,
   hashPickupCode as defaultHashPickupCode,
+  hashActionToken as defaultHashActionToken,
 } from "../crypto/crypto.service";
 import { OrderState, validateStateTransition } from "@order-by-sms/contracts";
 import {
@@ -298,4 +299,60 @@ export class OrdersService {
       smsResult,
     };
   }
+
+  /**
+   * Resolves and verifies an unguessable 16-byte (22-char base64url) seller action token.
+   * Enforces:
+   * 1. SHA-256 hash lookup in action_tokens.
+   * 2. Rejection if token does not exist (404).
+   * 3. Rejection if token is expired (>48h) (404).
+   * 4. Rejection if token has been revoked (404).
+   * 5. Rejection if purpose is not 'seller_action' (404).
+   */
+  async resolveActionToken(token: string) {
+    if (!token || typeof token !== "string") {
+      throw new NotFoundException("Invalid or missing action token");
+    }
+
+    const tokenHash = this.cryptoService
+      ? this.cryptoService.hashActionToken(token)
+      : defaultHashActionToken(token);
+
+    const tokenRecord = await this.prisma.actionToken.findUnique({
+      where: { token_hash: tokenHash },
+      include: {
+        order: {
+          include: {
+            seller: true,
+            order_items: true,
+          },
+        },
+      },
+    });
+
+    if (!tokenRecord) {
+      throw new NotFoundException("Invalid or unknown action token");
+    }
+
+    if (tokenRecord.revoked_at !== null) {
+      throw new NotFoundException(
+        "Action link has been revoked or already completed"
+      );
+    }
+
+    if (tokenRecord.expires_at < new Date()) {
+      throw new NotFoundException("Action link has expired");
+    }
+
+    if (tokenRecord.purpose !== "seller_action") {
+      throw new NotFoundException("Invalid action token purpose");
+    }
+
+    if (!tokenRecord.order) {
+      throw new NotFoundException("Order associated with token not found");
+    }
+
+    return tokenRecord;
+  }
 }
+
