@@ -1,58 +1,94 @@
-import Link from "next/link";
-import { ArrowLeft, MessageSquare } from "lucide-react";
+import React from "react";
+import { notFound } from "next/navigation";
+import { prisma } from "../../../../../lib/prisma";
+import { VerifyOtpForm } from "./verify-form";
 
 interface VerifyPageProps {
   params: Promise<{ slug: string; draftId: string }>;
 }
 
 export default async function VerifyPage({ params }: VerifyPageProps) {
-  const { slug } = await params;
+  const { slug, draftId } = await params;
+
+  if (!slug || !draftId) {
+    notFound();
+  }
+
+  let seller = null;
+  let verification = null;
+
+  try {
+    seller = await prisma.seller.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        business_name: true,
+        sms_name: true,
+        slug: true,
+      },
+    });
+
+    if (!seller) {
+      notFound();
+    }
+
+    verification = await prisma.phoneVerification.findUnique({
+      where: { id: draftId },
+      select: {
+        id: true,
+        phone: true,
+        purpose: true,
+        status: true,
+        last_sent_at: true,
+        expires_at: true,
+      },
+    });
+
+    if (!verification || verification.purpose !== "buyer_checkout") {
+      notFound();
+    }
+  } catch (err: any) {
+    if (err?.digest?.includes("NEXT_NOT_FOUND")) {
+      throw err;
+    }
+
+    // Fallback: If direct DB access is unavailable, fetch seller from API
+    try {
+      const apiUrl = process.env.INTERNAL_API_URL || "http://localhost:4000";
+      const res = await fetch(`${apiUrl}/api/s/${encodeURIComponent(slug)}`, {
+        cache: "no-store",
+      });
+
+      if (!res.ok) {
+        notFound();
+      }
+
+      return (
+        <VerifyOtpForm
+          slug={slug}
+          draftId={draftId}
+          phone="Your Phone Number"
+          lastSentAt={new Date().toISOString()}
+        />
+      );
+    } catch (fallbackErr: any) {
+      if (fallbackErr?.digest?.includes("NEXT_NOT_FOUND")) {
+        throw fallbackErr;
+      }
+      notFound();
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between max-w-md mx-auto border-x border-slate-200">
-      <header className="bg-white border-b px-4 py-3 flex items-center space-x-3">
-        <Link href={`/s/${slug}/checkout`} className="p-2 -ml-2 text-slate-600 hover:text-slate-900">
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <h1 className="text-lg font-bold text-slate-900">Verify Phone Number</h1>
-      </header>
-
-      <main className="p-6 text-center space-y-6 flex-1 flex flex-col justify-center">
-        <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
-          <MessageSquare className="w-6 h-6" />
-        </div>
-
-        <div>
-          <h2 className="text-xl font-bold text-slate-900">Enter 6-Digit Code</h2>
-          <p className="text-sm text-slate-600 mt-2">
-            We sent an SMS verification code to your phone number.
-          </p>
-        </div>
-
-        {/* 6-digit numeric input */}
-        <div className="max-w-xs mx-auto">
-          <input
-            type="text"
-            inputMode="numeric"
-            maxLength={6}
-            placeholder="000000"
-            className="w-full text-center text-3xl font-mono tracking-widest py-3 border-2 border-slate-300 rounded-xl focus:border-emerald-500 focus:outline-none"
-          />
-        </div>
-
-        <div className="text-xs text-slate-500">
-          Resend code available in <span className="font-semibold text-slate-700">60s</span>
-        </div>
-      </main>
-
-      <footer className="bg-white border-t p-4 sticky bottom-0">
-        <Link
-          href={`/s/${slug}/done`}
-          className="w-full block text-center bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-3 rounded-xl transition shadow-md"
-        >
-          Confirm & Place Order
-        </Link>
-      </footer>
-    </div>
+    <VerifyOtpForm
+      slug={slug}
+      draftId={draftId}
+      phone={verification.phone}
+      lastSentAt={
+        verification.last_sent_at
+          ? verification.last_sent_at.toISOString()
+          : null
+      }
+    />
   );
 }
