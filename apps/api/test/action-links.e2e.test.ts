@@ -102,6 +102,8 @@ describe("NestJS Seller Action Link Execution APIs E2E (BE-011)", () => {
       },
       pickupCode: {
         upsert: vi.fn().mockResolvedValue({ id: "pickup-1" }),
+        findUnique: vi.fn(),
+        update: vi.fn().mockResolvedValue({ id: "pickup-1" }),
       },
       suppressionList: {
         findUnique: vi.fn().mockResolvedValue(null),
@@ -215,6 +217,64 @@ describe("NestJS Seller Action Link Execution APIs E2E (BE-011)", () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.currentState).toBe("ready");
       expect(res.body.data.pickupCode).toBeDefined();
+    });
+  });
+
+  describe("POST /api/a/:token/complete (BE-012)", () => {
+    const pickupHash = crypto
+      .createHmac("sha256", "mock_pickup_code_secret_32_characters_long")
+      .update("4821")
+      .digest("hex");
+
+    it("rejects invalid pickup code and returns remaining attempts", async () => {
+      prismaMock.order.findUnique.mockResolvedValueOnce({
+        ...demoOrder,
+        state: "ready",
+      });
+      prismaMock.pickupCode.findUnique.mockResolvedValueOnce({
+        id: "pickup-1",
+        order_id: demoOrder.id,
+        code_hash: pickupHash,
+        attempts: 0,
+        expires_at: new Date(Date.now() + 86400000),
+      });
+
+      const res = await request(app.getHttpServer())
+        .post(`/api/a/${validToken}/complete`)
+        .send({ code: "0000" });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.code).toBe("INVALID_PICKUP_CODE");
+      expect(res.body.error.remainingAttempts).toBe(4);
+    });
+
+    it("completes order when matching pickup code is submitted", async () => {
+      prismaMock.order.findUnique.mockImplementation(({ where }: any) => {
+        if (where.id === demoOrder.id) {
+          return Promise.resolve({
+            ...demoOrder,
+            state: "ready",
+          });
+        }
+        return Promise.resolve(null);
+      });
+
+      prismaMock.pickupCode.findUnique.mockResolvedValueOnce({
+        id: "pickup-1",
+        order_id: demoOrder.id,
+        code_hash: pickupHash,
+        attempts: 1,
+        expires_at: new Date(Date.now() + 86400000),
+      });
+
+      const res = await request(app.getHttpServer())
+        .post(`/api/a/${validToken}/complete`)
+        .send({ code: "4821" });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.currentState).toBe("completed");
     });
   });
 });

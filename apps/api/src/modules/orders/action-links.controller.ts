@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Param,
+  Body,
   HttpCode,
   HttpStatus,
   Inject,
@@ -216,6 +217,39 @@ export class ActionLinksController {
       smsStatus: result.smsResult?.status,
       smsMessageId:
         result.smsResult?.smshubMessageId || result.smsResult?.messageId,
+      order: orderDto,
+    };
+  }
+
+  /**
+   * POST /api/a/:token/complete
+   * Submits 4-digit pickup code and completes the order from the mobile SMS link.
+   * Invokes centralized OrdersService.completeWithPickupCode (BE-012, FR-20).
+   */
+  @Post(":token/complete")
+  @HttpCode(HttpStatus.OK)
+  async completeOrder(
+    @Param("token") token: string,
+    @Body() body: any
+  ) {
+    const tokenRecord = await this.resolveTokenRecord(token);
+    const code = body?.code ?? body?.pickupCode ?? body?.pickup_code;
+
+    const result = await this.ordersService.completeWithPickupCode(
+      tokenRecord.order_id,
+      code,
+      "seller_link"
+    );
+
+    const orderDto = this.formatOrderDto(tokenRecord.order, result.currentState);
+
+    return {
+      ...orderDto,
+      isIdempotent: result.isIdempotent,
+      orderId: result.orderId,
+      orderNumber: result.orderNumber,
+      currentState: result.currentState,
+      previousState: result.previousState,
       order: orderDto,
     };
   }

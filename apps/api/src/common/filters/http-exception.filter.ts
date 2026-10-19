@@ -20,6 +20,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let code = "INTERNAL_SERVER_ERROR";
     let message = "An unexpected error occurred.";
     let details: any = undefined;
+    let extra: Record<string, any> = {};
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
@@ -32,6 +33,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
         message = resObj.message || exception.message;
         code = resObj.code || this.mapStatusToCode(status);
         details = resObj.details || (Array.isArray(resObj.message) ? resObj.message : undefined);
+        const { code: _c, message: _m, details: _d, ...rest } = resObj;
+        extra = rest;
       }
     } else if (exception instanceof Error) {
       message = exception.message;
@@ -47,6 +50,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         code,
         message: Array.isArray(message) ? message[0] : message,
         ...(details ? { details } : {}),
+        ...extra,
       },
     });
   }

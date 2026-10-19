@@ -4,6 +4,9 @@ import {
   Logger,
   NotFoundException,
   ConflictException,
+  BadRequestException,
+  HttpException,
+  HttpStatus,
   Optional,
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
@@ -12,6 +15,7 @@ import {
   CryptoService,
   generatePickupCode as defaultGeneratePickupCode,
   hashPickupCode as defaultHashPickupCode,
+  verifyPickupCodeHash as defaultVerifyPickupCodeHash,
   hashActionToken as defaultHashActionToken,
 } from "../crypto/crypto.service";
 import { OrderState, validateStateTransition } from "@order-by-sms/contracts";
@@ -353,6 +357,123 @@ export class OrdersService {
     }
 
     return tokenRecord;
+  }
+
+  /**
+   * Verifies 4-digit pickup code and completes handover (BE-012, FR-20, Sec 9.2).
+   * 1. Validates order is in 'ready' state.
+   * 2. Checks pickup_codes attempts; if >= 5, rejects as locked.
+   * 3. Checks expiration (7 days).
+   * 4. Constant-time comparison of code HMAC hash.
+   * 5. On failure: increments attempts, calculates remaining attempts, throws 400.
+   * 6. On success: transitions order state to 'completed', commits order event, revokes action tokens.
+   */
+  async completeWithPickupCode(
+    orderId: string,
+    rawCode: string,
+    actor: "seller_link" | "seller_dash"
+  ): Promise<TransitionOrderResult> {
+    if (!rawCode || typeof rawCode !== "string") {
+      throw new BadRequestException("Pickup code is required");
+    }
+
+    const cleanCode = rawCode.trim();
+    if (!/^\d{4}$/.test(cleanCode)) {
+      throw new BadRequestException("Pickup code must be exactly 4 digits");
+    }
+
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        seller: true,
+        pickup_code: true,
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+
+    if (order.state !== "ready") {
+      throw new ConflictException(
+        `Cannot complete order #${order.number}: current state is '${order.state}', expected 'ready'`
+      );
+    }
+
+    let pickupRecord = order.pickup_code;
+    if (!pickupRecord) {
+      pickupRecord = await this.prisma.pickupCode.findUnique({
+        where: { order_id: orderId },
+      });
+    }
+
+    if (!pickupRecord) {
+      throw new BadRequestException(
+        "No pickup code found for this order. Please reissue code."
+      );
+    }
+
+    // 1. Check if locked (>= 5 attempts)
+    if (pickupRecord.attempts >= 5) {
+      throw new HttpException(
+        {
+          code: "PICKUP_CODE_LOCKED",
+          message:
+            "Pickup code is locked after 5 failed attempts. Seller must reissue code.",
+          remainingAttempts: 0,
+          isLocked: true,
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    // 2. Check expiration
+    if (pickupRecord.expires_at < new Date()) {
+      throw new HttpException(
+        {
+          code: "PICKUP_CODE_EXPIRED",
+          message: "Pickup code has expired. Seller must reissue code.",
+          remainingAttempts: 0,
+          isLocked: true,
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    // 3. Constant-time HMAC comparison
+    const isValid = this.cryptoService
+      ? this.cryptoService.verifyPickupCodeHash(cleanCode, pickupRecord.code_hash)
+      : defaultVerifyPickupCodeHash(cleanCode, pickupRecord.code_hash);
+
+    if (!isValid) {
+      const newAttempts = pickupRecord.attempts + 1;
+      await this.prisma.pickupCode.update({
+        where: { order_id: orderId },
+        data: { attempts: newAttempts },
+      });
+
+      const remainingAttempts = Math.max(0, 5 - newAttempts);
+      const isLocked = newAttempts >= 5;
+
+      this.logger.warn(
+        `[Pickup Code Failed] Order #${order.number} (${orderId}): attempt ${newAttempts}/5 failed`
+      );
+
+      throw new HttpException(
+        {
+          code: "INVALID_PICKUP_CODE",
+          message: isLocked
+            ? "Pickup code locked after 5 failed attempts. Please reissue a new code."
+            : `Invalid pickup code. ${remainingAttempts} attempts remaining.`,
+          remainingAttempts,
+          isLocked,
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    // 4. Code matches! Transition order to 'completed'
+    return this.transitionOrderState(orderId, "completed", actor);
   }
 }
 
