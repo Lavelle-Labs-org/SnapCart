@@ -176,3 +176,17 @@ export interface ActionOrderDto {
   actionToken: string;
 }
 
+export interface OptOutResponse {
+  suppressed: boolean;
+  phone?: string;
+  alreadySuppressed?: boolean;
+}
+
+export interface OptOutPreviewResponse {
+  valid: boolean;
+  orderNumber: number;
+  shopName: string;
+  maskedPhone: string;
+  alreadySuppressed: boolean;
+}
+

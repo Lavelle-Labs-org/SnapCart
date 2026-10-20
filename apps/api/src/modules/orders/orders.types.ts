@@ -18,6 +18,7 @@ export interface TransitionOrderResult {
   previousState: string | null;
   currentState: OrderState;
   pickupCode?: string;
+  stopToken?: string;
   smsResult?: SendSMSResult;
   message?: string;
 }
