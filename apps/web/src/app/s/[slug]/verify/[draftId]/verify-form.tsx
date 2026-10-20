@@ -129,10 +129,18 @@ export function VerifyOtpForm({
 
       const orderNumber = data.orderNumber ?? data.data?.orderNumber ?? "";
       const orderId = data.orderId ?? data.data?.orderId ?? "";
+      const smsConsent =
+        data.order?.smsConsent ??
+        data.order?.sms_consent ??
+        data.smsConsent ??
+        data.sms_consent;
+
+      const consentParam =
+        smsConsent !== undefined ? `&consent=${smsConsent ? "true" : "false"}` : "";
 
       const targetUrl = `/s/${slug}/done?orderId=${encodeURIComponent(
         orderId
-      )}&orderNumber=${encodeURIComponent(orderNumber)}`;
+      )}&orderNumber=${encodeURIComponent(orderNumber)}${consentParam}`;
 
       router.push(targetUrl);
     } catch (err: any) {
