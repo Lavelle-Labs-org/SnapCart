@@ -7,6 +7,7 @@ import { ProductsModule } from "./modules/products/products.module";
 import { SMSHubModule } from "./modules/smshub/smshub.module";
 import { WebhooksModule } from "./modules/webhooks/webhooks.module";
 import { OrdersModule } from "./modules/orders/orders.module";
+import { MessagesModule } from "./modules/messages/messages.module";
 import { PrismaModule } from "./prisma/prisma.module";
 
 @Module({
@@ -18,6 +19,7 @@ import { PrismaModule } from "./prisma/prisma.module";
     ProductsModule,
     CheckoutModule,
     OrdersModule,
+    MessagesModule,
     WebhooksModule,
     HealthModule,
   ],
