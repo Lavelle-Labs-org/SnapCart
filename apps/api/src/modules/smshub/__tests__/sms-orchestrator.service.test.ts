@@ -1,13 +1,19 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { SMSOrchestratorService } from "../sms-orchestrator.service";
 import { SMSHubError } from "../smshub.service";
 
-describe("SMSOrchestratorService (BE-007)", () => {
+describe("SMSOrchestratorService (BE-007, BE-017)", () => {
   let service: SMSOrchestratorService;
   let prismaMock: any;
   let smshubMock: any;
+  const originalEnv = { ...process.env };
 
   beforeEach(() => {
+    process.env = { ...originalEnv };
+    delete process.env.SMS_SENDING_PAUSED;
+    delete process.env.SMS_ALLOWLIST;
+    delete process.env.SMS_DAILY_CAP;
+
     prismaMock = {
       suppressionList: {
         findUnique: vi.fn(),
@@ -24,6 +30,11 @@ describe("SMSOrchestratorService (BE-007)", () => {
           })
         ),
       },
+      rateCounter: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        upsert: vi.fn().mockResolvedValue({}),
+        update: vi.fn().mockResolvedValue({}),
+      },
     };
 
     smshubMock = {
@@ -31,6 +42,10 @@ describe("SMSOrchestratorService (BE-007)", () => {
     };
 
     service = new SMSOrchestratorService(prismaMock, smshubMock);
+  });
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
   });
 
   describe("Suppression List Enforcement", () => {
@@ -401,5 +416,287 @@ describe("SMSOrchestratorService (BE-007)", () => {
         expect(res.smshubMessageId).toBe(`msg_${event}`);
       });
     }
+  });
+
+  describe("Sending Pause Guard (SMS_SENDING_PAUSED - BE-017)", () => {
+    it("skips dispatch when SMS_SENDING_PAUSED='true' in process.env", async () => {
+      process.env.SMS_SENDING_PAUSED = "true";
+      prismaMock.suppressionList.findUnique.mockResolvedValue(null);
+
+      const res = await service.sendOrderSMS({
+        recipientPhone: "0911223344",
+        event: "seller_new_order",
+        shopName: "Habesha Cafe",
+        orderNumber: 1001,
+      });
+
+      expect(res.status).toBe("skipped");
+      expect(res.skipReason).toBe("sending_paused");
+      expect(smshubMock.sendSMS).not.toHaveBeenCalled();
+      expect(prismaMock.message.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          status: "skipped",
+          skip_reason: "sending_paused",
+          attempts: 0,
+        }),
+      });
+    });
+
+    it("skips dispatch when sendingPaused option is true even if env is false", async () => {
+      process.env.SMS_SENDING_PAUSED = "false";
+      prismaMock.suppressionList.findUnique.mockResolvedValue(null);
+
+      const res = await service.sendOrderSMS({
+        recipientPhone: "0911223344",
+        event: "seller_new_order",
+        shopName: "Habesha Cafe",
+        orderNumber: 1001,
+        sendingPaused: true,
+      });
+
+      expect(res.status).toBe("skipped");
+      expect(res.skipReason).toBe("sending_paused");
+      expect(smshubMock.sendSMS).not.toHaveBeenCalled();
+    });
+
+    it("proceeds with dispatch when SMS_SENDING_PAUSED is false or not set", async () => {
+      process.env.SMS_SENDING_PAUSED = "false";
+      prismaMock.suppressionList.findUnique.mockResolvedValue(null);
+      smshubMock.sendSMS.mockResolvedValue({
+        status: "success",
+        data: { message_id: "msg-123", credits_used: 1 },
+      });
+
+      const res = await service.sendOrderSMS({
+        recipientPhone: "0911223344",
+        event: "seller_new_order",
+        shopName: "Habesha Cafe",
+        orderNumber: 1001,
+      });
+
+      expect(res.status).toBe("sent");
+      expect(smshubMock.sendSMS).toHaveBeenCalled();
+    });
+  });
+
+  describe("Allowlist Guard (SMS_ALLOWLIST - BE-017)", () => {
+    it("skips dispatch when recipient phone is not in SMS_ALLOWLIST", async () => {
+      process.env.SMS_ALLOWLIST = "0911000000, 0922000000";
+      prismaMock.suppressionList.findUnique.mockResolvedValue(null);
+
+      const res = await service.sendOrderSMS({
+        recipientPhone: "0933000000",
+        event: "seller_new_order",
+        shopName: "Habesha Cafe",
+        orderNumber: 1001,
+      });
+
+      expect(res.status).toBe("skipped");
+      expect(res.skipReason).toBe("not_allowlisted");
+      expect(smshubMock.sendSMS).not.toHaveBeenCalled();
+      expect(prismaMock.message.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          status: "skipped",
+          skip_reason: "not_allowlisted",
+          attempts: 0,
+        }),
+      });
+    });
+
+    it("allows dispatch when recipient phone is in SMS_ALLOWLIST (supporting e164 / local format matching)", async () => {
+      process.env.SMS_ALLOWLIST = "+251911000000, 0922000000";
+      prismaMock.suppressionList.findUnique.mockResolvedValue(null);
+      smshubMock.sendSMS.mockResolvedValue({
+        status: "success",
+        data: { message_id: "msg-allowlisted", credits_used: 1 },
+      });
+
+      const res = await service.sendOrderSMS({
+        recipientPhone: "0911000000",
+        event: "seller_new_order",
+        shopName: "Habesha Cafe",
+        orderNumber: 1001,
+      });
+
+      expect(res.status).toBe("sent");
+      expect(smshubMock.sendSMS).toHaveBeenCalled();
+    });
+
+    it("respects allowlist provided in options override", async () => {
+      process.env.SMS_ALLOWLIST = "0911000000"; // not in env
+      prismaMock.suppressionList.findUnique.mockResolvedValue(null);
+      smshubMock.sendSMS.mockResolvedValue({
+        status: "success",
+        data: { message_id: "msg-custom-allowlist", credits_used: 1 },
+      });
+
+      const res = await service.sendOrderSMS({
+        recipientPhone: "0999999999",
+        allowlist: "0999999999, 0988888888",
+        event: "seller_new_order",
+        shopName: "Habesha Cafe",
+        orderNumber: 1001,
+      });
+
+      expect(res.status).toBe("sent");
+      expect(smshubMock.sendSMS).toHaveBeenCalled();
+    });
+
+    it("allows all dispatches when SMS_ALLOWLIST is empty or undefined", async () => {
+      delete process.env.SMS_ALLOWLIST;
+      prismaMock.suppressionList.findUnique.mockResolvedValue(null);
+      smshubMock.sendSMS.mockResolvedValue({
+        status: "success",
+        data: { message_id: "msg-all", credits_used: 1 },
+      });
+
+      const res = await service.sendOrderSMS({
+        recipientPhone: "0911223344",
+        event: "seller_new_order",
+        shopName: "Habesha Cafe",
+        orderNumber: 1001,
+      });
+
+      expect(res.status).toBe("sent");
+    });
+  });
+
+  describe("Daily Budget Cap Guard (SMS_DAILY_CAP - BE-017)", () => {
+    it("skips dispatch when daily SMS count meets or exceeds SMS_DAILY_CAP", async () => {
+      process.env.SMS_DAILY_CAP = "50";
+      prismaMock.suppressionList.findUnique.mockResolvedValue(null);
+      prismaMock.rateCounter.findUnique.mockImplementation(({ where }: any) => {
+        if (where.key.startsWith("sms_daily:")) {
+          return Promise.resolve({
+            key: where.key,
+            window_start: new Date(),
+            count: 50,
+          });
+        }
+        return Promise.resolve(null);
+      });
+
+      const res = await service.sendOrderSMS({
+        recipientPhone: "0911223344",
+        event: "seller_new_order",
+        shopName: "Habesha Cafe",
+        orderNumber: 1001,
+      });
+
+      expect(res.status).toBe("skipped");
+      expect(res.skipReason).toBe("daily_cap_exceeded");
+      expect(smshubMock.sendSMS).not.toHaveBeenCalled();
+      expect(prismaMock.message.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          status: "skipped",
+          skip_reason: "daily_cap_exceeded",
+          attempts: 0,
+        }),
+      });
+    });
+
+    it("allows dispatch when daily count is below SMS_DAILY_CAP", async () => {
+      process.env.SMS_DAILY_CAP = "50";
+      prismaMock.suppressionList.findUnique.mockResolvedValue(null);
+      prismaMock.rateCounter.findUnique.mockImplementation(({ where }: any) => {
+        if (where.key.startsWith("sms_daily:")) {
+          return Promise.resolve({
+            key: where.key,
+            window_start: new Date(),
+            count: 49,
+          });
+        }
+        return Promise.resolve(null);
+      });
+      smshubMock.sendSMS.mockResolvedValue({
+        status: "success",
+        data: { message_id: "msg-daily-ok", credits_used: 1 },
+      });
+
+      const res = await service.sendOrderSMS({
+        recipientPhone: "0911223344",
+        event: "seller_new_order",
+        shopName: "Habesha Cafe",
+        orderNumber: 1001,
+      });
+
+      expect(res.status).toBe("sent");
+      expect(smshubMock.sendSMS).toHaveBeenCalled();
+    });
+
+    it("respects dailyCap provided in options override", async () => {
+      prismaMock.suppressionList.findUnique.mockResolvedValue(null);
+      prismaMock.rateCounter.findUnique.mockImplementation(({ where }: any) => {
+        if (where.key.startsWith("sms_daily:")) {
+          return Promise.resolve({
+            key: where.key,
+            window_start: new Date(),
+            count: 10,
+          });
+        }
+        return Promise.resolve(null);
+      });
+
+      const res = await service.sendOrderSMS({
+        recipientPhone: "0911223344",
+        event: "seller_new_order",
+        dailyCap: 10, // cap is 10, count is 10 -> exceeded
+        shopName: "Habesha Cafe",
+        orderNumber: 1001,
+      });
+
+      expect(res.status).toBe("skipped");
+      expect(res.skipReason).toBe("daily_cap_exceeded");
+    });
+  });
+
+  describe("Recipient Phone Rate Limiter (BE-017)", () => {
+    it("skips dispatch when recipient phone exceeds 5 sends per hour", async () => {
+      prismaMock.suppressionList.findUnique.mockResolvedValue(null);
+      prismaMock.rateCounter.findUnique.mockResolvedValue({
+        key: "rate:phone:0911223344",
+        window_start: new Date(), // current window
+        count: 5,
+      });
+
+      const res = await service.sendOrderSMS({
+        recipientPhone: "0911223344",
+        event: "seller_new_order",
+        shopName: "Habesha Cafe",
+        orderNumber: 1001,
+      });
+
+      expect(res.status).toBe("skipped");
+      expect(res.skipReason).toBe("rate_limited");
+      expect(smshubMock.sendSMS).not.toHaveBeenCalled();
+      expect(prismaMock.message.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          status: "skipped",
+          skip_reason: "rate_limited",
+          attempts: 0,
+        }),
+      });
+    });
+
+    it("allows dispatch when recipient phone is below the hourly limit and records counter", async () => {
+      prismaMock.suppressionList.findUnique.mockResolvedValue(null);
+      prismaMock.rateCounter.findUnique.mockResolvedValue(null); // No prior counter
+      smshubMock.sendSMS.mockResolvedValue({
+        status: "success",
+        data: { message_id: "msg-rate-ok", credits_used: 1 },
+      });
+
+      const res = await service.sendOrderSMS({
+        recipientPhone: "0911223344",
+        event: "seller_new_order",
+        shopName: "Habesha Cafe",
+        orderNumber: 1001,
+      });
+
+      expect(res.status).toBe("sent");
+      expect(smshubMock.sendSMS).toHaveBeenCalled();
+      // Counter recording
+      expect(prismaMock.rateCounter.upsert).toHaveBeenCalled();
+    });
   });
 });

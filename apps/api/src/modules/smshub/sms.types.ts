@@ -38,6 +38,12 @@ export interface SendOrderSMSOptions {
   idempotencyKey?: string;
   // Throw on delivery error (default: false):
   throwOnError?: boolean;
+  // Guardrails & Rate Limits overrides (BE-017):
+  sendingPaused?: boolean;
+  allowlist?: string;
+  dailyCap?: number;
+  phoneRateLimit?: number;
+  mode?: "test" | "live";
 }
 
 export interface SendSMSResult {

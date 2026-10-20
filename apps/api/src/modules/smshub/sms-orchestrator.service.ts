@@ -22,13 +22,17 @@ export class SMSOrchestratorService {
   ) {}
 
   /**
-   * Authoritative SMS Notification Orchestrator (BE-007)
+    * Authoritative SMS Notification Orchestrator (BE-007, BE-017)
    * Dispatches SMS events through SMSHub while strictly enforcing:
    * 1. Recipient phone normalization (Ethiopian 10-digit format).
-   * 2. Buyer consent verification (checks checkout consent).
-   * 3. Suppression list enforcement (skips opted-out phones with zero credit consumption).
-   * 4. Privacy masking (plain pickup codes masked with **** before writing to messages.text).
-   * 5. Immutable audit logging in the `messages` table.
+   * 2. Suppression list enforcement (skips opted-out phones with zero credit consumption).
+   * 3. Buyer consent verification (checks checkout consent).
+   * 4. Pause guard (halts sends when SMS_SENDING_PAUSED="true").
+   * 5. Allowlist guard (skips numbers not in SMS_ALLOWLIST when configured).
+   * 6. Daily budget cap (pauses sends when SMS_DAILY_CAP is exceeded).
+   * 7. Phone rate limiter (Max 5/phone/hr per docs/06 Sec 2 using rate_counters).
+   * 8. Privacy masking (plain pickup codes masked with **** before writing to messages.text).
+   * 9. Immutable audit logging in the `messages` table.
    */
   async sendOrderSMS(options: SendOrderSMSOptions): Promise<SendSMSResult> {
     const normalizedPhone = normalizePhoneNumber(options.recipientPhone);
@@ -106,7 +110,115 @@ export class SMSOrchestratorService {
       }
     }
 
-    // 3. Dispatch to SMSHub gateway
+    // 3. Pause Guard: Global emergency switch (SMS_SENDING_PAUSED="true") (BE-017)
+    if (this.isSendingPaused(options)) {
+      this.logger.warn(
+        `[SMS Paused] SMS sending is paused by emergency switch (SMS_SENDING_PAUSED=true). Event: ${options.event}`
+      );
+
+      const msg = await this.prisma.message.create({
+        data: {
+          seller_id: options.sellerId ?? null,
+          order_id: options.orderId ?? null,
+          recipient_phone: normalizedPhone,
+          event: options.event,
+          text: maskedText,
+          status: "skipped",
+          skip_reason: "sending_paused",
+          attempts: 0,
+        },
+      });
+
+      return {
+        status: "skipped",
+        messageId: msg.id,
+        skipReason: "sending_paused",
+        text: maskedText,
+      };
+    }
+
+    // 4. Allowlist Guard (SMS_ALLOWLIST): Enforces staging/demo allowlist (BE-017)
+    if (!this.isAllowlistPermitted(options, normalizedPhone)) {
+      this.logger.warn(
+        `[SMS Skipped] Phone ${normalizedPhone} is not in SMS_ALLOWLIST. Event: ${options.event}`
+      );
+
+      const msg = await this.prisma.message.create({
+        data: {
+          seller_id: options.sellerId ?? null,
+          order_id: options.orderId ?? null,
+          recipient_phone: normalizedPhone,
+          event: options.event,
+          text: maskedText,
+          status: "skipped",
+          skip_reason: "not_allowlisted",
+          attempts: 0,
+        },
+      });
+
+      return {
+        status: "skipped",
+        messageId: msg.id,
+        skipReason: "not_allowlisted",
+        text: maskedText,
+      };
+    }
+
+    // 5. Daily Budget Cap Guard (SMS_DAILY_CAP): Exceeding daily budget pauses sends (BE-017)
+    if (await this.isDailyCapExceeded(options)) {
+      this.logger.warn(
+        `[SMS Skipped] Daily SMS budget cap reached. Event: ${options.event}`
+      );
+
+      const msg = await this.prisma.message.create({
+        data: {
+          seller_id: options.sellerId ?? null,
+          order_id: options.orderId ?? null,
+          recipient_phone: normalizedPhone,
+          event: options.event,
+          text: maskedText,
+          status: "skipped",
+          skip_reason: "daily_cap_exceeded",
+          attempts: 0,
+        },
+      });
+
+      return {
+        status: "skipped",
+        messageId: msg.id,
+        skipReason: "daily_cap_exceeded",
+        text: maskedText,
+      };
+    }
+
+    // 6. Recipient Phone Rate Limiter (Max 5/phone/hr per docs/06 Sec 2) (BE-017)
+    if (await this.isPhoneRateLimitExceeded(options, normalizedPhone)) {
+      this.logger.warn(
+        `[SMS Skipped] Phone rate limit exceeded for ${normalizedPhone}. Event: ${options.event}`
+      );
+
+      const msg = await this.prisma.message.create({
+        data: {
+          seller_id: options.sellerId ?? null,
+          order_id: options.orderId ?? null,
+          recipient_phone: normalizedPhone,
+          event: options.event,
+          text: maskedText,
+          status: "skipped",
+          skip_reason: "rate_limited",
+          attempts: 0,
+        },
+      });
+
+      return {
+        status: "skipped",
+        messageId: msg.id,
+        skipReason: "rate_limited",
+        text: maskedText,
+      };
+    }
+
+    // 7. Dispatch to SMSHub gateway
     try {
       const sendRes = await this.smshubService.sendSMS({
         msisdn: normalizedPhone,
@@ -137,6 +249,8 @@ export class SMSOrchestratorService {
       this.logger.log(
         `[SMS Dispatched] Event ${options.event} to ${normalizedPhone} - Status: ${status}, MessageId: ${sendRes.data?.message_id}`
       );
+
+      await this.recordDispatchCounters(normalizedPhone);
 
       return {
         status,
@@ -245,6 +359,148 @@ export class SMSOrchestratorService {
 
       default:
         return `${opts.shopName ?? "Shop"}: order #${opts.orderNumber ?? 0} update.`;
+    }
+  }
+
+  /**
+   * Checks if outbound SMS sending is paused by global emergency switch (BE-017).
+   */
+  isSendingPaused(options?: SendOrderSMSOptions): boolean {
+    if (options?.sendingPaused !== undefined) {
+      return options.sendingPaused;
+    }
+    return process.env.SMS_SENDING_PAUSED?.toLowerCase() === "true";
+  }
+
+  /**
+   * Checks if a phone number is permitted by the optional SMS_ALLOWLIST (BE-017).
+   * In demo/staging mode, non-allowlisted numbers are skipped.
+   */
+  isAllowlistPermitted(
+    options: SendOrderSMSOptions,
+    normalizedPhone: string
+  ): boolean {
+    const rawAllowlist = options?.allowlist ?? process.env.SMS_ALLOWLIST;
+    if (!rawAllowlist || !rawAllowlist.trim()) {
+      return true; // No allowlist configured; all permitted
+    }
+
+    const allowlist = rawAllowlist
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .map((p) => {
+        try {
+          return normalizePhoneNumber(p);
+        } catch {
+          return p;
+        }
+      });
+
+    return allowlist.includes(normalizedPhone);
+  }
+
+  /**
+   * Checks if the daily SMS budget cap has been reached (BE-017).
+   */
+  async isDailyCapExceeded(options?: SendOrderSMSOptions): Promise<boolean> {
+    const rawCap =
+      options?.dailyCap ??
+      (process.env.SMS_DAILY_CAP
+        ? parseInt(process.env.SMS_DAILY_CAP, 10)
+        : 50);
+    const cap = isNaN(rawCap) ? 50 : rawCap;
+    if (cap <= 0) return true;
+
+    if (!this.prisma.rateCounter) return false;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `sms_daily:${today}`;
+
+    try {
+      const counter = await this.prisma.rateCounter.findUnique({
+        where: { key },
+      });
+      return counter ? counter.count >= cap : false;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Checks if recipient phone has exceeded the hourly rate limit (BE-017, docs/06 Sec 2).
+   */
+  async isPhoneRateLimitExceeded(
+    options: SendOrderSMSOptions,
+    normalizedPhone: string
+  ): Promise<boolean> {
+    const limit = options?.phoneRateLimit ?? 5;
+    if (!this.prisma.rateCounter) return false;
+
+    const key = `rate:phone:${normalizedPhone}`;
+    const windowMs = 3600 * 1000;
+    const now = Date.now();
+
+    try {
+      const counter = await this.prisma.rateCounter.findUnique({
+        where: { key },
+      });
+      if (!counter) return false;
+      if (now - counter.window_start.getTime() >= windowMs) return false;
+      return counter.count >= limit;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Increments rate limit counters upon successful dispatch (BE-017).
+   */
+  async recordDispatchCounters(normalizedPhone: string): Promise<void> {
+    if (!this.prisma.rateCounter) return;
+
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    const dailyKey = `sms_daily:${today}`;
+    const phoneKey = `rate:phone:${normalizedPhone}`;
+    const windowMs = 3600 * 1000;
+
+    try {
+      // 1. Daily budget counter
+      await this.prisma.rateCounter.upsert({
+        where: { key: dailyKey },
+        create: {
+          key: dailyKey,
+          window_start: new Date(new Date().setHours(0, 0, 0, 0)),
+          count: 1,
+        },
+        update: {
+          count: { increment: 1 },
+        },
+      });
+
+      // 2. Phone rate counter
+      const existingPhone = await this.prisma.rateCounter.findUnique({
+        where: { key: phoneKey },
+      });
+
+      if (
+        !existingPhone ||
+        now.getTime() - existingPhone.window_start.getTime() >= windowMs
+      ) {
+        await this.prisma.rateCounter.upsert({
+          where: { key: phoneKey },
+          create: { key: phoneKey, window_start: now, count: 1 },
+          update: { window_start: now, count: 1 },
+        });
+      } else {
+        await this.prisma.rateCounter.update({
+          where: { key: phoneKey },
+          data: { count: { increment: 1 } },
+        });
+      }
+    } catch {
+      // Non-critical background counter update
     }
   }
 }
