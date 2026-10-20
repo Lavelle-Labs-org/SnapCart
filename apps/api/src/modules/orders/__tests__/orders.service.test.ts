@@ -47,8 +47,15 @@ describe("OrdersService - Centralized Order State Orchestrator (BE-010)", () => 
         update: vi.fn(),
       },
       actionToken: {
+        create: vi.fn(),
+        findUnique: vi.fn(),
+        update: vi.fn(),
         updateMany: vi.fn(),
         findFirst: vi.fn(),
+      },
+      suppressionList: {
+        findUnique: vi.fn(),
+        upsert: vi.fn(),
       },
       $transaction: vi.fn((callback) => callback(prismaMock)),
     };
@@ -65,6 +72,8 @@ describe("OrdersService - Centralized Order State Orchestrator (BE-010)", () => 
       generatePickupCode: vi.fn().mockReturnValue("4821"),
       hashPickupCode: vi.fn().mockReturnValue("mock_hmac_hash_4821"),
       verifyPickupCodeHash: vi.fn(),
+      generateActionToken: vi.fn().mockReturnValue("mock_stop_token_12345"),
+      hashActionToken: vi.fn().mockReturnValue("mock_stop_token_hash_abc"),
     };
 
     service = new OrdersService(
@@ -403,6 +412,192 @@ describe("OrdersService - Centralized Order State Orchestrator (BE-010)", () => 
       expect(result.success).toBe(true);
       expect(result.currentState).toBe("accepted");
       expect(prismaMock.order.update).toHaveBeenCalled();
+    });
+  });
+
+  describe("BE-015: Buyer Stop Action Token Generation on Acceptance", () => {
+    it("generates an action_tokens record with purpose 'buyer_stop' and includes stop link in SMS when accepted", async () => {
+      prismaMock.order.findUnique.mockResolvedValue({ ...mockOrderNew, state: "new" });
+      prismaMock.order.update.mockResolvedValue({ ...mockOrderNew, state: "accepted" });
+      prismaMock.orderEvent.create.mockResolvedValue({ id: "event-1" });
+      prismaMock.actionToken.create.mockResolvedValue({ id: "tok-1" });
+
+      const result = await service.transitionOrderState(
+        "order-uuid-1",
+        "accepted",
+        "seller_link"
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.stopToken).toBe("mock_stop_token_12345");
+      expect(cryptoServiceMock.generateActionToken).toHaveBeenCalled();
+      expect(cryptoServiceMock.hashActionToken).toHaveBeenCalledWith("mock_stop_token_12345");
+      expect(prismaMock.actionToken.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            order_id: "order-uuid-1",
+            purpose: "buyer_stop",
+            token_hash: "mock_stop_token_hash_abc",
+          }),
+        })
+      );
+      expect(smsOrchestratorMock.sendOrderSMS).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: "buyer_order_accepted",
+          link: expect.stringContaining("/x/mock_stop_token_12345"),
+        })
+      );
+    });
+  });
+
+  describe("BE-015: Buyer Opt-Out & Suppression (optOutBuyer)", () => {
+    const validStopToken = "valid_stop_token_12345";
+    const stopTokenHash = "mock_stop_token_hash_abc";
+    const mockOrderWithBuyer = {
+      id: "order-uuid-1",
+      number: 1043,
+      buyer_phone: "0911223344",
+      seller: { business_name: "Habesha Cafe", sms_name: "Habesha Cafe" },
+    };
+
+    it("verifies stop token, upserts into suppression_list, revokes token, and returns masked phone", async () => {
+      prismaMock.actionToken.findUnique.mockResolvedValue({
+        id: "tok-uuid-1",
+        order_id: "order-uuid-1",
+        purpose: "buyer_stop",
+        token_hash: stopTokenHash,
+        expires_at: new Date(Date.now() + 1000000),
+        revoked_at: null,
+        order: mockOrderWithBuyer,
+      });
+      prismaMock.suppressionList.upsert.mockResolvedValue({ id: "sup-1" });
+      prismaMock.actionToken.update.mockResolvedValue({});
+
+      const result = await service.optOutBuyer(validStopToken);
+
+      expect(cryptoServiceMock.hashActionToken).toHaveBeenCalledWith(validStopToken);
+      expect(prismaMock.suppressionList.upsert).toHaveBeenCalledWith({
+        where: { phone: "0911223344" },
+        create: {
+          phone: "0911223344",
+          reason: "buyer_stop",
+          order_id: "order-uuid-1",
+          created_at: expect.any(Date),
+        },
+        update: {
+          reason: "buyer_stop",
+          order_id: "order-uuid-1",
+        },
+      });
+      expect(prismaMock.actionToken.update).toHaveBeenCalledWith({
+        where: { id: "tok-uuid-1" },
+        data: { revoked_at: expect.any(Date) },
+      });
+      expect(result).toEqual({
+        suppressed: true,
+        phone: "09•• ••• 344",
+      });
+    });
+
+    it("throws NotFoundException when stop token not found", async () => {
+      prismaMock.actionToken.findUnique.mockResolvedValue(null);
+
+      await expect(service.optOutBuyer("unknown_token")).rejects.toThrow(
+        NotFoundException
+      );
+    });
+
+    it("throws NotFoundException when stop token has expired", async () => {
+      prismaMock.actionToken.findUnique.mockResolvedValue({
+        id: "tok-uuid-1",
+        order_id: "order-uuid-1",
+        purpose: "buyer_stop",
+        token_hash: stopTokenHash,
+        expires_at: new Date(Date.now() - 10000),
+        revoked_at: null,
+        order: mockOrderWithBuyer,
+      });
+
+      await expect(service.optOutBuyer(validStopToken)).rejects.toThrow(
+        NotFoundException
+      );
+    });
+
+    it("throws NotFoundException when token purpose is not buyer_stop", async () => {
+      prismaMock.actionToken.findUnique.mockResolvedValue({
+        id: "tok-uuid-1",
+        order_id: "order-uuid-1",
+        purpose: "seller_action",
+        token_hash: stopTokenHash,
+        expires_at: new Date(Date.now() + 1000000),
+        revoked_at: null,
+        order: mockOrderWithBuyer,
+      });
+
+      await expect(service.optOutBuyer(validStopToken)).rejects.toThrow(
+        NotFoundException
+      );
+    });
+
+    it("handles idempotent re-opt-out if token was already revoked and phone is already suppressed", async () => {
+      prismaMock.actionToken.findUnique.mockResolvedValue({
+        id: "tok-uuid-1",
+        order_id: "order-uuid-1",
+        purpose: "buyer_stop",
+        token_hash: stopTokenHash,
+        expires_at: new Date(Date.now() + 1000000),
+        revoked_at: new Date(Date.now() - 5000),
+        order: mockOrderWithBuyer,
+      });
+      prismaMock.suppressionList.findUnique.mockResolvedValue({
+        phone: "0911223344",
+        reason: "buyer_stop",
+      });
+
+      const result = await service.optOutBuyer(validStopToken);
+
+      expect(result).toEqual({
+        suppressed: true,
+        phone: "09•• ••• 344",
+        alreadySuppressed: true,
+      });
+      expect(prismaMock.suppressionList.upsert).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("BE-015: Read-Only Stop Link Details (getStopTokenDetails)", () => {
+    const validStopToken = "valid_stop_token_12345";
+    const stopTokenHash = "mock_stop_token_hash_abc";
+    const mockOrderWithBuyer = {
+      id: "order-uuid-1",
+      number: 1043,
+      buyer_phone: "0911223344",
+      seller: { business_name: "Habesha Cafe", sms_name: "Habesha Cafe" },
+    };
+
+    it("returns read-only preview metadata without modifying state", async () => {
+      prismaMock.actionToken.findUnique.mockResolvedValue({
+        id: "tok-uuid-1",
+        order_id: "order-uuid-1",
+        purpose: "buyer_stop",
+        token_hash: stopTokenHash,
+        expires_at: new Date(Date.now() + 1000000),
+        revoked_at: null,
+        order: mockOrderWithBuyer,
+      });
+      prismaMock.suppressionList.findUnique.mockResolvedValue(null);
+
+      const result = await service.getStopTokenDetails(validStopToken);
+
+      expect(result).toEqual({
+        valid: true,
+        orderNumber: 1043,
+        shopName: "Habesha Cafe",
+        maskedPhone: "09•• ••• 344",
+        alreadySuppressed: false,
+      });
+      expect(prismaMock.suppressionList.upsert).not.toHaveBeenCalled();
+      expect(prismaMock.actionToken.update).not.toHaveBeenCalled();
     });
   });
 });

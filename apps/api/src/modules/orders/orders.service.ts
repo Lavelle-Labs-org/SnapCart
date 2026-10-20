@@ -16,9 +16,17 @@ import {
   generatePickupCode as defaultGeneratePickupCode,
   hashPickupCode as defaultHashPickupCode,
   verifyPickupCodeHash as defaultVerifyPickupCodeHash,
+  generateActionToken as defaultGenerateActionToken,
   hashActionToken as defaultHashActionToken,
 } from "../crypto/crypto.service";
-import { OrderState, validateStateTransition } from "@order-by-sms/contracts";
+import {
+  OrderState,
+  validateStateTransition,
+  normalizePhoneNumber,
+  maskPhoneNumber,
+  OptOutResponse,
+  OptOutPreviewResponse,
+} from "@order-by-sms/contracts";
 import {
   OrderActor,
   TransitionOrderOptions,
@@ -98,6 +106,7 @@ export class OrdersService {
 
     // Perform atomic state mutation and audit logging
     let generatedPickupCode: string | undefined;
+    let generatedStopToken: string | undefined;
 
     await this.prisma.$transaction(async (tx) => {
       // 1. Update order state
@@ -148,7 +157,31 @@ export class OrdersService {
         });
       }
 
-      // 4. Side effects: When reaching terminal states 'completed' or 'rejected', revoke active action tokens
+      // 4. Side effects: When transitioning to 'accepted', generate buyer stop action token if not supplied
+      if (targetState === "accepted" && !options?.link) {
+        generatedStopToken = this.cryptoService
+          ? this.cryptoService.generateActionToken()
+          : defaultGenerateActionToken();
+
+        const stopTokenHash = this.cryptoService
+          ? this.cryptoService.hashActionToken(generatedStopToken)
+          : defaultHashActionToken(generatedStopToken);
+
+        const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48h validity per Sec 9.1
+
+        if (tx.actionToken?.create) {
+          await tx.actionToken.create({
+            data: {
+              order_id: orderId,
+              purpose: "buyer_stop",
+              token_hash: stopTokenHash,
+              expires_at: expiresAt,
+            },
+          });
+        }
+      }
+
+      // 5. Side effects: When reaching terminal states 'completed' or 'rejected', revoke active action tokens
       if (targetState === "completed" || targetState === "rejected") {
         await tx.actionToken.updateMany({
           where: { order_id: orderId, revoked_at: null },
@@ -161,13 +194,21 @@ export class OrdersService {
       `[Order Transition Committed] Order #${order.number} (${orderId}) transitioned from '${currentState}' to '${targetState}' by '${actor}'`
     );
 
-    // 5. Outbound SMS Notifications (Dispatched after DB commit; SMS failures never roll back state)
+    // 6. Outbound SMS Notifications (Dispatched after DB commit; SMS failures never roll back state)
     let smsResult;
     const shopName =
       order.seller?.sms_name || order.seller?.business_name || "Shop";
 
     if (this.smsOrchestrator) {
       if (targetState === "accepted") {
+        const appUrl =
+          process.env.NEXT_PUBLIC_APP_URL ||
+          process.env.FRONTEND_URL ||
+          "http://localhost:3000";
+        const stopLink =
+          options?.link ||
+          (generatedStopToken ? `${appUrl}/x/${generatedStopToken}` : "");
+
         smsResult = await this.smsOrchestrator.sendOrderSMS({
           orderId: order.id,
           sellerId: order.seller_id,
@@ -175,7 +216,7 @@ export class OrdersService {
           event: "buyer_order_accepted",
           shopName,
           orderNumber: order.number,
-          link: options?.link ?? "",
+          link: stopLink,
           smsConsent: order.sms_consent,
           throwOnError: options?.throwOnSMSFailure ?? false,
         });
@@ -214,6 +255,7 @@ export class OrdersService {
       previousState: currentState,
       currentState: targetState,
       pickupCode: generatedPickupCode,
+      stopToken: generatedStopToken,
       smsResult,
     };
   }
@@ -474,6 +516,153 @@ export class OrdersService {
 
     // 4. Code matches! Transition order to 'completed'
     return this.transitionOrderState(orderId, "completed", actor);
+  }
+
+  /**
+   * Processes buyer SMS opt-out via signed stop token (BE-015, #21, docs/04 Sec 5).
+   * 1. Verifies token is bound to order and buyer.
+   * 2. Checks token expiration and purpose ('buyer_stop').
+   * 3. Idempotently upserts normalized phone into suppression_list.
+   * 4. Revokes the action token to prevent reuse.
+   * 5. Handles idempotent replay gracefully when phone is already suppressed.
+   */
+  async optOutBuyer(token: string): Promise<OptOutResponse> {
+    if (!token || typeof token !== "string") {
+      throw new NotFoundException("Invalid or missing stop token");
+    }
+
+    const tokenHash = this.cryptoService
+      ? this.cryptoService.hashActionToken(token)
+      : defaultHashActionToken(token);
+
+    const tokenRecord = await this.prisma.actionToken.findUnique({
+      where: { token_hash: tokenHash },
+      include: {
+        order: {
+          include: { seller: true },
+        },
+      },
+    });
+
+    if (!tokenRecord) {
+      throw new NotFoundException("Invalid or unknown stop token");
+    }
+
+    if (tokenRecord.expires_at < new Date()) {
+      throw new NotFoundException("Stop link has expired");
+    }
+
+    if (tokenRecord.purpose !== "buyer_stop") {
+      throw new NotFoundException("Invalid action token purpose");
+    }
+
+    if (!tokenRecord.order || !tokenRecord.order.buyer_phone) {
+      throw new NotFoundException("Order associated with stop token not found");
+    }
+
+    const normalizedPhone = normalizePhoneNumber(tokenRecord.order.buyer_phone);
+
+    // If token was already revoked, check if phone is already suppressed for idempotency
+    if (tokenRecord.revoked_at !== null) {
+      const existing = await this.prisma.suppressionList.findUnique({
+        where: { phone: normalizedPhone },
+      });
+      if (existing) {
+        return {
+          suppressed: true,
+          phone: maskPhoneNumber(normalizedPhone),
+          alreadySuppressed: true,
+        };
+      }
+      throw new NotFoundException("Stop link has already been used or revoked");
+    }
+
+    // Atomic / idempotent upsert into suppression_list
+    await this.prisma.suppressionList.upsert({
+      where: { phone: normalizedPhone },
+      create: {
+        phone: normalizedPhone,
+        reason: "buyer_stop",
+        order_id: tokenRecord.order_id,
+        created_at: new Date(),
+      },
+      update: {
+        reason: "buyer_stop",
+        order_id: tokenRecord.order_id,
+      },
+    });
+
+    // Revoke the action token
+    await this.prisma.actionToken.update({
+      where: { id: tokenRecord.id },
+      data: { revoked_at: new Date() },
+    });
+
+    this.logger.log(
+      `[Buyer Opt-Out] Phone ${maskPhoneNumber(normalizedPhone)} suppressed for order #${tokenRecord.order.number} (${tokenRecord.order_id})`
+    );
+
+    return {
+      suppressed: true,
+      phone: maskPhoneNumber(normalizedPhone),
+    };
+  }
+
+  /**
+   * Read-only preview for the opt-out page GET /api/stop/:token (docs/06 Sec 1).
+   * Verifies token and returns display metadata without mutating state or consuming tokens.
+   */
+  async getStopTokenDetails(token: string): Promise<OptOutPreviewResponse> {
+    if (!token || typeof token !== "string") {
+      throw new NotFoundException("Invalid or missing stop token");
+    }
+
+    const tokenHash = this.cryptoService
+      ? this.cryptoService.hashActionToken(token)
+      : defaultHashActionToken(token);
+
+    const tokenRecord = await this.prisma.actionToken.findUnique({
+      where: { token_hash: tokenHash },
+      include: {
+        order: {
+          include: { seller: true },
+        },
+      },
+    });
+
+    if (!tokenRecord) {
+      throw new NotFoundException("Invalid or unknown stop token");
+    }
+
+    if (tokenRecord.expires_at < new Date()) {
+      throw new NotFoundException("Stop link has expired");
+    }
+
+    if (tokenRecord.purpose !== "buyer_stop") {
+      throw new NotFoundException("Invalid action token purpose");
+    }
+
+    if (!tokenRecord.order || !tokenRecord.order.buyer_phone) {
+      throw new NotFoundException("Order associated with stop token not found");
+    }
+
+    const normalizedPhone = normalizePhoneNumber(tokenRecord.order.buyer_phone);
+    const existing = await this.prisma.suppressionList.findUnique({
+      where: { phone: normalizedPhone },
+    });
+
+    const shopName =
+      tokenRecord.order.seller?.sms_name ||
+      tokenRecord.order.seller?.business_name ||
+      "Shop";
+
+    return {
+      valid: true,
+      orderNumber: tokenRecord.order.number,
+      shopName,
+      maskedPhone: maskPhoneNumber(normalizedPhone),
+      alreadySuppressed: !!existing,
+    };
   }
 }
 
