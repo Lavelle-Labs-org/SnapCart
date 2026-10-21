@@ -3,6 +3,7 @@ import {
   OnModuleInit,
   OnModuleDestroy,
   Logger,
+  Optional,
 } from "@nestjs/common";
 import { PrismaClient } from "@prisma/client";
 import { env } from "../config/env";
@@ -14,7 +15,7 @@ export class PrismaService
 {
   private readonly logger = new Logger(PrismaService.name);
 
-  constructor(options?: { databaseUrl?: string }) {
+  constructor(@Optional() options?: { databaseUrl?: string }) {
     let dbUrl = options?.databaseUrl;
     if (!dbUrl) {
       try {
