@@ -21,6 +21,8 @@ import {
   verifyPhoneSchema,
   LoginDto,
   loginSchema,
+  UpdateSettingsDto,
+  updateSettingsSchema,
 } from "./auth.types";
 
 function slugify(text: string): string {
@@ -482,5 +484,56 @@ export class AuthService {
     return this.prisma.seller.findUnique({
       where: { id: sellerId },
     });
+  }
+
+  async updateSettings(sellerId: string, dto: UpdateSettingsDto) {
+    const parseResult = updateSettingsSchema.safeParse(dto);
+    if (!parseResult.success) {
+      throw new HttpException(
+        {
+          code: "VALIDATION_ERROR",
+          message: parseResult.error.errors[0]?.message || "Invalid input data",
+          details: parseResult.error.flatten().fieldErrors,
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    const { business_name, sms_name } = parseResult.data;
+    const dataToUpdate: { business_name?: string; sms_name?: string } = {};
+
+    if (business_name !== undefined) {
+      dataToUpdate.business_name = business_name;
+    }
+    if (sms_name !== undefined) {
+      dataToUpdate.sms_name = sms_name;
+    }
+
+    if (Object.keys(dataToUpdate).length === 0) {
+      throw new HttpException(
+        {
+          code: "NO_UPDATES_PROVIDED",
+          message: "At least one setting field (business_name or sms_name) must be provided",
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    const updatedSeller = await this.prisma.seller.update({
+      where: { id: sellerId },
+      data: dataToUpdate,
+    });
+
+    return {
+      seller: {
+        id: updatedSeller.id,
+        business_name: updatedSeller.business_name,
+        sms_name: updatedSeller.sms_name,
+        phone: updatedSeller.phone,
+        slug: updatedSeller.slug,
+        phone_verified_at: updatedSeller.phone_verified_at,
+        created_at: updatedSeller.created_at,
+      },
+    };
   }
 }

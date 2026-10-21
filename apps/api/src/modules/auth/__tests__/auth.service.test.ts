@@ -299,4 +299,56 @@ describe("AuthService (apps/api - MIG-006)", () => {
       );
     });
   });
+
+  describe("updateSettings", () => {
+    it("successfully updates business_name and sms_name", async () => {
+      const mockUpdatedSeller = {
+        id: "seller-123",
+        business_name: "Updated Habesha Cafe",
+        sms_name: "Updated Cafe",
+        phone: "+251911223344",
+        slug: "habesha-cafe",
+        phone_verified_at: new Date(),
+        created_at: new Date(),
+      };
+      prismaMock.seller.update.mockResolvedValue(mockUpdatedSeller);
+
+      const result = await authService.updateSettings("seller-123", {
+        business_name: "Updated Habesha Cafe",
+        sms_name: "Updated Cafe",
+      });
+
+      expect(prismaMock.seller.update).toHaveBeenCalledWith({
+        where: { id: "seller-123" },
+        data: {
+          business_name: "Updated Habesha Cafe",
+          sms_name: "Updated Cafe",
+        },
+      });
+      expect(result.seller.business_name).toBe("Updated Habesha Cafe");
+      expect(result.seller.sms_name).toBe("Updated Cafe");
+    });
+
+    it("rejects sms_name longer than 20 characters", async () => {
+      await expect(
+        authService.updateSettings("seller-123", {
+          sms_name: "ThisIsWayTooLongForAnSMSName",
+        })
+      ).rejects.toThrow(
+        expect.objectContaining({
+          status: HttpStatus.BAD_REQUEST,
+        })
+      );
+    });
+
+    it("rejects when no updates are provided", async () => {
+      await expect(
+        authService.updateSettings("seller-123", {})
+      ).rejects.toThrow(
+        expect.objectContaining({
+          status: HttpStatus.BAD_REQUEST,
+        })
+      );
+    });
+  });
 });

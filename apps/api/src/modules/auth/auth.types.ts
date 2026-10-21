@@ -56,6 +56,23 @@ export const loginSchema = z.object({
 
 export type LoginDto = z.infer<typeof loginSchema>;
 
+export const updateSettingsSchema = z.object({
+  business_name: z
+    .string()
+    .trim()
+    .min(2, "Business name must be at least 2 characters")
+    .max(100, "Business name cannot exceed 100 characters")
+    .optional(),
+  sms_name: z
+    .string()
+    .trim()
+    .min(2, "SMS name must be at least 2 characters")
+    .max(20, "SMS name cannot exceed 20 characters")
+    .optional(),
+});
+
+export type UpdateSettingsDto = z.infer<typeof updateSettingsSchema>;
+
 export function serializeCookie(options: SessionCookieOptions): string {
   const parts = [
     `${options.name}=${encodeURIComponent(options.value)}`,
