@@ -11,6 +11,14 @@ jobs:
     name: Test & Build Quality Gate
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      NODE_ENV: test
+      NEXT_TELEMETRY_DISABLED: 1
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/order_by_sms
+      SMSHUB_MODE: test
+      SMSHUB_API_KEY: sk_test_dummy_for_offline_ci
+      SESSION_SECRET: ci_session_secret_at_least_32_characters_long
+      PICKUP_CODE_SECRET: ci_pickup_code_secret_32_characters_long
 
     steps:
       - name: Checkout Repository
@@ -36,16 +44,8 @@ jobs:
 
       - name: Run Vitest Test Suite
         run: npx vitest run --poolOptions.threads.maxThreads=3
-        env:
-          NODE_ENV: test
-          SMSHUB_MODE: test
-          SMSHUB_API_KEY: sk_test_dummy_for_offline_ci
-          SESSION_SECRET: ci_session_secret_at_least_32_characters_long
-          PICKUP_CODE_SECRET: ci_pickup_code_secret_32_characters_long
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/order_by_sms
 
       - name: Production Build (Next.js & NestJS)
         run: npm run build
         env:
-          NEXT_TELEMETRY_DISABLED: 1
           NODE_ENV: production
