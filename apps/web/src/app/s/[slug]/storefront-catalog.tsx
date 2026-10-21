@@ -144,19 +144,19 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
                         <button
                           type="button"
                           onClick={() => updateQuantity(product.id, -1)}
-                          className="w-9 h-9 min-h-[36px] min-w-[36px] bg-white text-slate-700 hover:bg-slate-200 rounded-lg flex items-center justify-center transition shadow-xs"
+                          className="w-11 h-11 min-h-[44px] min-w-[44px] bg-white text-slate-700 hover:bg-slate-200 rounded-lg flex items-center justify-center transition shadow-xs active:scale-95"
                           aria-label={`Decrease quantity of ${product.name}`}
                         >
-                          <Minus className="w-3.5 h-3.5" />
+                          <Minus className="w-4 h-4" />
                         </button>
                         <span className="w-7 text-center font-bold text-slate-900 text-sm">{qty}</span>
                         <button
                           type="button"
                           onClick={() => updateQuantity(product.id, 1)}
-                          className="w-9 h-9 min-h-[36px] min-w-[36px] bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg flex items-center justify-center transition shadow-xs"
+                          className="w-11 h-11 min-h-[44px] min-w-[44px] bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg flex items-center justify-center transition shadow-xs active:scale-95"
                           aria-label={`Increase quantity of ${product.name}`}
                         >
-                          <Plus className="w-3.5 h-3.5" />
+                          <Plus className="w-4 h-4" />
                         </button>
                       </div>
                     )}
