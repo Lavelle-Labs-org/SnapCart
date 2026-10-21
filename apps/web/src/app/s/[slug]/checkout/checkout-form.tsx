@@ -250,7 +250,7 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
                     }
                   }}
                   placeholder="e.g. Abebe Bikila"
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none focus:ring-2 ${
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm min-h-[44px] transition focus:outline-none focus:ring-2 ${
                     fieldErrors.name
                       ? "border-rose-300 focus:ring-rose-500 bg-rose-50/20"
                       : "border-slate-300 focus:ring-emerald-500"
@@ -278,7 +278,7 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
                     }
                   }}
                   placeholder="09... or 07..."
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none focus:ring-2 ${
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm min-h-[44px] transition focus:outline-none focus:ring-2 ${
                     fieldErrors.phone
                       ? "border-rose-300 focus:ring-rose-500 bg-rose-50/20"
                       : "border-slate-300 focus:ring-emerald-500"
@@ -296,14 +296,14 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
 
               {/* SMS Consent Checkbox (Unticked by default as per FR-9) */}
               <div className="pt-2 border-t border-slate-100">
-                <label className="flex items-start space-x-2.5 text-xs text-slate-700 cursor-pointer select-none">
+                <label className="flex items-center space-x-3 text-xs text-slate-700 cursor-pointer select-none min-h-[44px] py-1">
                   <input
                     type="checkbox"
                     id="sms_consent"
                     name="sms_consent"
                     checked={smsConsent}
                     onChange={(e) => setSmsConsent(e.target.checked)}
-                    className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 border-slate-300 transition"
+                    className="rounded text-emerald-600 focus:ring-emerald-500 h-5 w-5 border-slate-300 transition"
                     disabled={isSubmitting}
                   />
                   <span className="leading-relaxed">

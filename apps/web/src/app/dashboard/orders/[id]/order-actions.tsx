@@ -171,7 +171,7 @@ export default function OrderActions({
                   type="button"
                   disabled={isLoading}
                   onClick={() => handleAction("reject")}
-                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded text-xs font-semibold disabled:opacity-50"
+                  className="px-3.5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold disabled:opacity-50 min-h-[44px] inline-flex items-center justify-center"
                 >
                   {isLoading ? "Rejecting..." : "Yes, Reject Order"}
                 </button>
@@ -179,7 +179,7 @@ export default function OrderActions({
                   type="button"
                   disabled={isLoading}
                   onClick={() => setConfirmReject(false)}
-                  className="px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded text-xs font-medium"
+                  className="px-3.5 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg text-xs font-medium min-h-[44px] inline-flex items-center justify-center"
                 >
                   Cancel
                 </button>
@@ -191,7 +191,7 @@ export default function OrderActions({
                 type="button"
                 disabled={isLoading}
                 onClick={() => handleAction("accept")}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition disabled:opacity-50 shadow-sm"
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition disabled:opacity-50 shadow-sm min-h-[44px]"
               >
                 <Check className="w-4 h-4" />
                 <span>{isLoading ? "Accepting..." : "Accept Order"}</span>
@@ -201,7 +201,7 @@ export default function OrderActions({
                 type="button"
                 disabled={isLoading}
                 onClick={() => setConfirmReject(true)}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 border border-rose-300 text-rose-700 hover:bg-rose-50 rounded-lg text-sm font-semibold transition disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 border border-rose-300 text-rose-700 hover:bg-rose-50 rounded-lg text-sm font-semibold transition disabled:opacity-50 min-h-[44px]"
               >
                 <XCircle className="w-4 h-4" />
                 <span>Reject Order</span>
@@ -222,7 +222,7 @@ export default function OrderActions({
             type="button"
             disabled={isLoading}
             onClick={() => handleAction("ready")}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition disabled:opacity-50 shadow-sm"
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition disabled:opacity-50 shadow-sm min-h-[44px]"
           >
             <PackageCheck className="w-4 h-4" />
             <span>{isLoading ? "Updating..." : "Mark Ready for Pickup"}</span>
@@ -251,13 +251,13 @@ export default function OrderActions({
                 value={pickupCode}
                 onChange={(e) => setPickupCode(e.target.value.replace(/\D/g, ""))}
                 placeholder="1234"
-                className="w-32 px-3 py-2 border border-slate-300 rounded-lg text-center font-mono text-lg tracking-widest focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-32 px-3 py-2 border border-slate-300 rounded-lg text-center font-mono text-lg tracking-widest focus:ring-2 focus:ring-emerald-500 focus:outline-none min-h-[44px]"
               />
               <button
                 type="button"
                 disabled={isLoading || pickupCode.length !== 4}
                 onClick={() => handleAction("complete")}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition disabled:opacity-50 shadow-sm"
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition disabled:opacity-50 shadow-sm min-h-[44px]"
               >
                 <KeyRound className="w-4 h-4" />
                 <span>{isLoading ? "Verifying..." : "Complete Order"}</span>
@@ -271,7 +271,7 @@ export default function OrderActions({
               type="button"
               disabled={isLoading}
               onClick={() => handleAction("reissue")}
-              className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-800 font-semibold transition disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-800 font-semibold transition disabled:opacity-50 min-h-[44px]"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
               <span>Reissue Pickup Code</span>

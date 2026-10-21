@@ -244,7 +244,7 @@ export function VerifyOtpForm({
           <div className="mt-1">
             <Link
               href={`/s/${slug}/checkout`}
-              className="text-xs text-emerald-600 hover:text-emerald-700 underline font-medium"
+              className="inline-flex items-center text-xs text-emerald-600 hover:text-emerald-700 underline font-medium min-h-[44px]"
             >
               Wrong number? Edit checkout
             </Link>
@@ -313,7 +313,7 @@ export function VerifyOtpForm({
                 type="button"
                 onClick={handleResend}
                 disabled={isResending || isSubmitting}
-                className="inline-flex items-center space-x-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 py-1.5 px-3 rounded-lg hover:bg-emerald-50 transition disabled:opacity-50"
+                className="inline-flex items-center space-x-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 py-2.5 px-4 rounded-xl hover:bg-emerald-50 transition disabled:opacity-50 min-h-[44px]"
               >
                 {isResending ? (
                   <>

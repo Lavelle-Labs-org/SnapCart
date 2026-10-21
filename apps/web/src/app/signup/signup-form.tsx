@@ -331,7 +331,7 @@ export function SignupForm() {
               }}
               placeholder="e.g. Habesha Cafe & Bakery"
               required
-              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 ${
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm min-h-[44px] focus:outline-none focus:ring-2 ${
                 fieldErrors.business_name
                   ? "border-rose-300 focus:ring-rose-400 bg-rose-50/20"
                   : "border-slate-300 focus:ring-emerald-500"
@@ -370,7 +370,7 @@ export function SignupForm() {
               }}
               placeholder="e.g. Habesha Cafe"
               required
-              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 ${
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm min-h-[44px] focus:outline-none focus:ring-2 ${
                 fieldErrors.sms_name
                   ? "border-rose-300 focus:ring-rose-400 bg-rose-50/20"
                   : "border-slate-300 focus:ring-emerald-500"
@@ -407,7 +407,7 @@ export function SignupForm() {
               }}
               placeholder="09... or 07..."
               required
-              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 ${
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm min-h-[44px] focus:outline-none focus:ring-2 ${
                 fieldErrors.phone
                   ? "border-rose-300 focus:ring-rose-400 bg-rose-50/20"
                   : "border-slate-300 focus:ring-emerald-500"
@@ -444,7 +444,7 @@ export function SignupForm() {
               }}
               placeholder="••••••••••"
               required
-              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 ${
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm min-h-[44px] focus:outline-none focus:ring-2 ${
                 fieldErrors.password
                   ? "border-rose-300 focus:ring-rose-400 bg-rose-50/20"
                   : "border-slate-300 focus:ring-emerald-500"

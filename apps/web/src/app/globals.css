@@ -7,14 +7,61 @@
   --foreground: #0f172a;
 }
 
+html,
 body {
+  max-width: 100vw;
+  overflow-x: hidden;
   color: var(--foreground);
   background: var(--background);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Ensure mobile buttons have minimum 44px tap targets */
-button, a.button {
-  min-height: 44px;
+@layer base {
+  /*
+   * Mobile Touch Target Rule (FE-014, Issue #37, docs/10 Sec 3):
+   * All interactive buttons, steppers, and form inputs MUST meet the minimum
+   * 44px x 44px touch target requirement on mobile devices.
+   */
+  button,
+  [role="button"],
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea,
+  a.button {
+    min-height: 44px;
+  }
+
+  /*
+   * Mobile Browser Auto-Zoom Prevention:
+   * iOS Safari & Android Chrome automatically zoom in on inputs when font-size < 16px.
+   * Ensuring minimum 16px prevents disruptive layout shifts and horizontal scroll.
+   */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Accessible focus indicators for outdoor visibility and keyboard navigation */
+  :focus-visible {
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  /* Utility classes for explicit 44px touch targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .min-h-touch {
+    min-height: 44px;
+  }
+
+  .min-w-touch {
+    min-width: 44px;
+  }
 }
