@@ -2,7 +2,7 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-RUN apk add --no-cache libc6-compat postgresql-client
+RUN apk add --no-cache libc6-compat postgresql-client openssl
 
 COPY package.json package-lock.json ./
 COPY packages/contracts/package.json ./packages/contracts/
@@ -17,7 +17,8 @@ COPY apps/api ./apps/api
 COPY tsconfig.json ./
 
 RUN npm run prisma:generate
+RUN npm run build:api
 
 EXPOSE 4000
 
-CMD ["sh", "-c", "npx prisma db push && npx tsx prisma/seed.ts && npx tsx apps/api/src/main.ts"]
+CMD ["node", "apps/api/dist/apps/api/src/main.js"]
