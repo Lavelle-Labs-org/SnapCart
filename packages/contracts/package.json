@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "description": "Shared TypeScript contracts, DTOs, and validation schemas for Order-by-SMS",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts"
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  }
 }
