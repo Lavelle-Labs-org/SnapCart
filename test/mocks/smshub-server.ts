@@ -20,6 +20,8 @@ export interface SimulatedError {
   errorType?: string;
   message?: string;
   retryAfter?: number;
+  maxTimes?: number;
+  delayMs?: number;
 }
 
 export interface MockVerificationRecord {
@@ -147,6 +149,18 @@ export class MockSMSHubServer {
   }
 
   /**
+   * Simulates a transient 502 Bad Gateway that fails for a limited number of requests, then clears.
+   */
+  simulateTransientBadGateway(endpoint: string = "/api/sms", times: number = 1): void {
+    this.setSimulatedError(endpoint, {
+      status: 502,
+      errorType: "provider_error",
+      message: "Gateway or upstream carrier error occurred.",
+      maxTimes: times,
+    });
+  }
+
+  /**
    * Simulates a 429 Rate Limited error with Retry-After header.
    */
   simulateRateLimit(endpoint: string = "/api/sms", retryAfterSeconds: number = 5): void {
@@ -155,6 +169,18 @@ export class MockSMSHubServer {
       errorType: "rate_limited",
       message: "Too many requests. Please slow down.",
       retryAfter: retryAfterSeconds,
+    });
+  }
+
+  /**
+   * Simulates a network timeout by delaying response beyond client timeout threshold.
+   */
+  simulateTimeout(endpoint: string = "/api/sms", delayMs: number = 500): void {
+    this.setSimulatedError(endpoint, {
+      status: 408,
+      errorType: "timeout",
+      message: "Gateway request timed out",
+      delayMs,
     });
   }
 
@@ -299,21 +325,29 @@ export class MockSMSHubServer {
       // 1. Check for simulated error rules
       const simulatedError = this.findMatchingError(pathname);
       if (simulatedError) {
-        res.statusCode = simulatedError.status;
-        res.setHeader("Content-Type", "application/json");
+        const sendResponse = () => {
+          res.statusCode = simulatedError.status;
+          res.setHeader("Content-Type", "application/json");
 
-        if (simulatedError.retryAfter) {
-          res.setHeader("Retry-After", String(simulatedError.retryAfter));
+          if (simulatedError.retryAfter) {
+            res.setHeader("Retry-After", String(simulatedError.retryAfter));
+          }
+
+          res.end(
+            JSON.stringify({
+              status: "error",
+              error_type: simulatedError.errorType || "simulated_error",
+              message: simulatedError.message || "Simulated failure",
+              request_id: `req_${crypto.randomBytes(6).toString("hex")}`,
+            })
+          );
+        };
+
+        if (simulatedError.delayMs && simulatedError.delayMs > 0) {
+          setTimeout(sendResponse, simulatedError.delayMs);
+        } else {
+          sendResponse();
         }
-
-        res.end(
-          JSON.stringify({
-            status: "error",
-            error_type: simulatedError.errorType || "simulated_error",
-            message: simulatedError.message || "Simulated failure",
-            request_id: `req_${crypto.randomBytes(6).toString("hex")}`,
-          })
-        );
         return;
       }
 
@@ -344,6 +378,12 @@ export class MockSMSHubServer {
   private findMatchingError(pathname: string): SimulatedError | undefined {
     for (const [key, error] of this.simulatedErrors.entries()) {
       if (pathname === key || pathname.startsWith(key)) {
+        if (error.maxTimes !== undefined) {
+          error.maxTimes--;
+          if (error.maxTimes <= 0) {
+            this.simulatedErrors.delete(key);
+          }
+        }
         return error;
       }
     }
