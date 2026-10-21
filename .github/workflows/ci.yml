@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-build:
+    name: Test & Build Quality Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Pre-Commit Secret Scanner (INFRA-004)
+        run: npm run check:secrets
+
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
+
+      - name: TypeScript Static Typecheck
+        run: npx tsc --noEmit
+
+      - name: Run Vitest Test Suite
+        run: npx vitest run --poolOptions.threads.maxThreads=3
+        env:
+          NODE_ENV: test
+          SMSHUB_MODE: test
+          SMSHUB_API_KEY: sk_test_dummy_for_offline_ci
+          SESSION_SECRET: ci_session_secret_at_least_32_characters_long
+          PICKUP_CODE_SECRET: ci_pickup_code_secret_32_characters_long
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/order_by_sms
+
+      - name: Production Build (Next.js & NestJS)
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          NODE_ENV: production
