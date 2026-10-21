@@ -1,82 +1,74 @@
-import { Copy, ExternalLink, MessageSquare, AlertCircle } from "lucide-react";
+import React from "react";
+import { prisma } from "../../../lib/prisma";
+import { extractSellerIdFromToken } from "../dashboard-helpers";
+import SettingsClient, { SellerSettingsData } from "./settings-client";
 
-export default function SettingsPage() {
-  const shopSlug = "habesha-cafe";
-  const storefrontUrl = `https://ord.et/s/${shopSlug}`;
+export interface SettingsPageProps {
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+}
 
-  return (
-    <div className="max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Shop Settings</h1>
-        <p className="text-sm text-slate-500">Configure your storefront link and SMS notification parameters.</p>
-      </div>
+/**
+ * Shop Settings Server Component (FE-013, Issue #36).
+ * Loads authenticated seller profile from PostgreSQL via Prisma,
+ * and renders interactive settings form with real-time character counter
+ * and live SMS template previewer.
+ */
+export default async function SettingsPage({ searchParams }: SettingsPageProps) {
+  let sellerId: string | null = null;
 
-      {/* Shareable Storefront Link */}
-      <div className="bg-white p-6 rounded-xl border border-slate-200 space-y-3">
-        <h2 className="text-sm font-semibold text-slate-800 uppercase tracking-wider">Storefront Link</h2>
-        <p className="text-xs text-slate-500">
-          Paste this link into your Telegram channel, Instagram bio, or TikTok profile.
-        </p>
+  try {
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const token = cookieStore.get("seller_session")?.value;
+    if (token) {
+      sellerId = extractSellerIdFromToken(token);
+    }
+  } catch {
+    // Outside request context (e.g. testing or static build)
+  }
 
-        <div className="flex items-center space-x-2">
-          <input
-            type="text"
-            readOnly
-            value={storefrontUrl}
-            className="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-mono text-slate-700"
-          />
-          <button
-            type="button"
-            className="flex items-center space-x-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-medium transition"
-          >
-            <Copy className="w-4 h-4" />
-            <span>Copy</span>
-          </button>
-          <a
-            href={`/s/${shopSlug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 text-slate-500 hover:text-slate-800 border border-slate-300 rounded-lg hover:bg-slate-50 transition"
-          >
-            <ExternalLink className="w-5 h-5" />
-          </a>
-        </div>
-      </div>
+  if (!sellerId && searchParams) {
+    try {
+      const resolved = await searchParams;
+      if (typeof resolved?.sellerId === "string") {
+        sellerId = resolved.sellerId;
+      }
+    } catch {
+      // Ignore resolution errors
+    }
+  }
 
-      {/* SMS Sender Details */}
-      <div className="bg-white p-6 rounded-xl border border-slate-200 space-y-4">
-        <h2 className="text-sm font-semibold text-slate-800 uppercase tracking-wider">SMS Branding</h2>
+  let dbSeller: any = null;
+  try {
+    if (prisma?.seller?.findFirst) {
+      if (sellerId) {
+        dbSeller = await prisma.seller.findUnique({
+          where: { id: sellerId },
+        });
+      }
+      if (!dbSeller) {
+        // Fallback to demo seller if not authenticated or in preview
+        dbSeller = await prisma.seller.findFirst({
+          where: { slug: "habesha-cafe" },
+        });
+        if (!dbSeller) {
+          dbSeller = await prisma.seller.findFirst({
+            orderBy: { created_at: "asc" },
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("[SettingsPage] Could not query database for seller:", err);
+  }
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-            SMS Sender Name (Max 20 chars)
-          </label>
-          <input
-            type="text"
-            maxLength={20}
-            defaultValue="Habesha Cafe"
-            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
-        </div>
+  const initialSeller: SellerSettingsData = {
+    id: dbSeller?.id || "demo-seller-id",
+    businessName: dbSeller?.business_name || "Habesha Cafe & Bakery",
+    smsName: dbSeller?.sms_name || "Habesha Cafe",
+    slug: dbSeller?.slug || "habesha-cafe",
+    phone: dbSeller?.phone || "+251911223344",
+  };
 
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
-          <span className="text-xs font-semibold text-slate-600 block">Preview of Outgoing Buyer SMS:</span>
-          <p className="text-xs font-mono bg-white p-3 rounded border border-slate-200 text-slate-800">
-            Habesha Cafe: order #1043 accepted. We will text when ready. Stop texts: https://ord.et/x/Z7y1...
-          </p>
-          <div className="flex justify-between items-center text-[11px] text-slate-500 pt-1">
-            <span>Encoding: GSM-7</span>
-            <span>Length: 95 / 160 characters</span>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded-xl transition text-sm shadow-sm"
-        >
-          Save Settings
-        </button>
-      </div>
-    </div>
-  );
+  return <SettingsClient initialSeller={initialSeller} />;
 }

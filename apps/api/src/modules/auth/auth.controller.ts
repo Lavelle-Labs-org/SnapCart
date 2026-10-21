@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Body,
   Res,
   UseGuards,
@@ -16,6 +17,7 @@ import type {
   SignupDto,
   VerifyPhoneDto,
   LoginDto,
+  UpdateSettingsDto,
 } from "./auth.types";
 import type { Seller } from "@prisma/client";
 
@@ -78,5 +80,14 @@ export class AuthController {
         created_at: seller.created_at,
       },
     };
+  }
+
+  @Patch("settings")
+  @UseGuards(SellerAuthGuard)
+  async updateSettings(
+    @CurrentSeller() seller: Seller,
+    @Body() dto: UpdateSettingsDto
+  ) {
+    return this.authService.updateSettings(seller.id, dto);
   }
 }
