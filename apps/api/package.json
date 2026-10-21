@@ -4,7 +4,8 @@
   "private": true,
   "description": "Order-by-SMS NestJS Modular Monolith Backend",
   "scripts": {
-    "dev": "nest start --watch",
+    "dev": "tsx watch src/main.ts",
+    "dev:api": "tsx watch src/main.ts",
     "build": "nest build",
     "start": "node dist/apps/api/src/main.js",
     "test": "vitest run"
