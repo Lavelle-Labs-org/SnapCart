@@ -23,7 +23,8 @@
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:studio": "prisma studio",
     "template:check": "tsx scripts/check-templates.ts",
-    "check:secrets": "tsx scripts/check-secrets.ts"
+    "check:secrets": "tsx scripts/check-secrets.ts",
+    "ci:check": "npx tsc --noEmit && npm test && npm run build"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

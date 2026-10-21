@@ -373,7 +373,7 @@ describe("Scenario QA-007: Simulated Gateway Failure & Retry Tests (Issue #44)",
             apiKey: process.env.SMSHUB_API_KEY,
             retryDelays: [5, 10], // Fast bounded delays for test suite execution
             maxRetries: 3,
-            timeoutMs: 80, // Fast 80ms timeout for network timeout test
+            timeoutMs: 500, // 500ms timeout threshold for network timeout test
             minRequestIntervalMs: 0,
           }),
       })
@@ -679,8 +679,8 @@ describe("Scenario QA-007: Simulated Gateway Failure & Retry Tests (Issue #44)",
     it("handles connection timeout gracefully, preserves order state in DB, and allows manual resend", async () => {
       const order = seedOrder("new", true);
 
-      // Simulate network timeout: delay 200ms (> client timeoutMs of 80ms)
-      mockSMSHub.simulateTimeout("/api/test", 200);
+      // Simulate network timeout: delay 800ms (> client timeoutMs of 500ms)
+      mockSMSHub.simulateTimeout("/api/test", 800);
 
       const postRes = await request(app.getHttpServer())
         .post(`/api/orders/${order.id}/accept`)
