@@ -1,4 +1,5 @@
 import React from "react";
+import { redirect } from "next/navigation";
 import { prisma } from "../../../lib/prisma";
 import { extractSellerIdFromToken } from "../dashboard-helpers";
 import ProductManager, { ProductItem } from "./product-manager";
@@ -37,13 +38,15 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     }
   }
 
+  if (!sellerId) {
+    redirect("/login");
+  }
+
   let dbProducts: any[] = [];
   try {
     if (prisma?.product?.findMany) {
       dbProducts = await prisma.product.findMany({
-        where: sellerId
-          ? { seller_id: sellerId, deleted_at: null }
-          : { deleted_at: null },
+        where: { seller_id: sellerId, deleted_at: null },
         orderBy: { created_at: "asc" },
       });
     }
@@ -60,3 +63,4 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
   return <ProductManager initialProducts={initialProducts} />;
 }
+

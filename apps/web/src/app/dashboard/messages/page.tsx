@@ -1,4 +1,5 @@
 import React from "react";
+import { redirect } from "next/navigation";
 import { prisma } from "../../../lib/prisma";
 import { extractSellerIdFromToken } from "../dashboard-helpers";
 import MessagesClient, { MessageItem } from "./messages-client";
@@ -38,18 +39,20 @@ export default async function MessagesLogPage({ searchParams }: MessagesPageProp
     }
   }
 
+  if (!sellerId) {
+    redirect("/login");
+  }
+
   let dbMessages: any[] = [];
   try {
     if (prisma?.message?.findMany) {
       dbMessages = await prisma.message.findMany({
-        where: sellerId
-          ? {
-              OR: [
-                { seller_id: sellerId },
-                { order: { seller_id: sellerId } },
-              ],
-            }
-          : {},
+        where: {
+          OR: [
+            { seller_id: sellerId },
+            { order: { seller_id: sellerId } },
+          ],
+        },
         orderBy: { created_at: "desc" },
       });
     }

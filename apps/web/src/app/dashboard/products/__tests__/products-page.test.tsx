@@ -31,11 +31,16 @@ vi.mock("@/lib/prisma", () => ({
   default: prismaMock,
 }));
 
+const { redirectMock } = vi.hoisted(() => ({
+  redirectMock: vi.fn(),
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: vi.fn(),
     refresh: vi.fn(),
   }),
+  redirect: redirectMock,
 }));
 
 import ProductsPage from "../page";
@@ -47,7 +52,7 @@ describe("ProductsPage (FE-011, Issue #34 - /dashboard/products)", () => {
   });
 
   describe("Products Database Query & Mapping", () => {
-    it("queries database and passes mapped product items to ProductManager", async () => {
+    it("queries database and passes mapped product items to ProductManager for authenticated seller", async () => {
       const mockProducts = [
         {
           id: "prod_1",
@@ -77,13 +82,15 @@ describe("ProductsPage (FE-011, Issue #34 - /dashboard/products)", () => {
 
       prismaMock.product.findMany.mockResolvedValue(mockProducts);
 
-      const element = await ProductsPage({});
+      const element = await ProductsPage({
+        searchParams: Promise.resolve({ sellerId: "seller_test_1" }),
+      });
       expect(element).toBeDefined();
       expect(element.type).toBe(ProductManager);
 
-      // Verifies query filtered out soft-deleted items
+      // Verifies query scoped to authenticated seller and filtered out soft-deleted items
       expect(prismaMock.product.findMany).toHaveBeenCalledWith({
-        where: { deleted_at: null },
+        where: { seller_id: "seller_test_1", deleted_at: null },
         orderBy: { created_at: "asc" },
       });
 
@@ -128,11 +135,20 @@ describe("ProductsPage (FE-011, Issue #34 - /dashboard/products)", () => {
     });
   });
 
+  describe("Authentication Enforcement", () => {
+    it("redirects unauthenticated users to /login", async () => {
+      await ProductsPage({});
+      expect(redirectMock).toHaveBeenCalledWith("/login");
+    });
+  });
+
   describe("Empty State Initialization", () => {
     it("passes empty array to ProductManager when seller has 0 products", async () => {
       prismaMock.product.findMany.mockResolvedValue([]);
 
-      const element = await ProductsPage({});
+      const element = await ProductsPage({
+        searchParams: Promise.resolve({ sellerId: "seller_test_empty" }),
+      });
       expect(element).toBeDefined();
       expect(element.type).toBe(ProductManager);
       expect(element.props.initialProducts).toEqual([]);

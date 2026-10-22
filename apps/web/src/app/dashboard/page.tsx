@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRight, ShoppingBag } from "lucide-react";
 import { prisma } from "../../lib/prisma";
 import { formatBirr, maskPhoneNumber } from "@order-by-sms/contracts";
@@ -42,11 +43,15 @@ export default async function OrdersDashboardPage({
     }
   }
 
+  if (!sellerId) {
+    redirect("/login");
+  }
+
   let orders: any[] = [];
   try {
     if (prisma?.order?.findMany) {
       orders = await prisma.order.findMany({
-        where: sellerId ? { seller_id: sellerId } : undefined,
+        where: { seller_id: sellerId },
         include: {
           order_items: true,
         },
