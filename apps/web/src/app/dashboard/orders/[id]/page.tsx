@@ -17,6 +17,9 @@ import { prisma } from "../../../../lib/prisma";
 import { toBirr, formatBirr, maskPhoneNumber, OrderState } from "@order-by-sms/contracts";
 import OrderActions from "./order-actions";
 
+import { notFound, redirect } from "next/navigation";
+import { extractSellerIdFromToken } from "../../dashboard-helpers";
+
 export interface OrderDetailPageProps {
   params: Promise<{ id: string }>;
 }
@@ -87,6 +90,23 @@ function getStatusBadge(state: string) {
 export default async function OrderDetailPage({ params }: OrderDetailPageProps) {
   const { id } = await params;
 
+  let sellerId: string | null = null;
+  try {
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const token = cookieStore.get("seller_session")?.value;
+    if (token) {
+      sellerId = await extractSellerIdFromToken(token);
+    }
+  } catch {
+    // Outside request context (e.g. testing or static build)
+  }
+
+  if (!sellerId) {
+    redirect("/login");
+    return null;
+  }
+
   let dbOrder: any = null;
 
   try {
@@ -107,68 +127,15 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
       });
     }
   } catch (err) {
-    console.warn(`[OrderDetailPage] Could not query database for order ${id}, using scaffold fallback:`, err);
+    console.warn(`[OrderDetailPage] Could not query database for order ${id}:`, err);
   }
 
-  // Fallback scaffold order data when record does not exist in testing environment
-  const order = dbOrder ?? {
-    id: id || "ord_123",
-    number: 1043,
-    buyer_name: "Abebe Bikila",
-    buyer_phone: "0911223344",
-    sms_consent: true,
-    consent_wording: "Send me SMS updates about this order",
-    state: "accepted" as OrderState,
-    total_santim: 85000,
-    created_at: new Date(),
-    order_items: [
-      {
-        id: "item_1",
-        name_at_order: "Special Habesha Doro Wat",
-        quantity: 1,
-        unit_price_santim: 65000,
-      },
-      {
-        id: "item_2",
-        name_at_order: "Fresh Injera (Pack of 3)",
-        quantity: 2,
-        unit_price_santim: 10000,
-      },
-    ],
-    order_events: [
-      {
-        id: "evt_1",
-        from_state: null,
-        to_state: "new",
-        actor: "buyer",
-        created_at: new Date(Date.now() - 3600 * 1000),
-      },
-      {
-        id: "evt_2",
-        from_state: "new",
-        to_state: "accepted",
-        actor: "seller_link",
-        created_at: new Date(Date.now() - 1800 * 1000),
-      },
-    ],
-    messages: [
-      {
-        id: "msg_1",
-        event: "seller_new_order",
-        recipient_phone: "0988776655",
-        status: "sent",
-        created_at: new Date(Date.now() - 3550 * 1000),
-      },
-      {
-        id: "msg_2",
-        event: "buyer_order_accepted",
-        recipient_phone: "0911223344",
-        status: "sent",
-        created_at: new Date(Date.now() - 1750 * 1000),
-      },
-    ],
-    pickup_code: null,
-  };
+  if (!dbOrder || dbOrder.seller_id !== sellerId) {
+    notFound();
+    return null;
+  }
+
+  const order = dbOrder;
 
   const totalFormatted = formatBirr(order.total_santim ?? 0);
   const maskedPhone = maskPhoneNumber(order.buyer_phone || "");

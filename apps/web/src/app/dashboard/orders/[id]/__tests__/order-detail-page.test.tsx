@@ -21,12 +21,40 @@ vi.mock("@/lib/prisma", () => ({
   default: prismaMock,
 }));
 
+const { redirectMock, notFoundMock } = vi.hoisted(() => ({
+  redirectMock: vi.fn(),
+  notFoundMock: vi.fn(),
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: vi.fn(),
     refresh: vi.fn(),
   }),
+  redirect: redirectMock,
+  notFound: notFoundMock,
 }));
+
+import { SignJWT } from "jose";
+
+process.env.SESSION_SECRET = "test_session_secret_32_characters_long_minimum";
+
+const cookieStoreMock = {
+  get: vi.fn(),
+};
+
+vi.mock("next/headers", () => ({
+  cookies: vi.fn().mockResolvedValue(cookieStoreMock),
+}));
+
+async function createTestToken(sellerId: string): Promise<string> {
+  const secretKey = new TextEncoder().encode(process.env.SESSION_SECRET!);
+  return await new SignJWT({ sellerId })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("7d")
+    .sign(secretKey);
+}
 
 import OrderDetailPage from "../page";
 import OrderActions from "../order-actions";
@@ -54,14 +82,17 @@ function findElements(node: any, predicate: (n: any) => boolean): any[] {
 }
 
 describe("OrderDetailPage (FE-010, Issue #33 - /dashboard/orders/[id])", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    const token = await createTestToken("seller_test_123");
+    cookieStoreMock.get.mockReturnValue({ value: token });
   });
 
   describe("Order Details & Items Breakdown (Acceptance Criterion 1)", () => {
     it("renders itemized list, unit prices in Birr, grand total, and buyer contact info", async () => {
       const mockOrder = {
         id: "ord_full_1",
+        seller_id: "seller_test_123",
         number: 1042,
         buyer_name: "Abebe Bikila",
         buyer_phone: "0911223344",
@@ -125,6 +156,7 @@ describe("OrderDetailPage (FE-010, Issue #33 - /dashboard/orders/[id])", () => {
     it("renders chronological state transition audit trail from order_events", async () => {
       const mockOrder = {
         id: "ord_events_1",
+        seller_id: "seller_test_123",
         number: 1043,
         buyer_name: "Sara Hailu",
         buyer_phone: "0799887766",
@@ -178,6 +210,7 @@ describe("OrderDetailPage (FE-010, Issue #33 - /dashboard/orders/[id])", () => {
     it("displays friendly empty notice when no order_events exist", async () => {
       const mockOrder = {
         id: "ord_no_events",
+        seller_id: "seller_test_123",
         number: 1044,
         buyer_name: "Dawit Kebede",
         buyer_phone: "0922334455",
@@ -205,6 +238,7 @@ describe("OrderDetailPage (FE-010, Issue #33 - /dashboard/orders/[id])", () => {
     it("renders SMS audit log messages with event types, masked phones, and status badges", async () => {
       const mockOrder = {
         id: "ord_sms_1",
+        seller_id: "seller_test_123",
         number: 1045,
         buyer_name: "Tigist Alemu",
         buyer_phone: "0933445566",
@@ -252,6 +286,7 @@ describe("OrderDetailPage (FE-010, Issue #33 - /dashboard/orders/[id])", () => {
     it("passes order state and ID to OrderActions component when in 'new' state", async () => {
       const mockNewOrder = {
         id: "ord_new_state",
+        seller_id: "seller_test_123",
         number: 1046,
         buyer_name: "Almaz Ayana",
         buyer_phone: "0911223344",
@@ -278,6 +313,7 @@ describe("OrderDetailPage (FE-010, Issue #33 - /dashboard/orders/[id])", () => {
     it("passes order state and ID to OrderActions component when in 'accepted' state", async () => {
       const mockAcceptedOrder = {
         id: "ord_accepted_state",
+        seller_id: "seller_test_123",
         number: 1047,
         buyer_name: "Almaz Ayana",
         buyer_phone: "0911223344",
@@ -304,6 +340,7 @@ describe("OrderDetailPage (FE-010, Issue #33 - /dashboard/orders/[id])", () => {
     it("passes order state and ID to OrderActions component when in 'ready' state", async () => {
       const mockReadyOrder = {
         id: "ord_ready_state",
+        seller_id: "seller_test_123",
         number: 1048,
         buyer_name: "Almaz Ayana",
         buyer_phone: "0911223344",
@@ -330,6 +367,7 @@ describe("OrderDetailPage (FE-010, Issue #33 - /dashboard/orders/[id])", () => {
     it("renders terminal state notice in banner when order is rejected", async () => {
       const mockRejectedOrder = {
         id: "ord_rej_state",
+        seller_id: "seller_test_123",
         number: 1049,
         buyer_name: "Almaz Ayana",
         buyer_phone: "0911223344",
