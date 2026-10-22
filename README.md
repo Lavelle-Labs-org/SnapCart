@@ -136,9 +136,13 @@ CREATE DATABASE order_by_sms;
 3. Update `DATABASE_URL` in `.env` if using custom credentials.
 
 #### Apply Schema to Database
-Once your PostgreSQL instance is running, push the Prisma schema:
+Once your PostgreSQL instance is running, apply versioned migrations:
 ```bash
-npm run prisma:push
+# In production / CI (applies pending migrations):
+npm run prisma:migrate:deploy
+
+# In local development (applies migrations and checks schema drift):
+npm run prisma:migrate
 ```
 To inspect your database visually:
 ```bash
