@@ -54,6 +54,7 @@ model Product {
   seller       Seller      @relation(fields: [seller_id], references: [id], onDelete: Cascade)
   order_items  OrderItem[]
 
+  @@index([seller_id, available, deleted_at])
   @@map("products")
 }
 
@@ -78,6 +79,8 @@ model Order {
   messages        Message[]
 
   @@unique([seller_id, number])
+  @@index([seller_id, created_at])
+  @@index([seller_id, state])
   @@map("orders")
 }
 
@@ -169,6 +172,9 @@ model Message {
   order             Order?        @relation(fields: [order_id], references: [id], onDelete: SetNull)
   message_events    MessageEvent[]
 
+  @@index([seller_id, created_at])
+  @@index([order_id])
+  @@index([recipient_phone])
   @@map("messages")
 }
 
