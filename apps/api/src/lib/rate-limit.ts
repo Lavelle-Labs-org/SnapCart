@@ -1,3 +1,5 @@
+import { HttpException, HttpStatus } from "@nestjs/common";
+
 /**
  * Rate Limiting Utility (BE-017, docs/06 Sec 2, docs/08)
  * Fixed window rate limiter using Prisma `rate_counters` table.
@@ -17,6 +19,62 @@ export interface RateLimitOptions {
   windowSeconds: number;
 }
 
+export class RateLimitedException extends HttpException {
+  constructor(message: string, retryAfterSeconds: number) {
+    super(
+      {
+        code: "RATE_LIMITED",
+        message,
+        retryAfter: retryAfterSeconds,
+      },
+      HttpStatus.TOO_MANY_REQUESTS
+    );
+  }
+}
+
+export function enforceRateLimit(
+  result: RateLimitResult,
+  customMessage?: string
+): void;
+export function enforceRateLimit(
+  result: Promise<RateLimitResult>,
+  customMessage?: string
+): Promise<void>;
+export function enforceRateLimit(
+  resultOrPromise: RateLimitResult | Promise<RateLimitResult>,
+  customMessage?: string
+): void | Promise<void> {
+  if (
+    resultOrPromise instanceof Promise ||
+    typeof (resultOrPromise as any)?.then === "function"
+  ) {
+    return (resultOrPromise as Promise<RateLimitResult>).then((result) => {
+      enforceRateLimit(result, customMessage);
+    });
+  }
+  const result = resultOrPromise as RateLimitResult;
+  if (!result.allowed) {
+    const retryAfter = Math.max(
+      1,
+      Math.ceil((result.resetAt.getTime() - Date.now()) / 1000)
+    );
+    const message =
+      customMessage ||
+      `Rate limit exceeded. Maximum ${result.limit} requests per hour. Please retry after ${retryAfter} seconds.`;
+    throw new RateLimitedException(message, retryAfter);
+  }
+}
+
+export function extractClientIp(req: any): string {
+  if (!req) return "127.0.0.1";
+  const xForwardedFor = req.headers?.["x-forwarded-for"];
+  if (typeof xForwardedFor === "string") {
+    const first = xForwardedFor.split(",")[0]?.trim();
+    if (first) return first;
+  }
+  return req.ip || req.socket?.remoteAddress || "127.0.0.1";
+}
+
 /**
  * Checks and increments rate limit counter using Prisma `rate_counters` table.
  * If window has expired or record doesn't exist, resets counter to 1 and starts new window.
@@ -28,6 +86,16 @@ export async function consumeRateLimit(
   const { key, limit, windowSeconds } = options;
   const now = new Date();
   const windowMs = windowSeconds * 1000;
+
+  if (!prisma?.rateCounter) {
+    return {
+      allowed: true,
+      limit,
+      remaining: Math.max(0, limit - 1),
+      count: 1,
+      resetAt: new Date(now.getTime() + windowMs),
+    };
+  }
 
   const existing = await prisma.rateCounter.findUnique({
     where: { key },
@@ -69,16 +137,31 @@ export async function consumeRateLimit(
     };
   }
 
-  const updated = await prisma.rateCounter.update({
-    where: { key },
-    data: { count: { increment: 1 } },
-  });
+  let updatedCount = existing.count + 1;
+  if (typeof prisma.rateCounter.update === "function") {
+    const updated = await prisma.rateCounter.update({
+      where: { key },
+      data: { count: { increment: 1 } },
+    });
+    if (updated?.count !== undefined) {
+      updatedCount = updated.count;
+    }
+  } else if (typeof prisma.rateCounter.upsert === "function") {
+    const updated = await prisma.rateCounter.upsert({
+      where: { key },
+      create: { key, count: 1, expires_at: resetAt },
+      update: { count: { increment: 1 } },
+    });
+    if (updated?.count !== undefined) {
+      updatedCount = updated.count;
+    }
+  }
 
   return {
     allowed: true,
     limit,
-    remaining: Math.max(0, limit - updated.count),
-    count: updated.count,
+    remaining: Math.max(0, limit - updatedCount),
+    count: updatedCount,
     resetAt,
   };
 }
@@ -93,6 +176,16 @@ export async function checkRateLimit(
   const { key, limit, windowSeconds } = options;
   const now = new Date();
   const windowMs = windowSeconds * 1000;
+
+  if (!prisma?.rateCounter) {
+    return {
+      allowed: true,
+      limit,
+      remaining: limit,
+      count: 0,
+      resetAt: new Date(now.getTime() + windowMs),
+    };
+  }
 
   const existing = await prisma.rateCounter.findUnique({
     where: { key },

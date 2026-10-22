@@ -35,6 +35,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
         details = resObj.details || (Array.isArray(resObj.message) ? resObj.message : undefined);
         const { code: _c, message: _m, details: _d, ...rest } = resObj;
         extra = rest;
+        if (resObj.retryAfter !== undefined) {
+          response.setHeader("Retry-After", String(resObj.retryAfter));
+        }
       }
     } else if (exception instanceof Error) {
       message = exception.message;

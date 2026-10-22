@@ -5,11 +5,13 @@ import {
   Patch,
   Body,
   Res,
+  Req,
   UseGuards,
   Inject,
 } from "@nestjs/common";
-import type { Response } from "express";
+import type { Request, Response } from "express";
 import { AuthService } from "./auth.service";
+import { extractClientIp } from "../../lib/rate-limit";
 import { SellerAuthGuard } from "./auth.guard";
 import { CurrentSeller } from "./current-seller.decorator";
 import { serializeCookie } from "./auth.types";
@@ -29,8 +31,9 @@ export class AuthController {
   ) {}
 
   @Post("signup")
-  async signup(@Body() dto: SignupDto) {
-    return this.authService.signup(dto);
+  async signup(@Body() dto: SignupDto, @Req() req: Request) {
+    const clientIp = extractClientIp(req);
+    return this.authService.signup(dto, clientIp);
   }
 
   @Post("verify-phone")
@@ -48,9 +51,11 @@ export class AuthController {
   @Post("login")
   async login(
     @Body() dto: LoginDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response
   ) {
-    const result = await this.authService.login(dto);
+    const clientIp = extractClientIp(req);
+    const result = await this.authService.login(dto, clientIp);
     res.setHeader("Set-Cookie", serializeCookie(result.cookie));
     return {
       seller: result.seller,

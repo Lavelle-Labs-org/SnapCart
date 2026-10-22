@@ -9,6 +9,11 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import { SMSHubService, SMSHubError } from "../smshub/smshub.service";
+import {
+  checkPhoneRateLimit,
+  checkIpRateLimit,
+  enforceRateLimit,
+} from "../../lib/rate-limit";
 import type { MessageDto, MessageStatus } from "@order-by-sms/contracts";
 
 @Injectable()
@@ -80,8 +85,16 @@ export class MessagesService {
    */
   async resendMessage(
     messageId: string,
-    sellerId: string
+    sellerId: string,
+    clientIp?: string
   ): Promise<{ resent: boolean; message: MessageDto }> {
+    if (clientIp) {
+      await enforceRateLimit(
+        checkIpRateLimit(this.prisma, clientIp, 10, 3600),
+        "Too many message resend attempts from this IP address. Please try again later."
+      );
+    }
+
     const message = await this.prisma.message.findUnique({
       where: { id: messageId },
     });
@@ -116,6 +129,11 @@ export class MessagesService {
         HttpStatus.BAD_REQUEST
       );
     }
+
+    await enforceRateLimit(
+      checkPhoneRateLimit(this.prisma, message.recipient_phone, 5, 3600),
+      "Too many message resend attempts for this phone number. Please try again later."
+    );
 
     // Check suppression list before attempting SMS dispatch
     const suppressionRecord = await this.prisma.suppressionList.findUnique({
