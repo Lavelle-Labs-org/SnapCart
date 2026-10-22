@@ -73,11 +73,15 @@ export async function createProductApi(
   }
 
   const result = await res.json();
+  const item =
+    result && typeof result === "object" && "data" in result && result.data
+      ? result.data
+      : result;
   return {
-    id: result.id,
-    name: result.name,
-    priceSantim: result.priceSantim ?? result.price_santim,
-    available: Boolean(result.available),
+    id: String(item.id || ""),
+    name: String(item.name || ""),
+    priceSantim: Number(item.priceSantim ?? item.price_santim ?? 0),
+    available: Boolean(item.available),
   };
 }
 
@@ -107,11 +111,15 @@ export async function toggleAvailabilityApi(
   }
 
   const result = await res.json();
+  const item =
+    result && typeof result === "object" && "data" in result && result.data
+      ? result.data
+      : result;
   return {
-    id: result.id,
-    name: result.name,
-    priceSantim: result.priceSantim ?? result.price_santim,
-    available: Boolean(result.available),
+    id: String(item.id || ""),
+    name: String(item.name || ""),
+    priceSantim: Number(item.priceSantim ?? item.price_santim ?? 0),
+    available: Boolean(item.available),
   };
 }
 
@@ -141,11 +149,15 @@ export async function updateProductApi(
   }
 
   const result = await res.json();
+  const item =
+    result && typeof result === "object" && "data" in result && result.data
+      ? result.data
+      : result;
   return {
-    id: result.id,
-    name: result.name,
-    priceSantim: result.priceSantim ?? result.price_santim,
-    available: Boolean(result.available),
+    id: String(item.id || ""),
+    name: String(item.name || ""),
+    priceSantim: Number(item.priceSantim ?? item.price_santim ?? 0),
+    available: Boolean(item.available),
   };
 }
 
@@ -200,7 +212,15 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
   const openEditModal = (p: ProductItem) => {
     setEditingProduct(p);
     setFormName(p.name);
-    setFormPriceBirr(String(toBirr(p.priceSantim)));
+    setFormPriceBirr(
+      String(
+        toBirr(
+          typeof p?.priceSantim === "number" && !isNaN(p.priceSantim)
+            ? p.priceSantim
+            : 0
+        )
+      )
+    );
     setFormAvailable(p.available);
     setFormError(null);
   };
@@ -356,7 +376,11 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {products.map((p) => {
-                  const priceFormatted = formatBirr(p.priceSantim);
+                  const priceFormatted = formatBirr(
+                    typeof p?.priceSantim === "number" && !isNaN(p.priceSantim)
+                      ? p.priceSantim
+                      : 0
+                  );
                   const isToggling = togglingId === p.id;
 
                   return (

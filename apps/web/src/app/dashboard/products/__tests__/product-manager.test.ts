@@ -59,6 +59,33 @@ describe("ProductManager Actions & API Calls (FE-011, Issue #34)", () => {
       });
     });
 
+    it("correctly unwraps wrapped ApiResponse { success: true, data } envelopes", async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: {
+            id: "prod-wrapped",
+            name: "Shiro Wat",
+            price_santim: 8000,
+            available: true,
+          },
+        }),
+      });
+
+      const result = await createProductApi(
+        { name: "Shiro Wat", priceBirr: 80, available: true },
+        mockFetch as any
+      );
+
+      expect(result).toEqual({
+        id: "prod-wrapped",
+        name: "Shiro Wat",
+        priceSantim: 8000,
+        available: true,
+      });
+    });
+
     it("throws server error message on failure", async () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: false,
