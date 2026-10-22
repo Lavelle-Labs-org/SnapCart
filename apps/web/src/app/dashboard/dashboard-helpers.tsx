@@ -5,22 +5,42 @@ export interface OrdersDashboardPageProps {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
+import { jwtVerify } from "jose";
+
+function getSessionSecretKey(secret?: string): Uint8Array {
+  const secretStr =
+    secret ||
+    process.env.SESSION_SECRET ||
+    "mock_session_secret_at_least_32_characters_long";
+  return new TextEncoder().encode(secretStr);
+}
+
 /**
- * Extracts sellerId from JWT token payload without throwing or external dependencies.
+ * Extracts sellerId from JWT token payload after cryptographically verifying
+ * the HMAC-SHA256 signature against SESSION_SECRET.
+ * Returns null if signature is invalid, token is expired, or sellerId is empty.
  */
-export function extractSellerIdFromToken(token: string): string | null {
+export async function extractSellerIdFromToken(
+  token: string,
+  secret?: string
+): Promise<string | null> {
+  if (!token || typeof token !== "string" || token.trim() === "") {
+    return null;
+  }
   try {
-    const parts = token.split(".");
-    if (parts.length < 2) return null;
-    const base64Url = parts[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = Buffer.from(base64, "base64").toString("utf8");
-    const parsed = JSON.parse(jsonPayload);
-    if (parsed && typeof parsed.sellerId === "string" && parsed.sellerId.trim() !== "") {
-      return parsed.sellerId.trim();
+    const secretKey = getSessionSecretKey(secret);
+    const { payload } = await jwtVerify(token, secretKey, {
+      algorithms: ["HS256"],
+    });
+    if (
+      payload &&
+      typeof payload.sellerId === "string" &&
+      payload.sellerId.trim() !== ""
+    ) {
+      return payload.sellerId.trim();
     }
   } catch {
-    // Return null on malformed token
+    // Return null on invalid signature, expired token, or malformed JWT
   }
   return null;
 }

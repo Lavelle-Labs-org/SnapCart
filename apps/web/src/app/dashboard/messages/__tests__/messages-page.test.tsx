@@ -31,6 +31,27 @@ vi.mock("@/lib/prisma", () => ({
   default: prismaMock,
 }));
 
+import { SignJWT } from "jose";
+
+process.env.SESSION_SECRET = "test_session_secret_32_characters_long_minimum";
+
+const cookieStoreMock = {
+  get: vi.fn(),
+};
+
+vi.mock("next/headers", () => ({
+  cookies: vi.fn().mockResolvedValue(cookieStoreMock),
+}));
+
+async function createTestToken(sellerId: string): Promise<string> {
+  const secretKey = new TextEncoder().encode(process.env.SESSION_SECRET!);
+  return await new SignJWT({ sellerId })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("7d")
+    .sign(secretKey);
+}
+
 const { redirectMock } = vi.hoisted(() => ({
   redirectMock: vi.fn(),
 }));
@@ -49,6 +70,7 @@ import MessagesClient from "../messages-client";
 describe("MessagesLogPage (FE-012, Issue #35 - /dashboard/messages)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    cookieStoreMock.get.mockReturnValue(undefined);
     delete process.env.SMS_SENDING_PAUSED;
     delete process.env.SMS_BALANCE_LOW;
   });
@@ -92,10 +114,10 @@ describe("MessagesLogPage (FE-012, Issue #35 - /dashboard/messages)", () => {
       ];
 
       prismaMock.message.findMany.mockResolvedValue(mockMessages);
+      const token = await createTestToken("seller-123");
+      cookieStoreMock.get.mockReturnValue({ value: token });
 
-      const element = await MessagesLogPage({
-        searchParams: Promise.resolve({ sellerId: "seller-123" }),
-      });
+      const element = await MessagesLogPage({});
 
       expect(element).toBeDefined();
       expect(element.type).toBe(MessagesClient);
@@ -120,23 +142,43 @@ describe("MessagesLogPage (FE-012, Issue #35 - /dashboard/messages)", () => {
       expect(props.isLowBalance).toBe(false);
     });
 
+    it("ignores spoofed searchParams.sellerId and scopes query to cookie sellerId", async () => {
+      prismaMock.message.findMany.mockResolvedValue([]);
+      const token = await createTestToken("seller-authenticated");
+      cookieStoreMock.get.mockReturnValue({ value: token });
+
+      await MessagesLogPage({
+        searchParams: Promise.resolve({ sellerId: "seller-victim-idor" }),
+      });
+
+      expect(prismaMock.message.findMany).toHaveBeenCalledWith({
+        where: {
+          OR: [
+            { seller_id: "seller-authenticated" },
+            { order: { seller_id: "seller-authenticated" } },
+          ],
+        },
+        orderBy: { created_at: "desc" },
+      });
+    });
+
     it("passes isSendingPaused=true when SMS_SENDING_PAUSED is configured (Acceptance Criterion 4)", async () => {
       process.env.SMS_SENDING_PAUSED = "true";
       prismaMock.message.findMany.mockResolvedValue([]);
+      const token = await createTestToken("seller-123");
+      cookieStoreMock.get.mockReturnValue({ value: token });
 
-      const element = await MessagesLogPage({
-        searchParams: Promise.resolve({ sellerId: "seller-123" }),
-      });
+      const element = await MessagesLogPage({});
       expect(element.props.isSendingPaused).toBe(true);
     });
 
     it("passes isLowBalance=true when SMS_BALANCE_LOW is configured (Acceptance Criterion 4)", async () => {
       process.env.SMS_BALANCE_LOW = "true";
       prismaMock.message.findMany.mockResolvedValue([]);
+      const token = await createTestToken("seller-123");
+      cookieStoreMock.get.mockReturnValue({ value: token });
 
-      const element = await MessagesLogPage({
-        searchParams: Promise.resolve({ sellerId: "seller-123" }),
-      });
+      const element = await MessagesLogPage({});
       expect(element.props.isLowBalance).toBe(true);
     });
   });

@@ -21,7 +21,7 @@ export default async function MessagesLogPage({ searchParams }: MessagesPageProp
     const cookieStore = await cookies();
     const token = cookieStore.get("seller_session")?.value;
     if (token) {
-      sellerId = extractSellerIdFromToken(token);
+      sellerId = await extractSellerIdFromToken(token);
     }
   } catch {
     // Outside active request context (e.g. testing or static export)
@@ -31,9 +31,6 @@ export default async function MessagesLogPage({ searchParams }: MessagesPageProp
   if (searchParams) {
     try {
       resolvedParams = await searchParams;
-      if (!sellerId && typeof resolvedParams?.sellerId === "string") {
-        sellerId = resolvedParams.sellerId;
-      }
     } catch {
       // Ignore resolution errors
     }

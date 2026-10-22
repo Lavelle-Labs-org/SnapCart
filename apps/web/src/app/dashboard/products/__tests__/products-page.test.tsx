@@ -31,6 +31,27 @@ vi.mock("@/lib/prisma", () => ({
   default: prismaMock,
 }));
 
+import { SignJWT } from "jose";
+
+process.env.SESSION_SECRET = "test_session_secret_32_characters_long_minimum";
+
+const cookieStoreMock = {
+  get: vi.fn(),
+};
+
+vi.mock("next/headers", () => ({
+  cookies: vi.fn().mockResolvedValue(cookieStoreMock),
+}));
+
+async function createTestToken(sellerId: string): Promise<string> {
+  const secretKey = new TextEncoder().encode(process.env.SESSION_SECRET!);
+  return await new SignJWT({ sellerId })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("7d")
+    .sign(secretKey);
+}
+
 const { redirectMock } = vi.hoisted(() => ({
   redirectMock: vi.fn(),
 }));
@@ -49,6 +70,7 @@ import ProductManager from "../product-manager";
 describe("ProductsPage (FE-011, Issue #34 - /dashboard/products)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    cookieStoreMock.get.mockReturnValue(undefined);
   });
 
   describe("Products Database Query & Mapping", () => {
@@ -81,10 +103,10 @@ describe("ProductsPage (FE-011, Issue #34 - /dashboard/products)", () => {
       ];
 
       prismaMock.product.findMany.mockResolvedValue(mockProducts);
+      const token = await createTestToken("seller_test_1");
+      cookieStoreMock.get.mockReturnValue({ value: token });
 
-      const element = await ProductsPage({
-        searchParams: Promise.resolve({ sellerId: "seller_test_1" }),
-      });
+      const element = await ProductsPage({});
       expect(element).toBeDefined();
       expect(element.type).toBe(ProductManager);
 
@@ -119,11 +141,13 @@ describe("ProductsPage (FE-011, Issue #34 - /dashboard/products)", () => {
       });
     });
 
-    it("scopes query by authenticated sellerId when provided via searchParams", async () => {
+    it("scopes query by authenticated sellerId from cookie and ignores searchParams.sellerId", async () => {
       prismaMock.product.findMany.mockResolvedValue([]);
+      const token = await createTestToken("seller_custom_99");
+      cookieStoreMock.get.mockReturnValue({ value: token });
 
       const element = await ProductsPage({
-        searchParams: Promise.resolve({ sellerId: "seller_custom_99" }),
+        searchParams: Promise.resolve({ sellerId: "seller_malicious_spoof" }),
       });
 
       expect(prismaMock.product.findMany).toHaveBeenCalledWith({
