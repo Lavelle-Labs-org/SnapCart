@@ -1,4 +1,5 @@
 import React from "react";
+import { redirect } from "next/navigation";
 import { prisma } from "../../../lib/prisma";
 import { extractSellerIdFromToken } from "../dashboard-helpers";
 import SettingsClient, { SellerSettingsData } from "./settings-client";
@@ -39,27 +40,18 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   }
 
   let dbSeller: any = null;
-  try {
-    if (prisma?.seller?.findFirst) {
-      if (sellerId) {
-        dbSeller = await prisma.seller.findUnique({
-          where: { id: sellerId },
-        });
-      }
-      if (!dbSeller) {
-        // Fallback to demo seller if not authenticated or in preview
-        dbSeller = await prisma.seller.findFirst({
-          where: { slug: "habesha-cafe" },
-        });
-        if (!dbSeller) {
-          dbSeller = await prisma.seller.findFirst({
-            orderBy: { created_at: "asc" },
-          });
-        }
-      }
+  if (sellerId && prisma?.seller?.findUnique) {
+    try {
+      dbSeller = await prisma.seller.findUnique({
+        where: { id: sellerId },
+      });
+    } catch (err) {
+      console.warn("[SettingsPage] Could not query database for seller:", err);
     }
-  } catch (err) {
-    console.warn("[SettingsPage] Could not query database for seller:", err);
+  }
+
+  if (!dbSeller) {
+    redirect("/login");
   }
 
   const initialSeller: SellerSettingsData = {

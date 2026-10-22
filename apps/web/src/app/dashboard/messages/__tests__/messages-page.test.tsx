@@ -31,11 +31,16 @@ vi.mock("@/lib/prisma", () => ({
   default: prismaMock,
 }));
 
+const { redirectMock } = vi.hoisted(() => ({
+  redirectMock: vi.fn(),
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: vi.fn(),
     refresh: vi.fn(),
   }),
+  redirect: redirectMock,
 }));
 
 import MessagesLogPage from "../page";
@@ -119,7 +124,9 @@ describe("MessagesLogPage (FE-012, Issue #35 - /dashboard/messages)", () => {
       process.env.SMS_SENDING_PAUSED = "true";
       prismaMock.message.findMany.mockResolvedValue([]);
 
-      const element = await MessagesLogPage({});
+      const element = await MessagesLogPage({
+        searchParams: Promise.resolve({ sellerId: "seller-123" }),
+      });
       expect(element.props.isSendingPaused).toBe(true);
     });
 
@@ -127,8 +134,17 @@ describe("MessagesLogPage (FE-012, Issue #35 - /dashboard/messages)", () => {
       process.env.SMS_BALANCE_LOW = "true";
       prismaMock.message.findMany.mockResolvedValue([]);
 
-      const element = await MessagesLogPage({});
+      const element = await MessagesLogPage({
+        searchParams: Promise.resolve({ sellerId: "seller-123" }),
+      });
       expect(element.props.isLowBalance).toBe(true);
+    });
+  });
+
+  describe("Authentication Enforcement", () => {
+    it("redirects unauthenticated users to /login", async () => {
+      await MessagesLogPage({});
+      expect(redirectMock).toHaveBeenCalledWith("/login");
     });
   });
 });

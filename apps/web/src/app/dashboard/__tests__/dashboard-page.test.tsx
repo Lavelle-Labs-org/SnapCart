@@ -29,6 +29,18 @@ vi.mock("../../../lib/prisma", () => ({
   default: prismaMock,
 }));
 
+const { redirectMock } = vi.hoisted(() => ({
+  redirectMock: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn(),
+  }),
+  redirect: redirectMock,
+}));
+
 import OrdersDashboardPage from "../page";
 import {
   extractSellerIdFromToken,
@@ -135,12 +147,14 @@ describe("OrdersDashboardPage (FE-009, Issue #32)", () => {
 
       prismaMock.order.findMany.mockResolvedValue(mockOrders);
 
-      const element = await OrdersDashboardPage({});
+      const element = await OrdersDashboardPage({
+        searchParams: Promise.resolve({ sellerId: "seller_test" }),
+      });
       expect(element).toBeDefined();
 
-      // Verified query was called with newest first ordering
+      // Verified query was called with newest first ordering scoped to seller
       expect(prismaMock.order.findMany).toHaveBeenCalledWith({
-        where: undefined,
+        where: { seller_id: "seller_test" },
         include: { order_items: true },
         orderBy: { created_at: "desc" },
       });
@@ -191,11 +205,20 @@ describe("OrdersDashboardPage (FE-009, Issue #32)", () => {
     });
   });
 
+  describe("Authentication Enforcement", () => {
+    it("redirects unauthenticated users to /login", async () => {
+      await OrdersDashboardPage({});
+      expect(redirectMock).toHaveBeenCalledWith("/login");
+    });
+  });
+
   describe("Empty State (Acceptance Criteria 2)", () => {
     it("displays empty state with helpful prompt when seller has 0 orders", async () => {
       prismaMock.order.findMany.mockResolvedValue([]);
 
-      const element = await OrdersDashboardPage({});
+      const element = await OrdersDashboardPage({
+        searchParams: Promise.resolve({ sellerId: "seller_empty" }),
+      });
       expect(element).toBeDefined();
 
       const text = extractText(element);
@@ -233,7 +256,9 @@ describe("OrdersDashboardPage (FE-009, Issue #32)", () => {
 
       prismaMock.order.findMany.mockResolvedValue(mockOrders);
 
-      const element = await OrdersDashboardPage({});
+      const element = await OrdersDashboardPage({
+        searchParams: Promise.resolve({ sellerId: "seller_test" }),
+      });
       const links = findElements(element, (n) => n.props?.href === "/dashboard/orders/ord_target_999");
 
       // Links to order detail page should exist in the row

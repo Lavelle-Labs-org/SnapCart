@@ -32,11 +32,16 @@ vi.mock("../../../lib/prisma", () => ({
   default: prismaMock,
 }));
 
+const { redirectMock } = vi.hoisted(() => ({
+  redirectMock: vi.fn(),
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: vi.fn(),
     refresh: vi.fn(),
   }),
+  redirect: redirectMock,
 }));
 
 import SettingsPage from "../page";
@@ -75,19 +80,11 @@ describe("SettingsPage Server Component (FE-013, Issue #36)", () => {
     });
   });
 
-  it("falls back to demo seller when unauthenticated", async () => {
-    prismaMock.seller.findFirst.mockResolvedValue({
-      id: "demo-id",
-      business_name: "Habesha Cafe & Bakery",
-      sms_name: "Habesha Cafe",
-      slug: "habesha-cafe",
-      phone: "+251911223344",
-    });
+  it("redirects unauthenticated users to /login instead of falling back to hardcoded demo cafe", async () => {
+    prismaMock.seller.findUnique.mockResolvedValue(null);
 
-    const element = await SettingsPage({});
+    await SettingsPage({});
 
-    expect(element).toBeDefined();
-    expect(element.type).toBe(SettingsClient);
-    expect(element.props.initialSeller.slug).toBe("habesha-cafe");
+    expect(redirectMock).toHaveBeenCalledWith("/login");
   });
 });
