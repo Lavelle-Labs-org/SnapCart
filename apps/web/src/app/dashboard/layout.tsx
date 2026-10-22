@@ -142,7 +142,7 @@ export default async function DashboardLayout({
           <div className="flex items-center space-x-3 text-xs">
             {seller?.slug && (
               <a
-                href={`/c/${seller.slug}`}
+                href={`/s/${seller.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center space-x-1.5 text-xs text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full font-medium transition"
