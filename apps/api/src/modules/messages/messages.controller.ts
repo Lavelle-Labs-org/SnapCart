@@ -3,14 +3,17 @@ import {
   Get,
   Post,
   Param,
+  Req,
   UseGuards,
   HttpCode,
   HttpStatus,
   Inject,
 } from "@nestjs/common";
+import type { Request } from "express";
 import { MessagesService } from "./messages.service";
 import { SellerAuthGuard } from "../auth/auth.guard";
 import { CurrentSeller } from "../auth/current-seller.decorator";
+import { extractClientIp } from "../../lib/rate-limit";
 import type { MessageDto } from "@order-by-sms/contracts";
 
 @Controller("messages")
@@ -38,8 +41,10 @@ export class MessagesController {
   @HttpCode(HttpStatus.OK)
   async resendMessage(
     @CurrentSeller() seller: any,
-    @Param("id") id: string
+    @Param("id") id: string,
+    @Req() req: Request
   ): Promise<{ resent: boolean; message: MessageDto }> {
-    return this.messagesService.resendMessage(id, seller.id);
+    const clientIp = extractClientIp(req);
+    return this.messagesService.resendMessage(id, seller.id, clientIp);
   }
 }

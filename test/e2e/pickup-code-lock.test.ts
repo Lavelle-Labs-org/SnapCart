@@ -334,15 +334,17 @@ describe("Scenario E5: Pickup Code Lock & Reissue Integration Tests (QA-004, #41
       },
       rateCounter: {
         findUnique: async ({ where }: any) => {
-          const rc = dbRateCounters.get(where.phone);
+          const k = where.key || where.phone;
+          const rc = dbRateCounters.get(k);
           return rc ? { ...rc } : null;
         },
         upsert: async ({ where, create, update }: any) => {
-          const existing = dbRateCounters.get(where.phone);
+          const k = where.key || where.phone;
+          const existing = dbRateCounters.get(k);
           const data = existing
             ? { ...existing, ...update, count: (existing.count || 0) + (update.count?.increment || 1) }
             : { id: `rc-${Date.now()}`, ...create };
-          dbRateCounters.set(where.phone, data);
+          dbRateCounters.set(k, data);
           return { ...data };
         },
       },

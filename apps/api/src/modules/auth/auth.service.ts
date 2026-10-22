@@ -11,6 +11,11 @@ import { env } from "../../config/env";
 import { hashPassword, verifyPassword } from "./password";
 import { normalizeEthiopianPhone, maskPhoneNumber } from "@order-by-sms/contracts";
 import {
+  checkPhoneRateLimit,
+  checkIpRateLimit,
+  enforceRateLimit,
+} from "../../lib/rate-limit";
+import {
   SESSION_COOKIE_NAME,
   SESSION_DURATION_SECONDS,
   SessionPayload,
@@ -182,7 +187,14 @@ export class AuthService {
     };
   }
 
-  async signup(dto: SignupDto) {
+  async signup(dto: SignupDto, clientIp?: string) {
+    if (clientIp) {
+      await enforceRateLimit(
+        checkIpRateLimit(this.prisma, clientIp, 10, 3600),
+        "Too many signup attempts from this IP address. Please try again later."
+      );
+    }
+
     const parseResult = signupSchema.safeParse(dto);
     if (!parseResult.success) {
       throw new HttpException(
@@ -209,6 +221,11 @@ export class AuthService {
     }
 
     const normalizedPhone = phoneValidation.normalized;
+
+    await enforceRateLimit(
+      checkPhoneRateLimit(this.prisma, normalizedPhone, 5, 3600),
+      "Too many signup attempts for this phone number. Please try again later."
+    );
 
     const existingSeller = await this.prisma.seller.findUnique({
       where: { phone: normalizedPhone },
@@ -401,7 +418,14 @@ export class AuthService {
     };
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, clientIp?: string) {
+    if (clientIp) {
+      await enforceRateLimit(
+        checkIpRateLimit(this.prisma, clientIp, 10, 3600),
+        "Too many login attempts from this IP address. Please try again later."
+      );
+    }
+
     const parseResult = loginSchema.safeParse(dto);
     if (!parseResult.success) {
       throw new HttpException(

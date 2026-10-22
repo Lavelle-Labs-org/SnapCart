@@ -22,6 +22,11 @@ import {
   ResendCheckoutOtpSchema,
   VerifyCheckoutSchema,
 } from "./checkout.dto";
+import {
+  checkPhoneRateLimit,
+  checkIpRateLimit,
+  enforceRateLimit,
+} from "../../lib/rate-limit";
 
 @Injectable()
 export class CheckoutService {
@@ -47,7 +52,7 @@ export class CheckoutService {
    * 3. Dispatches 6-digit OTP via SMSHub Verify API with seller shop name.
    * 4. Stores serialized cart details in phone_verifications.draft.
    */
-  async checkout(input: any): Promise<CheckoutResponse> {
+  async checkout(input: any, clientIp?: string): Promise<CheckoutResponse> {
     const parseResult = CheckoutSchema.safeParse(input);
     if (!parseResult.success) {
       const firstError =
@@ -66,6 +71,21 @@ export class CheckoutService {
     const rawPhone = (parseResult.data.buyerPhone ?? parseResult.data.buyer_phone)!.trim();
     const phoneRes = normalizeEthiopianPhone(rawPhone);
     const normalizedPhone = phoneRes.normalized;
+
+    // Rate limit checks (PR-005, Issue #124)
+    if (clientIp) {
+      const ipLimit = await checkIpRateLimit(this.prisma, clientIp, 10, 3600);
+      enforceRateLimit(
+        ipLimit,
+        "Too many checkout attempts from this IP address. Please try again later."
+      );
+    }
+
+    const phoneLimit = await checkPhoneRateLimit(this.prisma, normalizedPhone, 5, 3600);
+    enforceRateLimit(
+      phoneLimit,
+      `Too many checkout verification attempts for ${normalizedPhone}. Maximum 5 attempts per hour.`
+    );
 
     const smsConsent = parseResult.data.smsConsent ?? parseResult.data.sms_consent ?? false;
     const consentWording =
@@ -200,7 +220,8 @@ export class CheckoutService {
    * Enforces 60-second cooldown timer based on last_sent_at.
    */
   async resendCheckoutOtp(
-    input: any
+    input: any,
+    clientIp?: string
   ): Promise<{ sent: boolean; retryAfter: number }> {
     const rawId = typeof input === "string" ? input : input?.draftId ?? input?.draft_id;
     const parseResult = ResendCheckoutOtpSchema.safeParse({ draftId: rawId });
@@ -240,6 +261,21 @@ export class CheckoutService {
         HttpStatus.BAD_REQUEST
       );
     }
+
+    // Rate limit checks (PR-005, Issue #124)
+    if (clientIp) {
+      const ipLimit = await checkIpRateLimit(this.prisma, clientIp, 10, 3600);
+      enforceRateLimit(
+        ipLimit,
+        "Too many OTP resend attempts from this IP address. Please try again later."
+      );
+    }
+
+    const phoneLimit = await checkPhoneRateLimit(this.prisma, verification.phone, 5, 3600);
+    enforceRateLimit(
+      phoneLimit,
+      `Too many OTP resend attempts for ${verification.phone}. Maximum 5 attempts per hour.`
+    );
 
     // Enforce 60-second application cooldown (FR-13)
     const elapsedSeconds = Math.floor(
