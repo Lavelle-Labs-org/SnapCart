@@ -156,7 +156,9 @@ describe("Scenario E10: Inbound Webhook Signature & Status Sync Integration Test
       .compile();
 
     app = moduleRef.createNestApplication({ rawBody: true });
-    app.setGlobalPrefix("api");
+    app.setGlobalPrefix("api", {
+      exclude: ["webhooks/smshub", "webhooks/(.*)"],
+    });
     app.useGlobalInterceptors(new TransformInterceptor());
     app.useGlobalFilters(new HttpExceptionFilter());
     await app.init();
@@ -202,7 +204,7 @@ describe("Scenario E10: Inbound Webhook Signature & Status Sync Integration Test
 
     it("rejects request missing X-SMSHub-Signature header with 400 MISSING_SIGNATURE", async () => {
       const res = await request(app.getHttpServer())
-        .post("/api/webhooks/smshub")
+        .post("/webhooks/smshub")
         .set("Content-Type", "application/json")
         .set("X-SMSHub-Event", "message.sent")
         .set("X-SMSHub-Delivery", "deliv-missing-sig")
@@ -217,7 +219,7 @@ describe("Scenario E10: Inbound Webhook Signature & Status Sync Integration Test
       const invalidSignature = signWebhook(validBody, "wrong_attacker_secret_key");
 
       const res = await request(app.getHttpServer())
-        .post("/api/webhooks/smshub")
+        .post("/webhooks/smshub")
         .set("Content-Type", "application/json")
         .set("X-SMSHub-Signature", invalidSignature)
         .set("X-SMSHub-Event", "message.sent")
@@ -241,7 +243,7 @@ describe("Scenario E10: Inbound Webhook Signature & Status Sync Integration Test
       });
 
       const res = await request(app.getHttpServer())
-        .post("/api/webhooks/smshub")
+        .post("/webhooks/smshub")
         .set("Content-Type", "application/json")
         .set("X-SMSHub-Signature", validSignature)
         .set("X-SMSHub-Event", "message.sent")
@@ -258,7 +260,7 @@ describe("Scenario E10: Inbound Webhook Signature & Status Sync Integration Test
       const expiredSignature = signWebhook(validBody, WEBHOOK_SECRET, pastTimestamp);
 
       const res = await request(app.getHttpServer())
-        .post("/api/webhooks/smshub")
+        .post("/webhooks/smshub")
         .set("Content-Type", "application/json")
         .set("X-SMSHub-Signature", expiredSignature)
         .set("X-SMSHub-Event", "message.sent")
@@ -280,7 +282,7 @@ describe("Scenario E10: Inbound Webhook Signature & Status Sync Integration Test
 
       for (const malformed of malformedSignatures) {
         const res = await request(app.getHttpServer())
-          .post("/api/webhooks/smshub")
+          .post("/webhooks/smshub")
           .set("Content-Type", "application/json")
           .set("X-SMSHub-Signature", malformed)
           .set("X-SMSHub-Event", "message.sent")
@@ -331,7 +333,7 @@ describe("Scenario E10: Inbound Webhook Signature & Status Sync Integration Test
       const signature = signWebhook(rawBody, WEBHOOK_SECRET);
 
       const res = await request(app.getHttpServer())
-        .post("/api/webhooks/smshub")
+        .post("/webhooks/smshub")
         .set("Content-Type", "application/json")
         .set("X-SMSHub-Signature", signature)
         .set("X-SMSHub-Event", "message.sent")
@@ -387,7 +389,7 @@ describe("Scenario E10: Inbound Webhook Signature & Status Sync Integration Test
       const signature = signWebhook(rawBody, WEBHOOK_SECRET);
 
       const res = await request(app.getHttpServer())
-        .post("/api/webhooks/smshub")
+        .post("/webhooks/smshub")
         .set("Content-Type", "application/json")
         .set("X-SMSHub-Signature", signature)
         .set("X-SMSHub-Event", "message.failed")
@@ -435,7 +437,7 @@ describe("Scenario E10: Inbound Webhook Signature & Status Sync Integration Test
 
       // 1. First webhook delivery
       const firstRes = await request(app.getHttpServer())
-        .post("/api/webhooks/smshub")
+        .post("/webhooks/smshub")
         .set("Content-Type", "application/json")
         .set("X-SMSHub-Signature", signature)
         .set("X-SMSHub-Event", "message.sent")
@@ -451,7 +453,7 @@ describe("Scenario E10: Inbound Webhook Signature & Status Sync Integration Test
 
       // 2. Second webhook delivery with IDENTICAL deliveryId (replay)
       const secondRes = await request(app.getHttpServer())
-        .post("/api/webhooks/smshub")
+        .post("/webhooks/smshub")
         .set("Content-Type", "application/json")
         .set("X-SMSHub-Signature", signature)
         .set("X-SMSHub-Event", "message.sent")
@@ -494,7 +496,7 @@ describe("Scenario E10: Inbound Webhook Signature & Status Sync Integration Test
       const signature = signWebhook(rawBody, WEBHOOK_SECRET);
 
       const res = await request(app.getHttpServer())
-        .post("/api/webhooks/smshub")
+        .post("/webhooks/smshub")
         .set("Content-Type", "application/json")
         .set("X-SMSHub-Signature", signature)
         .set("X-SMSHub-Event", "message.sent")

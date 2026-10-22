@@ -14,8 +14,10 @@ export async function bootstrap() {
 
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
-  // Global API routing prefix
-  app.setGlobalPrefix("api");
+  // Global API routing prefix (excluding webhooks per SMSHub spec)
+  app.setGlobalPrefix("api", {
+    exclude: ["webhooks/smshub", "webhooks/(.*)"],
+  });
 
   // CORS configuration for frontend origin with credentials
   app.enableCors({

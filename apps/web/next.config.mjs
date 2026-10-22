@@ -2,10 +2,15 @@
 const nextConfig = {
   reactStrictMode: true,
   async rewrites() {
+    const apiUrl = process.env.INTERNAL_API_URL || "http://localhost:4000";
     return [
       {
         source: "/api/:path*",
-        destination: `${process.env.INTERNAL_API_URL || "http://localhost:4000"}/api/:path*`,
+        destination: `${apiUrl}/api/:path*`,
+      },
+      {
+        source: "/webhooks/:path*",
+        destination: `${apiUrl}/webhooks/:path*`,
       },
     ];
   },
