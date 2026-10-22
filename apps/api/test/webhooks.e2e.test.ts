@@ -42,7 +42,9 @@ describe("NestJS SMSHub Webhook API E2E (BE-014)", () => {
       .compile();
 
     app = moduleFixture.createNestApplication({ rawBody: true });
-    app.setGlobalPrefix("api");
+    app.setGlobalPrefix("api", {
+      exclude: ["webhooks/smshub", "webhooks/(.*)"],
+    });
     app.useGlobalInterceptors(new TransformInterceptor());
     app.useGlobalFilters(new HttpExceptionFilter());
     await app.init();
@@ -64,7 +66,7 @@ describe("NestJS SMSHub Webhook API E2E (BE-014)", () => {
     return `t=${timestamp},v1=${hash}`;
   }
 
-  it("POST /api/webhooks/smshub accepts valid signature and returns fast 200 acknowledgment", async () => {
+  it("POST /webhooks/smshub accepts valid signature and returns fast 200 acknowledgment", async () => {
     prismaMock.messageEvent.findUnique.mockResolvedValue(null);
     prismaMock.message.findUnique.mockResolvedValue({ id: "msg-1" });
     prismaMock.message.update.mockResolvedValue({});
@@ -79,7 +81,7 @@ describe("NestJS SMSHub Webhook API E2E (BE-014)", () => {
     const signature = generateSignature(bodyStr, now);
 
     const res = await request(app.getHttpServer())
-      .post("/api/webhooks/smshub")
+      .post("/webhooks/smshub")
       .set("Content-Type", "application/json")
       .set("X-SMSHub-Signature", signature)
       .set("X-SMSHub-Event", "message.sent")
@@ -118,7 +120,7 @@ describe("NestJS SMSHub Webhook API E2E (BE-014)", () => {
     const signature = generateSignature(bodyStr, now);
 
     const res = await request(app.getHttpServer())
-      .post("/api/webhooks/smshub")
+      .post("/webhooks/smshub")
       .set("Content-Type", "application/json")
       .set("X-SMSHub-Signature", signature)
       .set("X-SMSHub-Event", "message.failed")
@@ -156,7 +158,7 @@ describe("NestJS SMSHub Webhook API E2E (BE-014)", () => {
     const signature = generateSignature(bodyStr, now);
 
     const res = await request(app.getHttpServer())
-      .post("/api/webhooks/smshub")
+      .post("/webhooks/smshub")
       .set("Content-Type", "application/json")
       .set("X-SMSHub-Signature", signature)
       .set("X-SMSHub-Event", "message.sent")
@@ -176,7 +178,7 @@ describe("NestJS SMSHub Webhook API E2E (BE-014)", () => {
 
   it("rejects request missing X-SMSHub-Signature header with 400", async () => {
     const res = await request(app.getHttpServer())
-      .post("/api/webhooks/smshub")
+      .post("/webhooks/smshub")
       .set("Content-Type", "application/json")
       .send({ event: "ping" })
       .expect(400);
@@ -191,7 +193,7 @@ describe("NestJS SMSHub Webhook API E2E (BE-014)", () => {
     const signature = generateSignature(bodyStr, expiredTimestamp);
 
     const res = await request(app.getHttpServer())
-      .post("/api/webhooks/smshub")
+      .post("/webhooks/smshub")
       .set("Content-Type", "application/json")
       .set("X-SMSHub-Signature", signature)
       .send(bodyStr)
@@ -207,7 +209,7 @@ describe("NestJS SMSHub Webhook API E2E (BE-014)", () => {
     const forgedSignature = `t=${now},v1=badbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbad1`;
 
     const res = await request(app.getHttpServer())
-      .post("/api/webhooks/smshub")
+      .post("/webhooks/smshub")
       .set("Content-Type", "application/json")
       .set("X-SMSHub-Signature", forgedSignature)
       .send(bodyStr)
@@ -228,7 +230,7 @@ describe("NestJS SMSHub Webhook API E2E (BE-014)", () => {
     const signature = generateSignature(bodyStr, now);
 
     const res = await request(app.getHttpServer())
-      .post("/api/webhooks/smshub")
+      .post("/webhooks/smshub")
       .set("Content-Type", "application/json")
       .set("X-SMSHub-Signature", signature)
       .set("X-SMSHub-Event", "message.sent")
