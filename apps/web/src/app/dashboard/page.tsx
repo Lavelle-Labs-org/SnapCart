@@ -26,21 +26,10 @@ export default async function OrdersDashboardPage({
     const cookieStore = await cookies();
     const token = cookieStore.get("seller_session")?.value;
     if (token) {
-      sellerId = extractSellerIdFromToken(token);
+      sellerId = await extractSellerIdFromToken(token);
     }
   } catch {
     // Outside request context (e.g. testing or static build)
-  }
-
-  if (!sellerId && searchParams) {
-    try {
-      const resolved = await searchParams;
-      if (typeof resolved?.sellerId === "string") {
-        sellerId = resolved.sellerId;
-      }
-    } catch {
-      // Ignore searchParams resolution errors
-    }
   }
 
   if (!sellerId) {

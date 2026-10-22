@@ -28,13 +28,26 @@ vi.mock("../../../lib/prisma", () => ({
   default: prismaMock,
 }));
 
+import { SignJWT } from "jose";
+
+process.env.SESSION_SECRET = "test_session_secret_32_characters_long_minimum";
+
+const cookieStoreMock = {
+  get: vi.fn(),
+};
+
 vi.mock("next/headers", () => ({
-  cookies: vi.fn().mockResolvedValue({
-    get: vi.fn().mockReturnValue({
-      value: "eyJhbGciOiJIUzI1NiJ9.eyJzZWxsZXJJZCI6InNlbGxlci0xMjMifQ.signature",
-    }),
-  }),
+  cookies: vi.fn().mockResolvedValue(cookieStoreMock),
 }));
+
+async function createTestToken(sellerId: string): Promise<string> {
+  const secretKey = new TextEncoder().encode(process.env.SESSION_SECRET!);
+  return await new SignJWT({ sellerId })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("7d")
+    .sign(secretKey);
+}
 
 import DashboardLayout from "../layout";
 
@@ -59,6 +72,9 @@ describe("DashboardLayout Component (PR-009, Issue #128)", () => {
   });
 
   it("renders View Storefront link pointing to /s/{slug} instead of broken /c/{slug}", async () => {
+    const token = await createTestToken("seller-123");
+    cookieStoreMock.get.mockReturnValue({ value: token });
+
     prismaMock.seller.findUnique.mockResolvedValue({
       id: "seller-123",
       business_name: "Habesha Coffee",

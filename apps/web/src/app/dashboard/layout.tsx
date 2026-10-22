@@ -24,7 +24,7 @@ export default async function DashboardLayout({
     const cookieStore = await cookies();
     const token = cookieStore.get("seller_session")?.value;
     if (token) {
-      const sellerId = extractSellerIdFromToken(token);
+      const sellerId = await extractSellerIdFromToken(token);
       if (sellerId && prisma?.seller?.findUnique) {
         try {
           seller = await prisma.seller.findUnique({

@@ -29,6 +29,27 @@ vi.mock("../../../lib/prisma", () => ({
   default: prismaMock,
 }));
 
+import { SignJWT } from "jose";
+
+process.env.SESSION_SECRET = "test_session_secret_32_characters_long_minimum";
+
+const cookieStoreMock = {
+  get: vi.fn(),
+};
+
+vi.mock("next/headers", () => ({
+  cookies: vi.fn().mockResolvedValue(cookieStoreMock),
+}));
+
+async function createTestToken(sellerId: string): Promise<string> {
+  const secretKey = new TextEncoder().encode(process.env.SESSION_SECRET!);
+  return await new SignJWT({ sellerId })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("7d")
+    .sign(secretKey);
+}
+
 const { redirectMock } = vi.hoisted(() => ({
   redirectMock: vi.fn(),
 }));
@@ -73,23 +94,21 @@ function findElements(node: any, predicate: (n: any) => boolean): any[] {
 describe("OrdersDashboardPage (FE-009, Issue #32)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    cookieStoreMock.get.mockReturnValue(undefined);
   });
 
   describe("Utility & Token Extraction Helpers", () => {
-    it("extracts sellerId from valid JWT payload", () => {
-      const payload = { sellerId: "seller_test_123", iat: 1700000000 };
-      const base64Payload = Buffer.from(JSON.stringify(payload)).toString("base64");
-      const token = `eyJhbGciOiJIUzI1NiJ9.${base64Payload}.dummySignature`;
-
-      expect(extractSellerIdFromToken(token)).toBe("seller_test_123");
+    it("extracts sellerId from valid JWT payload", async () => {
+      const token = await createTestToken("seller_test_123");
+      expect(await extractSellerIdFromToken(token)).toBe("seller_test_123");
     });
 
-    it("returns null for malformed or missing sellerId tokens", () => {
-      expect(extractSellerIdFromToken("")).toBeNull();
-      expect(extractSellerIdFromToken("invalid-token")).toBeNull();
+    it("returns null for malformed or missing sellerId tokens", async () => {
+      expect(await extractSellerIdFromToken("")).toBeNull();
+      expect(await extractSellerIdFromToken("invalid-token")).toBeNull();
 
       const emptyPayload = Buffer.from(JSON.stringify({})).toString("base64");
-      expect(extractSellerIdFromToken(`header.${emptyPayload}.sig`)).toBeNull();
+      expect(await extractSellerIdFromToken(`header.${emptyPayload}.sig`)).toBeNull();
     });
 
     it("formats relative order timestamps accurately", () => {
@@ -146,10 +165,10 @@ describe("OrdersDashboardPage (FE-009, Issue #32)", () => {
       ];
 
       prismaMock.order.findMany.mockResolvedValue(mockOrders);
+      const token = await createTestToken("seller_test");
+      cookieStoreMock.get.mockReturnValue({ value: token });
 
-      const element = await OrdersDashboardPage({
-        searchParams: Promise.resolve({ sellerId: "seller_test" }),
-      });
+      const element = await OrdersDashboardPage({});
       expect(element).toBeDefined();
 
       // Verified query was called with newest first ordering scoped to seller
@@ -190,11 +209,13 @@ describe("OrdersDashboardPage (FE-009, Issue #32)", () => {
       expect(text).toContain("3 orders live");
     });
 
-    it("scopes query by authenticated sellerId when provided via searchParams", async () => {
+    it("scopes query by authenticated sellerId from cookie and ignores searchParams.sellerId", async () => {
+      const token = await createTestToken("seller_42");
+      cookieStoreMock.get.mockReturnValue({ value: token });
       prismaMock.order.findMany.mockResolvedValue([]);
 
       await OrdersDashboardPage({
-        searchParams: Promise.resolve({ sellerId: "seller_42" }),
+        searchParams: Promise.resolve({ sellerId: "seller_attacker_spoofed" }),
       });
 
       expect(prismaMock.order.findMany).toHaveBeenCalledWith({
@@ -214,11 +235,11 @@ describe("OrdersDashboardPage (FE-009, Issue #32)", () => {
 
   describe("Empty State (Acceptance Criteria 2)", () => {
     it("displays empty state with helpful prompt when seller has 0 orders", async () => {
+      const token = await createTestToken("seller_empty");
+      cookieStoreMock.get.mockReturnValue({ value: token });
       prismaMock.order.findMany.mockResolvedValue([]);
 
-      const element = await OrdersDashboardPage({
-        searchParams: Promise.resolve({ sellerId: "seller_empty" }),
-      });
+      const element = await OrdersDashboardPage({});
       expect(element).toBeDefined();
 
       const text = extractText(element);
@@ -255,10 +276,10 @@ describe("OrdersDashboardPage (FE-009, Issue #32)", () => {
       ];
 
       prismaMock.order.findMany.mockResolvedValue(mockOrders);
+      const token = await createTestToken("seller_test");
+      cookieStoreMock.get.mockReturnValue({ value: token });
 
-      const element = await OrdersDashboardPage({
-        searchParams: Promise.resolve({ sellerId: "seller_test" }),
-      });
+      const element = await OrdersDashboardPage({});
       const links = findElements(element, (n) => n.props?.href === "/dashboard/orders/ord_target_999");
 
       // Links to order detail page should exist in the row

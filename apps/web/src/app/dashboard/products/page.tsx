@@ -22,21 +22,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     const cookieStore = await cookies();
     token = cookieStore.get("seller_session")?.value;
     if (token) {
-      sellerId = extractSellerIdFromToken(token);
+      sellerId = await extractSellerIdFromToken(token);
     }
   } catch {
     // Outside request context (e.g. testing or static build)
-  }
-
-  if (!sellerId && searchParams) {
-    try {
-      const resolved = await searchParams;
-      if (typeof resolved?.sellerId === "string") {
-        sellerId = resolved.sellerId;
-      }
-    } catch {
-      // Ignore resolution errors
-    }
   }
 
   if (!sellerId) {
