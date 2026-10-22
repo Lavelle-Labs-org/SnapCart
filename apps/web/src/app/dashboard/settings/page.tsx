@@ -16,11 +16,12 @@ export interface SettingsPageProps {
  */
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
   let sellerId: string | null = null;
+  let token: string | undefined;
 
   try {
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();
-    const token = cookieStore.get("seller_session")?.value;
+    token = cookieStore.get("seller_session")?.value;
     if (token) {
       sellerId = extractSellerIdFromToken(token);
     }
@@ -39,6 +40,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     }
   }
 
+  if (!sellerId) {
+    redirect("/login");
+  }
+
   let dbSeller: any = null;
   if (sellerId && prisma?.seller?.findUnique) {
     try {
@@ -46,21 +51,38 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         where: { id: sellerId },
       });
     } catch (err) {
-      console.warn("[SettingsPage] Could not query database for seller:", err);
+      console.warn("[SettingsPage] Could not query database for seller via Prisma:", err);
     }
   }
 
-  if (!dbSeller) {
-    redirect("/login");
+  // Fallback: If Prisma direct connection is unavailable in serverless, fetch from NestJS API
+  if (!dbSeller && token) {
+    try {
+      const apiUrl = process.env.INTERNAL_API_URL || "http://localhost:4000";
+      const res = await fetch(`${apiUrl}/api/auth/me`, {
+        headers: {
+          Cookie: `seller_session=${token}`,
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const body = await res.json();
+        dbSeller = body?.data?.seller || body?.seller;
+      }
+    } catch (err) {
+      console.warn("[SettingsPage] Could not fetch seller profile from API:", err);
+    }
   }
 
   const initialSeller: SellerSettingsData = {
-    id: dbSeller?.id || "demo-seller-id",
-    businessName: dbSeller?.business_name || "Habesha Cafe & Bakery",
-    smsName: dbSeller?.sms_name || "Habesha Cafe",
-    slug: dbSeller?.slug || "habesha-cafe",
-    phone: dbSeller?.phone || "+251911223344",
+    id: dbSeller?.id || sellerId,
+    businessName: dbSeller?.business_name || "My Cafe",
+    smsName: dbSeller?.sms_name || dbSeller?.business_name || "My Cafe",
+    slug: dbSeller?.slug || "my-cafe",
+    phone: dbSeller?.phone || "+251900000000",
   };
 
   return <SettingsClient initialSeller={initialSeller} />;
 }
+

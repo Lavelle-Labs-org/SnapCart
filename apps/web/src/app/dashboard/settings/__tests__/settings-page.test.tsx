@@ -87,4 +87,16 @@ describe("SettingsPage Server Component (FE-013, Issue #36)", () => {
 
     expect(redirectMock).toHaveBeenCalledWith("/login");
   });
+
+  it("gracefully falls back when Prisma query fails for authenticated seller", async () => {
+    prismaMock.seller.findUnique.mockRejectedValue(new Error("Database connection refused"));
+
+    const element = await SettingsPage({
+      searchParams: Promise.resolve({ sellerId: "seller-resilient-1" }),
+    });
+
+    expect(element).toBeDefined();
+    expect(element.type).toBe(SettingsClient);
+    expect(element.props.initialSeller.id).toBe("seller-resilient-1");
+  });
 });

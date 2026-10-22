@@ -26,10 +26,36 @@ export default async function DashboardLayout({
     if (token) {
       const sellerId = extractSellerIdFromToken(token);
       if (sellerId && prisma?.seller?.findUnique) {
-        seller = await prisma.seller.findUnique({
-          where: { id: sellerId },
-          select: { business_name: true, slug: true },
-        });
+        try {
+          seller = await prisma.seller.findUnique({
+            where: { id: sellerId },
+            select: { business_name: true, slug: true },
+          });
+        } catch {
+          // Prisma query failed
+        }
+      }
+
+      if (!seller) {
+        try {
+          const apiUrl = process.env.INTERNAL_API_URL || "http://localhost:4000";
+          const res = await fetch(`${apiUrl}/api/auth/me`, {
+            headers: {
+              Cookie: `seller_session=${token}`,
+              Authorization: `Bearer ${token}`,
+            },
+            cache: "no-store",
+          });
+          if (res.ok) {
+            const body = await res.json();
+            const s = body?.data?.seller || body?.seller;
+            if (s) {
+              seller = { business_name: s.business_name, slug: s.slug };
+            }
+          }
+        } catch {
+          // API query failed
+        }
       }
     }
   } catch {
