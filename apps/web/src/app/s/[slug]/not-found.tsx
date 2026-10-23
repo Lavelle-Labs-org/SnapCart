@@ -11,7 +11,7 @@ export default function StorefrontNotFound() {
         <div>
           <h1 className="text-xl font-bold text-slate-900">Shop Not Found</h1>
           <p className="text-sm text-slate-500 mt-2">
-            We couldn't find a storefront at this address. The seller may have changed their shop link, or the address was typed incorrectly.
+            We couldn&apos;t find a storefront at this address. The seller may have changed their shop link, or the address was typed incorrectly.
           </p>
         </div>
         <div className="pt-2">

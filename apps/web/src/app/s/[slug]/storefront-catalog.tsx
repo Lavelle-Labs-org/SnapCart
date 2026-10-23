@@ -107,7 +107,7 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
             </div>
             <h2 className="text-base font-semibold text-slate-900">No products available right now</h2>
             <p className="text-xs text-slate-500 max-w-xs mx-auto">
-              This shop doesn't have any items available for ordering at the moment. Please check back later!
+              This shop doesn&apos;t have any items available for ordering at the moment. Please check back later!
             </p>
           </div>
         ) : (

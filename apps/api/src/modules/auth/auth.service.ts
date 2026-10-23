@@ -241,7 +241,7 @@ export class AuthService {
       );
     }
 
-    let baseSlug = slugify(business_name);
+    const baseSlug = slugify(business_name);
     let finalSlug = baseSlug;
     let counter = 1;
     while (await this.prisma.seller.findUnique({ where: { slug: finalSlug } })) {
