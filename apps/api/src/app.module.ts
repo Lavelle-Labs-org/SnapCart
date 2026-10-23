@@ -10,6 +10,9 @@ import { OrdersModule } from "./modules/orders/orders.module";
 import { MessagesModule } from "./modules/messages/messages.module";
 import { PrismaModule } from "./prisma/prisma.module";
 
+import { APP_PIPE } from "@nestjs/core";
+import { ZodValidationPipe } from "./common/pipes/zod-validation.pipe";
+
 @Module({
   imports: [
     PrismaModule,
@@ -24,6 +27,11 @@ import { PrismaModule } from "./prisma/prisma.module";
     HealthModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_PIPE,
+      useValue: new ZodValidationPipe({ whitelist: true }),
+    },
+  ],
 })
 export class AppModule {}

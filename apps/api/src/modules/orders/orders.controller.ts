@@ -16,6 +16,7 @@ import { PrismaService } from "../../prisma/prisma.service";
 import { SellerAuthGuard } from "../auth/auth.guard";
 import { CurrentSeller } from "../auth/current-seller.decorator";
 import { OrderDto, OrderState } from "@order-by-sms/contracts";
+import { CompleteOrderDto } from "./orders.types";
 
 @Controller("orders")
 @UseGuards(SellerAuthGuard)
@@ -211,10 +212,10 @@ export class OrdersController {
   async completeOrder(
     @CurrentSeller() seller: any,
     @Param("id") id: string,
-    @Body() body: any
+    @Body() body: CompleteOrderDto
   ) {
     await this.verifySellerOwnership(id, seller.id);
-    const code = body?.code ?? body?.pickupCode ?? body?.pickup_code;
+    const code = body?.code ?? body?.pickupCode ?? body?.pickup_code ?? "";
     return this.ordersService.completeWithPickupCode(
       id,
       code,

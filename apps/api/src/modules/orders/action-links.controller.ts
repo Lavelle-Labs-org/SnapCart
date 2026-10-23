@@ -17,6 +17,7 @@ import {
   hashActionToken as defaultHashActionToken,
 } from "../crypto/crypto.service";
 import { OrderDto, OrderState } from "@order-by-sms/contracts";
+import { CompleteOrderDto } from "./orders.types";
 
 @Controller("a")
 export class ActionLinksController {
@@ -230,10 +231,10 @@ export class ActionLinksController {
   @HttpCode(HttpStatus.OK)
   async completeOrder(
     @Param("token") token: string,
-    @Body() body: any
+    @Body() body: CompleteOrderDto
   ) {
     const tokenRecord = await this.resolveTokenRecord(token);
-    const code = body?.code ?? body?.pickupCode ?? body?.pickup_code;
+    const code = body?.code ?? body?.pickupCode ?? body?.pickup_code ?? "";
 
     const result = await this.ordersService.completeWithPickupCode(
       tokenRecord.order_id,

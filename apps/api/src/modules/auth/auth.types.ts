@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { createZodDto } from "../../common/pipes/zod-validation.pipe";
 import type { Seller } from "@prisma/client";
 
 export const SESSION_COOKIE_NAME = "seller_session";
@@ -40,21 +41,21 @@ export const signupSchema = z.object({
   password: z.string().min(10, "Password must be at least 10 characters long"),
 });
 
-export type SignupDto = z.infer<typeof signupSchema>;
+export class SignupDto extends createZodDto(signupSchema) {}
 
 export const verifyPhoneSchema = z.object({
   phone: z.string().min(1, "Phone number is required"),
   code: z.string().length(6, "Verification code must be exactly 6 digits"),
 });
 
-export type VerifyPhoneDto = z.infer<typeof verifyPhoneSchema>;
+export class VerifyPhoneDto extends createZodDto(verifyPhoneSchema) {}
 
 export const loginSchema = z.object({
   phone: z.string().min(1, "Phone number is required"),
   password: z.string().min(1, "Password is required"),
 });
 
-export type LoginDto = z.infer<typeof loginSchema>;
+export class LoginDto extends createZodDto(loginSchema) {}
 
 export const updateSettingsSchema = z.object({
   business_name: z
@@ -83,7 +84,7 @@ export const updateSettingsSchema = z.object({
     .optional(),
 });
 
-export type UpdateSettingsDto = z.infer<typeof updateSettingsSchema>;
+export class UpdateSettingsDto extends createZodDto(updateSettingsSchema) {}
 
 export function serializeCookie(options: SessionCookieOptions): string {
   const parts = [

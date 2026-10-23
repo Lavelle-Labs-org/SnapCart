@@ -5,6 +5,7 @@ import { AppModule } from "./app.module";
 import { validateEnv, env } from "./config/env";
 import { TransformInterceptor } from "./common/interceptors/transform.interceptor";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
+import { ZodValidationPipe } from "./common/pipes/zod-validation.pipe";
 
 export async function bootstrap() {
   const logger = new Logger("Bootstrap");
@@ -30,6 +31,9 @@ export async function bootstrap() {
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-SMSHub-Signature", "X-SMSHub-Event", "X-SMSHub-Delivery"],
   });
+
+  // Global validation pipe with whitelist stripping (PR-017, #136)
+  app.useGlobalPipes(new ZodValidationPipe({ whitelist: true }));
 
   // Global response transformer and exception handler
   app.useGlobalInterceptors(new TransformInterceptor());
