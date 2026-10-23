@@ -91,10 +91,12 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
   const { id } = await params;
 
   let sellerId: string | null = null;
+  let token: string | undefined;
+
   try {
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();
-    const token = cookieStore.get("seller_session")?.value;
+    token = cookieStore.get("seller_session")?.value;
     if (token) {
       sellerId = await extractSellerIdFromToken(token);
     }
@@ -108,6 +110,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
   }
 
   let dbOrder: any = null;
+  let prismaSucceeded = false;
 
   try {
     if (prisma?.order?.findUnique) {
@@ -125,9 +128,65 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           pickup_code: true,
         },
       });
+      prismaSucceeded = true;
     }
   } catch (err) {
-    console.warn(`[OrderDetailPage] Could not query database for order ${id}:`, err);
+    console.warn(`[OrderDetailPage] Could not query database for order ${id} via Prisma:`, err);
+  }
+
+  // Fallback to internal NestJS API if Prisma direct connection failed or DATABASE_URL is omitted (PR-010)
+  if (!prismaSucceeded && token) {
+    try {
+      const apiUrl = process.env.INTERNAL_API_URL || "http://localhost:4000";
+      const res = await fetch(`${apiUrl}/api/orders/${encodeURIComponent(id)}`, {
+        headers: {
+          Cookie: `seller_session=${token}`,
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const body = await res.json();
+        const o = body?.data ?? body;
+        if (o) {
+          dbOrder = {
+            id: o.id,
+            seller_id: o.sellerId ?? o.seller_id,
+            number: o.number,
+            buyer_name: o.buyerName ?? o.buyer_name,
+            buyer_phone: o.buyerPhone ?? o.buyer_phone,
+            sms_consent: o.smsConsent ?? o.sms_consent,
+            consent_wording: o.consentWording ?? o.consent_wording,
+            consent_at: o.consentAt ?? o.consent_at,
+            state: o.state,
+            total_santim: o.totalSantim ?? o.total_santim,
+            created_at: o.createdAt ?? o.created_at,
+            order_items: (o.items ?? o.order_items ?? []).map((it: any) => ({
+              id: it.id,
+              name_at_order: it.name_at_order ?? it.nameAtOrder ?? "",
+              unit_price_santim: it.unit_price_santim ?? it.unitPriceSantim ?? 0,
+              quantity: it.quantity ?? 1,
+            })),
+            order_events: (o.events ?? o.order_events ?? []).map((ev: any) => ({
+              id: ev.id,
+              from_state: ev.from_state ?? ev.fromState,
+              to_state: ev.to_state ?? ev.toState,
+              actor: ev.actor,
+              created_at: ev.created_at ?? ev.createdAt,
+            })),
+            messages: (o.messages ?? []).map((m: any) => ({
+              id: m.id,
+              event: m.event,
+              recipient_phone: m.recipient_phone ?? m.recipientPhone,
+              status: m.status,
+              created_at: m.created_at ?? m.createdAt,
+            })),
+          };
+        }
+      }
+    } catch (err) {
+      console.warn(`[OrderDetailPage] Could not query order via API:`, err);
+    }
   }
 
   if (!dbOrder || dbOrder.seller_id !== sellerId) {
@@ -250,8 +309,9 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
 
             <div className="divide-y divide-slate-100">
               {order.order_items?.map((item: any) => {
-                const unitFormatted = formatBirr(item.unit_price_santim);
-                const lineFormatted = formatBirr(item.unit_price_santim * item.quantity);
+                const unitPrice = item.unit_price_santim ?? item.unitPriceSantim ?? 0;
+                const unitFormatted = formatBirr(unitPrice);
+                const lineFormatted = formatBirr(unitPrice * (item.quantity ?? 1));
                 return (
                   <div
                     key={item.id}

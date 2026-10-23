@@ -59,6 +59,8 @@ export interface OrderDto {
   totalSantim: number;
   createdAt: string;
   items?: OrderItemDto[];
+  events?: OrderEventDto[];
+  messages?: MessageDto[];
 }
 
 export interface OrderEventDto {

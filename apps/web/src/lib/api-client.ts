@@ -200,12 +200,12 @@ export class OrderBySmsApiClient {
   }
 
   // --- Seller Orders ---
-  public async getOrders(): Promise<OrderDto[]> {
-    return this.request<OrderDto[]>("/api/orders");
+  public async getOrders(init?: RequestInit): Promise<OrderDto[]> {
+    return this.request<OrderDto[]>("/api/orders", init);
   }
 
-  public async getOrder(id: string): Promise<OrderDto> {
-    return this.request<OrderDto>(`/api/orders/${encodeURIComponent(id)}`);
+  public async getOrder(id: string, init?: RequestInit): Promise<OrderDto> {
+    return this.request<OrderDto>(`/api/orders/${encodeURIComponent(id)}`, init);
   }
 
   public async acceptOrder(id: string): Promise<OrderDto> {
@@ -240,8 +240,8 @@ export class OrderBySmsApiClient {
   }
 
   // --- Seller Products ---
-  public async getProducts(): Promise<ProductDto[]> {
-    return this.request<ProductDto[]>("/api/products");
+  public async getProducts(init?: RequestInit): Promise<ProductDto[]> {
+    return this.request<ProductDto[]>("/api/products", init);
   }
 
   public async createProduct(input: CreateProductInput): Promise<ProductDto> {
@@ -265,8 +265,8 @@ export class OrderBySmsApiClient {
   }
 
   // --- SMS Audit Messages ---
-  public async getMessages(): Promise<MessageDto[]> {
-    return this.request<MessageDto[]>("/api/messages");
+  public async getMessages(init?: RequestInit): Promise<MessageDto[]> {
+    return this.request<MessageDto[]>("/api/messages", init);
   }
 
   public async resendMessage(id: string): Promise<{ resent: boolean }> {
@@ -276,8 +276,8 @@ export class OrderBySmsApiClient {
   }
 
   // --- Seller Settings ---
-  public async getSettings(): Promise<SellerDto> {
-    return this.request<SellerDto>("/api/settings");
+  public async getSettings(init?: RequestInit): Promise<SellerDto> {
+    return this.request<SellerDto>("/api/settings", init);
   }
 
   public async updateSettings(

@@ -15,11 +15,12 @@ export interface MessagesPageProps {
  */
 export default async function MessagesLogPage({ searchParams }: MessagesPageProps) {
   let sellerId: string | null = null;
+  let token: string | undefined;
 
   try {
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();
-    const token = cookieStore.get("seller_session")?.value;
+    token = cookieStore.get("seller_session")?.value;
     if (token) {
       sellerId = await extractSellerIdFromToken(token);
     }
@@ -41,6 +42,8 @@ export default async function MessagesLogPage({ searchParams }: MessagesPageProp
   }
 
   let dbMessages: any[] = [];
+  let prismaSucceeded = false;
+
   try {
     if (prisma?.message?.findMany) {
       dbMessages = await prisma.message.findMany({
@@ -52,9 +55,50 @@ export default async function MessagesLogPage({ searchParams }: MessagesPageProp
         },
         orderBy: { created_at: "desc" },
       });
+      prismaSucceeded = true;
     }
   } catch (err) {
-    console.warn("[MessagesLogPage] Could not query database for messages:", err);
+    console.warn("[MessagesLogPage] Could not query database for messages via Prisma:", err);
+  }
+
+  // Fallback to internal NestJS API if Prisma direct connection failed or DATABASE_URL is omitted (PR-010)
+  if (!prismaSucceeded && token) {
+    try {
+      const apiUrl = process.env.INTERNAL_API_URL || "http://localhost:4000";
+      const res = await fetch(`${apiUrl}/api/messages`, {
+        headers: {
+          Cookie: `seller_session=${token}`,
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const body = await res.json();
+        const items = body?.data ?? body;
+        if (Array.isArray(items)) {
+          dbMessages = items.map((m: any) => ({
+            id: m.id,
+            seller_id: m.sellerId ?? m.seller_id,
+            order_id: m.orderId ?? m.order_id,
+            recipient_phone: m.recipientPhone ?? m.recipient_phone,
+            event: m.event,
+            text: m.text,
+            status: m.status,
+            skip_reason: m.skipReason ?? m.skip_reason,
+            smshub_message_id: m.smshubMessageId ?? m.smshub_message_id,
+            request_id: m.requestId ?? m.request_id,
+            network: m.network,
+            credits_used: m.creditsUsed ?? m.credits_used,
+            error_type: m.errorType ?? m.error_type,
+            attempts: m.attempts ?? 0,
+            created_at: m.createdAt ?? m.created_at,
+            updated_at: m.updatedAt ?? m.updated_at,
+          }));
+        }
+      }
+    } catch (err) {
+      console.warn("[MessagesLogPage] Could not query messages via API:", err);
+    }
   }
 
   const isSendingPaused =
