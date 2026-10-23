@@ -29,6 +29,16 @@
     "check:secrets": "tsx scripts/check-secrets.ts",
     "ci:check": "npx tsc --noEmit && npm test && npm run build"
   },
+  "overrides": {
+    "tinypool": "2.2.0",
+    "multer": "^2.5.0",
+    "postcss": "^8.5.31",
+    "qs": "6.16.1",
+    "body-parser": "1.20.9",
+    "file-type": "21.3.4",
+    "postcss-selector-parser": "7.1.7",
+    "vite": "6.4.5"
+  },
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "bcryptjs": "^3.0.3",
@@ -48,12 +58,13 @@
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.2",
     "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.49",
+    "multer": "^2.5.0",
+    "postcss": "^8.5.31",
     "prisma": "^5.22.0",
     "tailwindcss": "^3.4.16",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "vitest": "^3.2.7"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

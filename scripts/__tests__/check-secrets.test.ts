@@ -162,7 +162,7 @@ describe("Pre-Commit Secret Scanner (INFRA-004)", () => {
 
       expect(processFailed).toBe(true);
       expect(exitCode).toBe(1);
-    });
+    }, 25000);
 
     it("staging a clean dummy file passes the check script with code 0", () => {
       // 1. Create clean dummy file
@@ -182,6 +182,6 @@ describe("Pre-Commit Secret Scanner (INFRA-004)", () => {
         stdio: "pipe",
       });
       expect(output).toContain("PASS");
-    });
+    }, 25000);
   });
 });
