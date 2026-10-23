@@ -15,7 +15,7 @@
     "build:web": "npm --workspace=@order-by-sms/web run build",
     "build:api": "npm run build:contracts && npm --workspace=@order-by-sms/api run build",
     "start": "npm --workspace=@order-by-sms/web run start",
-    "lint": "npm --workspace=@order-by-sms/web run lint",
+    "lint": "npm --workspace=@order-by-sms/web run lint && npm --workspace=@order-by-sms/api run lint",
     "test": "vitest run",
     "test:watch": "vitest",
     "prisma:generate": "node --env-file-if-exists=.env.development --env-file-if-exists=.env ./node_modules/prisma/build/index.js generate",

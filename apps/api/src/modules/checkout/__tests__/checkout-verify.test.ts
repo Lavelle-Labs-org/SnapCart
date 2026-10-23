@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { HttpException, HttpStatus } from "@nestjs/common";
+import { HttpStatus } from "@nestjs/common";
 import { CheckoutService } from "../checkout.service";
 
 describe("CheckoutService - verifyCheckout (BE-009)", () => {

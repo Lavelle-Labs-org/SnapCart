@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { validateEnv, envSchema } from "../env";
+import { validateEnv } from "../env";
 
 describe("NestJS Backend Environment Configuration (apps/api)", () => {
   const originalEnv = process.env;
