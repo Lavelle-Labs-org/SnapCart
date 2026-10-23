@@ -1,9 +1,10 @@
 import React from "react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   validateShopSettings,
   renderTemplatePreview,
   saveSettingsApi,
+  getStorefrontUrl,
   TEMPLATE_OPTIONS,
 } from "../settings-client";
 import SettingsClient from "../settings-client";
@@ -192,6 +193,51 @@ describe("SettingsClient Logic & Component (FE-013, Issue #36)", () => {
       expect(element).toBeDefined();
       expect(element.type).toBe(SettingsClient);
       expect(element.props.initialSeller).toEqual(mockSeller);
+    });
+
+    it("accepts and passes baseUrl prop", () => {
+      const element = React.createElement(SettingsClient, {
+        initialSeller: mockSeller,
+        baseUrl: "https://custom-shop.et",
+      });
+      expect(element.props.baseUrl).toBe("https://custom-shop.et");
+    });
+  });
+
+  describe("Storefront URL Generation from Environment", () => {
+    const originalEnv = process.env.NEXT_PUBLIC_APP_URL;
+
+    afterEach(() => {
+      if (originalEnv !== undefined) {
+        process.env.NEXT_PUBLIC_APP_URL = originalEnv;
+      } else {
+        delete process.env.NEXT_PUBLIC_APP_URL;
+      }
+    });
+
+    it("generates storefront URL from NEXT_PUBLIC_APP_URL environment variable", () => {
+      process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
+      expect(getStorefrontUrl("habesha-cafe")).toBe("http://localhost:3000/s/habesha-cafe");
+
+      process.env.NEXT_PUBLIC_APP_URL = "https://ord.et";
+      expect(getStorefrontUrl("habesha-cafe")).toBe("https://ord.et/s/habesha-cafe");
+    });
+
+    it("strips trailing slash from base URL", () => {
+      process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000/";
+      expect(getStorefrontUrl("habesha-cafe")).toBe("http://localhost:3000/s/habesha-cafe");
+
+      expect(getStorefrontUrl("habesha-cafe", "https://ord.et/")).toBe("https://ord.et/s/habesha-cafe");
+    });
+
+    it("prioritizes explicit baseUrl parameter over environment variable", () => {
+      process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
+      expect(getStorefrontUrl("habesha-cafe", "https://staging.ord.et")).toBe("https://staging.ord.et/s/habesha-cafe");
+    });
+
+    it("falls back to http://localhost:3000 when env variable is not set", () => {
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      expect(getStorefrontUrl("habesha-cafe")).toBe("http://localhost:3000/s/habesha-cafe");
     });
   });
 });

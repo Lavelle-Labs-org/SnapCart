@@ -72,6 +72,8 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     phone: dbSeller?.phone || "+251900000000",
   };
 
-  return <SettingsClient initialSeller={initialSeller} />;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+  return <SettingsClient initialSeller={initialSeller} baseUrl={baseUrl} />;
 }
 

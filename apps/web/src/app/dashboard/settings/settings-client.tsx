@@ -32,6 +32,16 @@ export interface SellerSettingsData {
 export interface SettingsClientProps {
   initialSeller: SellerSettingsData;
   fetchFn?: typeof fetch;
+  baseUrl?: string;
+}
+
+/**
+ * Returns the fully-qualified storefront URL using configured environment base URL
+ * (fallback to NEXT_PUBLIC_APP_URL or http://localhost:3000).
+ */
+export function getStorefrontUrl(slug: string, baseUrl?: string): string {
+  const appBaseUrl = (baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
+  return `${appBaseUrl}/s/${slug}`;
 }
 
 export type TemplateKey =
@@ -156,6 +166,7 @@ export async function saveSettingsApi(
 export default function SettingsClient({
   initialSeller,
   fetchFn = typeof fetch !== "undefined" ? fetch : (async () => ({} as any)),
+  baseUrl,
 }: SettingsClientProps) {
   const [businessName, setBusinessName] = useState(initialSeller.businessName || "");
   const [smsName, setSmsName] = useState(initialSeller.smsName || "");
@@ -166,7 +177,7 @@ export default function SettingsClient({
   const [saveMessage, setSaveMessage] = useState("");
 
   const slug = initialSeller.slug || "shop";
-  const storefrontUrl = `https://ord.et/s/${slug}`;
+  const storefrontUrl = getStorefrontUrl(slug, baseUrl);
 
   // Real-time validations
   const isBusinessNameValid =
