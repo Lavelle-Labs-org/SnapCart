@@ -1,4 +1,52 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { z } from "zod";
+
+/**
+ * Automatically loads .env files using Node.js built-in process.loadEnvFile().
+ * Precedence hierarchy (highest to lowest, does not overwrite variables already set in process.env):
+ * 1. .env.[NODE_ENV].local (e.g. .env.development.local)
+ * 2. .env.local
+ * 3. .env.[NODE_ENV] (e.g. .env.development)
+ * 4. .env
+ */
+export function loadEnvironmentFiles(): void {
+  if (typeof process.loadEnvFile !== "function") {
+    return;
+  }
+
+  const nodeEnv = process.env.NODE_ENV || "development";
+  const envCandidates = [
+    `.env.${nodeEnv}.local`,
+    ".env.local",
+    `.env.${nodeEnv}`,
+    ".env",
+  ];
+
+  const searchDirs = [
+    process.cwd(),
+    path.resolve(process.cwd(), "../.."),
+    path.resolve(__dirname, "../../.."),
+  ];
+
+  const uniqueDirs = Array.from(new Set(searchDirs));
+
+  for (const dir of uniqueDirs) {
+    for (const file of envCandidates) {
+      const fullPath = path.resolve(dir, file);
+      if (fs.existsSync(fullPath)) {
+        try {
+          process.loadEnvFile(fullPath);
+        } catch {
+          // Ignore parse or permission errors
+        }
+      }
+    }
+  }
+}
+
+// Ensure environment files are loaded upon module initialization
+loadEnvironmentFiles();
 
 /**
  * NestJS Backend Environment Validation Schema (MIG-002)
@@ -17,6 +65,7 @@ export const envSchema = z
       .string()
       .min(1, "SMSHUB_API_KEY is required and cannot be empty"),
     SMSHUB_WEBHOOK_SECRET: z.string().optional(),
+    SMSHUB_BASE_URL: z.string().url("SMSHUB_BASE_URL must be a valid URL").optional(),
 
     // SMSHub Execution Mode: "test" (calls /api/test, 0 credits) or "live" (calls /api/sms)
     SMSHUB_MODE: z
@@ -96,6 +145,9 @@ export type Env = z.infer<typeof envSchema>;
  * Throws a formatted, informative Error if validation fails.
  */
 export function validateEnv(customEnv: Record<string, unknown> = process.env): Env {
+  if (customEnv === process.env) {
+    loadEnvironmentFiles();
+  }
   const result = envSchema.safeParse(customEnv);
 
   if (!result.success) {

@@ -64,11 +64,11 @@ export const SECRET_PATTERNS: SecretPattern[] = [
 
 export const FORBIDDEN_FILE_PATTERNS: { pattern: RegExp; reason: string }[] = [
   {
-    pattern: /^\.env(?!\.example$)/i,
-    reason: "Live or local .env file must never be committed. Use .env.example with mock values.",
+    pattern: /^\.env(?!\.(?:example|[a-zA-Z0-9_\-]+\.example)$)/i,
+    reason: "Live or local .env file must never be committed. Use .env.example or .env.*.example with mock values.",
   },
   {
-    pattern: /(^|\/)\.env\.(local|production|staging|test\.local)($|\.)/i,
+    pattern: /(^|\/)\.env\.(local|production|staging|test\.local)($|\.(?!example$))/i,
     reason: "Environment credential file must not be committed to git.",
   },
   {
