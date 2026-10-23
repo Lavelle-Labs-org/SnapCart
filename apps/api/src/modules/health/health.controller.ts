@@ -10,7 +10,7 @@ export class HealthController {
   ) {}
 
   @Get()
-  getHealth(): HealthStatus {
-    return this.healthService.getHealth();
+  async getHealth(): Promise<HealthStatus> {
+    return await this.healthService.getHealth();
   }
 }

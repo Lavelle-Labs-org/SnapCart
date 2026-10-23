@@ -1,14 +1,16 @@
 import "reflect-metadata";
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { Test, TestingModule } from "@nestjs/testing";
 import { INestApplication } from "@nestjs/common";
 import request from "supertest";
 import { AppModule } from "../src/app.module";
+import { PrismaService } from "../src/prisma/prisma.service";
 import { TransformInterceptor } from "../src/common/interceptors/transform.interceptor";
 import { HttpExceptionFilter } from "../src/common/filters/http-exception.filter";
 
 describe("NestJS Health API E2E (GET /api/health)", () => {
   let app: INestApplication;
+  let prismaMock: { $connect: any; $disconnect: any; $queryRaw: any };
 
   beforeAll(async () => {
     // Ensure test environment variables are set
@@ -17,9 +19,18 @@ describe("NestJS Health API E2E (GET /api/health)", () => {
     process.env.PICKUP_CODE_SECRET = process.env.PICKUP_CODE_SECRET || "mock_pickup_code_secret_32_characters_long";
     process.env.DATABASE_URL = process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/order_by_sms";
 
+    prismaMock = {
+      $connect: vi.fn(),
+      $disconnect: vi.fn(),
+      $queryRaw: vi.fn().mockResolvedValue([{ 1: 1 }]),
+    };
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(PrismaService)
+      .useValue(prismaMock)
+      .compile();
 
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix("api");
@@ -34,7 +45,9 @@ describe("NestJS Health API E2E (GET /api/health)", () => {
     }
   });
 
-  it("GET /api/health returns 200 with standard JSON envelope and health status", async () => {
+  it("GET /api/health returns 200 with standard JSON envelope and health status when DB is connected", async () => {
+    prismaMock.$queryRaw.mockResolvedValueOnce([{ 1: 1 }]);
+
     const res = await request(app.getHttpServer())
       .get("/api/health")
       .expect(200);
@@ -43,8 +56,25 @@ describe("NestJS Health API E2E (GET /api/health)", () => {
     expect(res.body.data).toBeDefined();
     expect(res.body.data.status).toBe("ok");
     expect(res.body.data.app).toBe("order-by-sms-api");
+    expect(res.body.data.database).toBe("connected");
     expect(typeof res.body.data.timestamp).toBe("string");
     expect(typeof res.body.data.uptime).toBe("number");
+  });
+
+  it("GET /api/health returns 503 if PostgreSQL is disconnected (Acceptance Criterion)", async () => {
+    prismaMock.$queryRaw.mockRejectedValueOnce(new Error("Connection refused: 5432"));
+
+    const res = await request(app.getHttpServer())
+      .get("/api/health")
+      .expect(503);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toBeDefined();
+    expect(res.body.error.code).toBe("SERVICE_UNAVAILABLE");
+    expect(res.body.error.message).toBe("Database ping failed");
+    expect(res.body.error.status).toBe("down");
+    expect(res.body.error.database).toBe("disconnected");
+    expect(res.body.error.error).toBe("Connection refused: 5432");
   });
 
   it("GET /api/unknown-endpoint returns 404 with standard error JSON envelope", async () => {
