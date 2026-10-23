@@ -325,8 +325,8 @@ describe("AuthService (apps/api - MIG-006)", () => {
           sms_name: "Updated Cafe",
         },
       });
-      expect(result.seller.business_name).toBe("Updated Habesha Cafe");
-      expect(result.seller.sms_name).toBe("Updated Cafe");
+      expect(result.seller.businessName).toBe("Updated Habesha Cafe");
+      expect(result.seller.smsName).toBe("Updated Cafe");
     });
 
     it("successfully updates settings using camelCase businessName and smsName", async () => {
@@ -353,9 +353,7 @@ describe("AuthService (apps/api - MIG-006)", () => {
           sms_name: "Camel",
         },
       });
-      expect(result.seller.business_name).toBe("Camel Cafe");
       expect(result.seller.businessName).toBe("Camel Cafe");
-      expect(result.seller.sms_name).toBe("Camel");
       expect(result.seller.smsName).toBe("Camel");
     });
 
