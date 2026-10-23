@@ -95,8 +95,14 @@ describe("Pre-Commit Secret Scanner (INFRA-004)", () => {
       expect(violations.every((v) => v.rule === "Forbidden Secret File")).toBe(true);
     });
 
-    it("allows .env.example with placeholder templates", () => {
-      const files = [".env.example", "apps/api/.env.example"];
+    it("allows .env.example and .env.*.example with placeholder templates", () => {
+      const files = [
+        ".env.example",
+        ".env.development.example",
+        ".env.production.example",
+        "apps/api/.env.example",
+        "apps/web/.env.production.example",
+      ];
       const violations = checkForbiddenFiles(files);
       expect(violations).toHaveLength(0);
     });
