@@ -329,6 +329,36 @@ describe("AuthService (apps/api - MIG-006)", () => {
       expect(result.seller.sms_name).toBe("Updated Cafe");
     });
 
+    it("successfully updates settings using camelCase businessName and smsName", async () => {
+      const mockUpdatedSeller = {
+        id: "seller-123",
+        business_name: "Camel Cafe",
+        sms_name: "Camel",
+        phone: "+251911223344",
+        slug: "camel-cafe",
+        phone_verified_at: new Date(),
+        created_at: new Date(),
+      };
+      prismaMock.seller.update.mockResolvedValue(mockUpdatedSeller);
+
+      const result = await authService.updateSettings("seller-123", {
+        businessName: "Camel Cafe",
+        smsName: "Camel",
+      });
+
+      expect(prismaMock.seller.update).toHaveBeenCalledWith({
+        where: { id: "seller-123" },
+        data: {
+          business_name: "Camel Cafe",
+          sms_name: "Camel",
+        },
+      });
+      expect(result.seller.business_name).toBe("Camel Cafe");
+      expect(result.seller.businessName).toBe("Camel Cafe");
+      expect(result.seller.sms_name).toBe("Camel");
+      expect(result.seller.smsName).toBe("Camel");
+    });
+
     it("rejects sms_name longer than 20 characters", async () => {
       await expect(
         authService.updateSettings("seller-123", {

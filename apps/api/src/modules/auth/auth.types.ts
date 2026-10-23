@@ -69,6 +69,18 @@ export const updateSettingsSchema = z.object({
     .min(2, "SMS name must be at least 2 characters")
     .max(20, "SMS name cannot exceed 20 characters")
     .optional(),
+  businessName: z
+    .string()
+    .trim()
+    .min(2, "Business name must be at least 2 characters")
+    .max(100, "Business name cannot exceed 100 characters")
+    .optional(),
+  smsName: z
+    .string()
+    .trim()
+    .min(2, "SMS name must be at least 2 characters")
+    .max(20, "SMS name cannot exceed 20 characters")
+    .optional(),
 });
 
 export type UpdateSettingsDto = z.infer<typeof updateSettingsSchema>;
