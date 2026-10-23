@@ -526,64 +526,103 @@ export class CheckoutService {
       : hashActionToken(actionToken);
     const tokenExpiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48h
 
-    // 6. Execute atomic database transaction
-    const createdOrder = await this.prisma.$transaction(async (tx) => {
-      // Find highest order number for this seller
-      const lastOrder = await tx.order.findFirst({
-        where: { seller_id: draftData.sellerId },
-        orderBy: { number: "desc" },
-        select: { number: true },
-      });
-      const orderNumber = lastOrder ? lastOrder.number + 1 : 1001;
+    // 6. Execute atomic database transaction with optimistic retry on order number collision (PR-008, Issue #127)
+    const MAX_ORDER_NUMBER_RETRIES = 5;
+    let createdOrder: any;
 
-      // Create order with nested order_items, order_events, and action_tokens
-      const order = await tx.order.create({
-        data: {
-          seller_id: draftData.sellerId,
-          number: orderNumber,
-          buyer_name: draftData.buyerName,
-          buyer_phone: draftData.buyerPhone,
-          sms_consent: draftData.smsConsent,
-          consent_wording: draftData.consentWording,
-          consent_at: draftData.smsConsent ? new Date() : null,
-          state: "new",
-          total_santim: totalSantim,
-          order_items: {
-            create: finalItems.map((item: any) => ({
-              product_id: item.productId,
-              name_at_order: item.name,
-              unit_price_santim: item.unitPriceSantim,
-              quantity: item.quantity,
-            })),
-          },
-          order_events: {
-            create: {
-              from_state: null,
-              to_state: "new",
-              actor: "buyer",
+    for (let attempt = 1; attempt <= MAX_ORDER_NUMBER_RETRIES; attempt++) {
+      try {
+        createdOrder = await this.prisma.$transaction(async (tx) => {
+          // Find highest order number for this seller
+          const lastOrder = await tx.order.findFirst({
+            where: { seller_id: draftData.sellerId },
+            orderBy: { number: "desc" },
+            select: { number: true },
+          });
+          const orderNumber = lastOrder ? lastOrder.number + 1 : 1001;
+
+          // Create order with nested order_items, order_events, and action_tokens
+          const order = await tx.order.create({
+            data: {
+              seller_id: draftData.sellerId,
+              number: orderNumber,
+              buyer_name: draftData.buyerName,
+              buyer_phone: draftData.buyerPhone,
+              sms_consent: draftData.smsConsent,
+              consent_wording: draftData.consentWording,
+              consent_at: draftData.smsConsent ? new Date() : null,
+              state: "new",
+              total_santim: totalSantim,
+              order_items: {
+                create: finalItems.map((item: any) => ({
+                  product_id: item.productId,
+                  name_at_order: item.name,
+                  unit_price_santim: item.unitPriceSantim,
+                  quantity: item.quantity,
+                })),
+              },
+              order_events: {
+                create: {
+                  from_state: null,
+                  to_state: "new",
+                  actor: "buyer",
+                },
+              },
+              action_tokens: {
+                create: {
+                  purpose: "seller_action",
+                  token_hash: tokenHash,
+                  expires_at: tokenExpiresAt,
+                },
+              },
             },
-          },
-          action_tokens: {
-            create: {
-              purpose: "seller_action",
-              token_hash: tokenHash,
-              expires_at: tokenExpiresAt,
+            include: {
+              order_items: true,
             },
-          },
-        },
-        include: {
-          order_items: true,
-        },
-      });
+          });
 
-      // Mark verification draft as approved
-      await tx.phoneVerification.update({
-        where: { id: verification.id },
-        data: { status: "approved" },
-      });
+          // Mark verification draft as approved
+          await tx.phoneVerification.update({
+            where: { id: verification.id },
+            data: { status: "approved" },
+          });
 
-      return order;
-    });
+          return order;
+        });
+
+        // Transaction succeeded
+        break;
+      } catch (err: any) {
+        const isUniqueConstraintViolation =
+          err?.code === "P2002" ||
+          err?.message?.includes("P2002") ||
+          err?.message?.includes("Unique constraint failed");
+
+        if (isUniqueConstraintViolation && attempt < MAX_ORDER_NUMBER_RETRIES) {
+          this.logger.warn(
+            `[Order Number Collision] P2002 collision on order creation for seller ${draftData.sellerId} on attempt ${attempt}/${MAX_ORDER_NUMBER_RETRIES}. Retrying with next sequence number...`
+          );
+          // Randomized jitter (10ms - 30ms) to avoid lock-step retries across concurrent threads
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.floor(Math.random() * 20) + 10)
+          );
+          continue;
+        }
+
+        throw err;
+      }
+    }
+
+    if (!createdOrder) {
+      throw new HttpException(
+        {
+          code: "ORDER_CREATION_FAILED",
+          message:
+            "Failed to allocate sequential order number after multiple retries",
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
 
     // 7. Dispatch new-order alert SMS with action link to seller
     const seller = await this.prisma.seller.findUnique({

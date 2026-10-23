@@ -299,5 +299,71 @@ describe("CheckoutService - verifyCheckout (BE-009)", () => {
       );
       expect(result.orderNumber).toBe(1043);
     });
+
+    it("retries on P2002 order number collision and allocates the next sequential number", async () => {
+      prismaMock.phoneVerification.findUnique.mockResolvedValue(mockVerification);
+      smshubMock.verifyCheck.mockResolvedValue({
+        status: "success",
+        data: {
+          valid: true,
+          verification_status: "approved",
+        },
+      });
+
+      // On attempt 1, highest order is 1005. Both transactions try 1006.
+      // Attempt 1 fails with P2002 unique constraint collision.
+      // On attempt 2, another transaction committed 1006, so findFirst returns 1006.
+      // Attempt 2 creates 1007 successfully.
+      let findFirstCalls = 0;
+      prismaMock.order.findFirst.mockImplementation(async () => {
+        findFirstCalls++;
+        if (findFirstCalls === 1) {
+          return { number: 1005 };
+        }
+        return { number: 1006 };
+      });
+
+      prismaMock.product.findMany.mockResolvedValue([
+        {
+          id: "prod-1",
+          name: "Yirgacheffe Coffee",
+          price_santim: 45000,
+        },
+      ]);
+      prismaMock.seller.findUnique.mockResolvedValue(mockSeller);
+
+      let createCalls = 0;
+      prismaMock.order.create.mockImplementation(async ({ data }: any) => {
+        createCalls++;
+        if (createCalls === 1) {
+          const p2002Err: any = new Error(
+            "Unique constraint failed on the fields: (`seller_id`, `number`)"
+          );
+          p2002Err.code = "P2002";
+          throw p2002Err;
+        }
+        return {
+          id: "order-uuid-retry",
+          seller_id: mockSeller.id,
+          number: data.number,
+          buyer_name: "Dawit Abebe",
+          buyer_phone: "0922334455",
+          sms_consent: true,
+          consent_wording: "Send me SMS updates about this order",
+          state: "new",
+          total_santim: 45000,
+          created_at: new Date(),
+          order_items: [],
+        };
+      });
+
+      const result = await service.verifyCheckout({
+        draftId: mockVerification.id,
+        code: "482190",
+      });
+
+      expect(createCalls).toBe(2);
+      expect(result.orderNumber).toBe(1007);
+    });
   });
 });
