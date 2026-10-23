@@ -460,4 +460,92 @@ describe("OrderBySmsApiClient (apps/web - MIG-008)", () => {
       expect(optOutRes.suppressed).toBe(true);
     });
   });
+
+  describe("Seller Settings Endpoints (PR-012)", () => {
+    it("fetches settings via GET /api/auth/settings with init options", async () => {
+      const mockFetch = vi.fn().mockImplementation((path: string, options?: RequestInit) => {
+        expect(path).toBe("/api/auth/settings");
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          headers: new Headers({ "content-type": "application/json" }),
+          json: async () => ({
+            success: true,
+            data: {
+              seller: {
+                id: "seller_1",
+                businessName: "Habesha Coffee",
+                smsName: "Habesha",
+                phone: "+251911223344",
+                slug: "habesha-coffee",
+                createdAt: "2026-10-23T12:00:00.000Z",
+              },
+            },
+          }),
+        });
+      });
+
+      const client = new OrderBySmsApiClient({ fetchFn: mockFetch as unknown as typeof fetch });
+      const res = await client.getSettings({
+        headers: { Cookie: "seller_session=token_abc" },
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith("/api/auth/settings", expect.objectContaining({
+        headers: expect.any(Headers),
+      }));
+      expect(res.seller.businessName).toBe("Habesha Coffee");
+      expect(res.seller.smsName).toBe("Habesha");
+    });
+
+    it("sends PATCH /api/auth/settings with mapped camelCase and snake_case body", async () => {
+      let capturedBody: any = null;
+      const mockFetch = vi.fn().mockImplementation((path: string, options?: RequestInit) => {
+        expect(path).toBe("/api/auth/settings");
+        expect(options?.method).toBe("PATCH");
+        capturedBody = JSON.parse(options?.body as string);
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          headers: new Headers({ "content-type": "application/json" }),
+          json: async () => ({
+            success: true,
+            data: {
+              seller: {
+                id: "seller_1",
+                businessName: capturedBody.business_name,
+                smsName: capturedBody.sms_name,
+                phone: "+251911223344",
+                slug: "habesha-coffee",
+                createdAt: "2026-10-23T12:00:00.000Z",
+              },
+            },
+          }),
+        });
+      });
+
+      const client = new OrderBySmsApiClient({ fetchFn: mockFetch as unknown as typeof fetch });
+
+      // Test with camelCase input
+      const res1 = await client.updateSettings({
+        businessName: "New Cafe Name",
+        smsName: "NewCafe",
+      });
+      expect(capturedBody).toEqual({
+        business_name: "New Cafe Name",
+        sms_name: "NewCafe",
+      });
+      expect(res1.seller.businessName).toBe("New Cafe Name");
+
+      // Test with snake_case input
+      const res2 = await client.updateSettings({
+        business_name: "Another Cafe",
+        sms_name: "Another",
+      });
+      expect(capturedBody).toEqual({
+        business_name: "Another Cafe",
+        sms_name: "Another",
+      });
+      expect(res2.seller.businessName).toBe("Another Cafe");
+    });
+  });
 });

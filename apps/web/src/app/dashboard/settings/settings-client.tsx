@@ -270,8 +270,8 @@ export default function SettingsClient({
       setSaveStatus("success");
       setSaveMessage("Shop settings saved successfully!");
       if (data?.seller) {
-        if (data.seller.business_name) setBusinessName(data.seller.business_name);
-        if (data.seller.sms_name) setSmsName(data.seller.sms_name);
+        if (data.seller.businessName) setBusinessName(data.seller.businessName);
+        if (data.seller.smsName) setSmsName(data.seller.smsName);
       }
     } catch (err: any) {
       setSaveStatus("error");

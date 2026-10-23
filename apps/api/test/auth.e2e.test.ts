@@ -205,7 +205,7 @@ describe("NestJS Seller Auth API E2E (MIG-006)", () => {
 
       expect(meRes.body.success).toBe(true);
       expect(meRes.body.data.seller.id).toBe("seller-e2e-1");
-      expect(meRes.body.data.seller.business_name).toBe("Habesha E2E");
+      expect(meRes.body.data.seller.businessName).toBe("Habesha E2E");
     });
   });
 

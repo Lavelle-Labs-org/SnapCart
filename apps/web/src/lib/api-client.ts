@@ -276,16 +276,27 @@ export class OrderBySmsApiClient {
   }
 
   // --- Seller Settings ---
-  public async getSettings(init?: RequestInit): Promise<SellerDto> {
-    return this.request<SellerDto>("/api/settings", init);
+  public async getSettings(init?: RequestInit): Promise<{ seller: SellerDto }> {
+    return this.request<{ seller: SellerDto }>("/api/auth/settings", init);
   }
 
   public async updateSettings(
-    input: Partial<Pick<SellerDto, "businessName" | "smsName">>
-  ): Promise<SellerDto> {
-    return this.request<SellerDto>("/api/settings", {
+    input: {
+      businessName?: string;
+      smsName?: string;
+      business_name?: string;
+      sms_name?: string;
+    },
+    init?: RequestInit
+  ): Promise<{ seller: SellerDto }> {
+    const payload = {
+      business_name: input.business_name ?? input.businessName,
+      sms_name: input.sms_name ?? input.smsName,
+    };
+    return this.request<{ seller: SellerDto }>("/api/auth/settings", {
+      ...init,
       method: "PATCH",
-      body: JSON.stringify(input),
+      body: JSON.stringify(payload),
     });
   }
 

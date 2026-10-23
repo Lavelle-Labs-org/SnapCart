@@ -523,7 +523,8 @@ export class AuthService {
       );
     }
 
-    const { business_name, sms_name } = parseResult.data;
+    const business_name = parseResult.data.business_name ?? parseResult.data.businessName;
+    const sms_name = parseResult.data.sms_name ?? parseResult.data.smsName;
     const dataToUpdate: { business_name?: string; sms_name?: string } = {};
 
     if (business_name !== undefined) {
@@ -551,12 +552,12 @@ export class AuthService {
     return {
       seller: {
         id: updatedSeller.id,
-        business_name: updatedSeller.business_name,
-        sms_name: updatedSeller.sms_name,
+        businessName: updatedSeller.business_name,
+        smsName: updatedSeller.sms_name,
         phone: updatedSeller.phone,
         slug: updatedSeller.slug,
-        phone_verified_at: updatedSeller.phone_verified_at,
-        created_at: updatedSeller.created_at,
+        phoneVerifiedAt: updatedSeller.phone_verified_at?.toISOString() ?? null,
+        createdAt: updatedSeller.created_at.toISOString(),
       },
     };
   }

@@ -77,14 +77,20 @@ export class AuthController {
     return {
       seller: {
         id: seller.id,
-        business_name: seller.business_name,
-        sms_name: seller.sms_name,
+        businessName: seller.business_name,
+        smsName: seller.sms_name,
         phone: seller.phone,
         slug: seller.slug,
-        phone_verified_at: seller.phone_verified_at,
-        created_at: seller.created_at,
+        phoneVerifiedAt: seller.phone_verified_at?.toISOString() ?? null,
+        createdAt: seller.created_at.toISOString(),
       },
     };
+  }
+
+  @Get("settings")
+  @UseGuards(SellerAuthGuard)
+  async getSettings(@CurrentSeller() seller: Seller) {
+    return this.me(seller);
   }
 
   @Patch("settings")
