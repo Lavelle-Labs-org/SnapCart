@@ -365,5 +365,65 @@ describe("CheckoutService - verifyCheckout (BE-009)", () => {
       expect(createCalls).toBe(2);
       expect(result.orderNumber).toBe(1007);
     });
+
+    it("returns response within 500ms even when SMS dispatch experiences carrier latency (PR-014, Issue #133)", async () => {
+      prismaMock.phoneVerification.findUnique.mockResolvedValue(mockVerification);
+      smshubMock.verifyCheck.mockResolvedValue({
+        status: "success",
+        data: {
+          valid: true,
+          verification_status: "approved",
+        },
+      });
+      prismaMock.product.findMany.mockResolvedValue([
+        {
+          id: "prod-1",
+          name: "Yirgacheffe Coffee",
+          price_santim: 45000,
+        },
+      ]);
+      prismaMock.seller.findUnique.mockResolvedValue(mockSeller);
+      prismaMock.order.create.mockResolvedValue({
+        id: "order-uuid-1",
+        seller_id: mockSeller.id,
+        number: 1001,
+        buyer_name: "Dawit Abebe",
+        buyer_phone: "0922334455",
+        sms_consent: true,
+        consent_wording: "Send me SMS updates about this order",
+        state: "new",
+        total_santim: 45000,
+        created_at: new Date(),
+        order_items: [],
+      });
+
+      // Simulate carrier network delay of 1000ms if called synchronously
+      smsOrchestratorMock.sendOrderSMS.mockImplementation(async (opts: any) => {
+        if (!opts?.async) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+        return {
+          status: opts?.async ? "queued" : "sent",
+          messageId: "msg-async-1",
+          text: "Order Alert",
+        };
+      });
+
+      const startTime = Date.now();
+      const result = await service.verifyCheckout({
+        draftId: mockVerification.id,
+        code: "482190",
+      });
+      const durationMs = Date.now() - startTime;
+
+      expect(smsOrchestratorMock.sendOrderSMS).toHaveBeenCalledWith(
+        expect.objectContaining({
+          async: true,
+          event: "seller_new_order",
+        })
+      );
+      expect(result.orderNumber).toBe(1001);
+      expect(durationMs).toBeLessThan(500);
+    });
   });
 });

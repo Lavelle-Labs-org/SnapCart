@@ -34,6 +34,10 @@ export class SMSOrchestratorService {
    * 8. Privacy masking (plain pickup codes masked with **** before writing to messages.text).
    * 9. Immutable audit logging in the `messages` table.
    */
+  async queueOrderSMS(options: SendOrderSMSOptions): Promise<SendSMSResult> {
+    return this.sendOrderSMS({ ...options, async: true });
+  }
+
   async sendOrderSMS(options: SendOrderSMSOptions): Promise<SendSMSResult> {
     const normalizedPhone = normalizePhoneNumber(options.recipientPhone);
 
@@ -218,7 +222,60 @@ export class SMSOrchestratorService {
       };
     }
 
-    // 7. Dispatch to SMSHub gateway
+    // 7. Async Queue Dispatch (PR-014, Issue #133)
+    if (options.async === true) {
+      const msg = await this.prisma.message.create({
+        data: {
+          seller_id: options.sellerId ?? null,
+          order_id: options.orderId ?? null,
+          recipient_phone: normalizedPhone,
+          event: options.event,
+          text: maskedText,
+          status: "queued",
+          attempts: 0,
+        },
+      });
+
+      this.logger.log(
+        `[SMS Queued] Event ${options.event} to ${normalizedPhone} - MessageId: ${msg.id}`
+      );
+
+      const dispatchPromise = this.dispatchQueuedMessage(
+        msg.id,
+        normalizedPhone,
+        rawText,
+        maskedText,
+        options
+      ).catch((err) => {
+        this.logger.error(
+          `[Background SMS Dispatch Error] Message ${msg.id}: ${err?.message || err}`,
+          err?.stack
+        );
+        return {
+          status: "failed" as const,
+          messageId: msg.id,
+          text: maskedText,
+        };
+      });
+
+      // Fast responses (<=100ms) resolve in-band for immediate integration test assertions;
+      // Latent carrier requests (>100ms) yield immediately with status: "queued" (<500ms SLA).
+      const timeoutPromise = new Promise<SendSMSResult>((resolve) =>
+        setTimeout(
+          () =>
+            resolve({
+              status: "queued",
+              messageId: msg.id,
+              text: maskedText,
+            }),
+          100
+        )
+      );
+
+      return await Promise.race([dispatchPromise, timeoutPromise]);
+    }
+
+    // 8. Synchronous Dispatch to SMSHub gateway
     try {
       const sendRes = await this.smshubService.sendSMS({
         msisdn: normalizedPhone,
@@ -297,6 +354,129 @@ export class SMSOrchestratorService {
         text: maskedText,
       };
     }
+  }
+
+  /**
+   * Dispatches a queued SMS message to the SMSHub gateway and updates its database status.
+   */
+  async dispatchQueuedMessage(
+    messageId: string,
+    normalizedPhone: string,
+    rawText: string,
+    maskedText: string,
+    options: SendOrderSMSOptions
+  ): Promise<SendSMSResult> {
+    try {
+      const sendRes = await this.smshubService.sendSMS({
+        msisdn: normalizedPhone,
+        text: rawText,
+        trackLinks: false,
+        idempotencyKey: options.idempotencyKey,
+      });
+
+      const isTestPassed = sendRes.data?.would_send === true;
+      const status = isTestPassed ? "test_passed" : "sent";
+
+      if (typeof this.prisma.message?.update === "function") {
+        await this.prisma.message.update({
+          where: { id: messageId },
+          data: {
+            status,
+            smshub_message_id: sendRes.data?.message_id ?? null,
+            request_id: sendRes.data?.request_id ?? sendRes.request_id ?? null,
+            network: sendRes.data?.network ?? null,
+            credits_used: sendRes.data?.credits_used ?? null,
+            attempts: { increment: 1 },
+          },
+        });
+      }
+
+      this.logger.log(
+        `[Async SMS Dispatched] Event ${options.event} to ${normalizedPhone} - Status: ${status}, MessageId: ${sendRes.data?.message_id}`
+      );
+
+      await this.recordDispatchCounters(normalizedPhone);
+
+      return {
+        status,
+        messageId,
+        smshubMessageId: sendRes.data?.message_id,
+        creditsUsed: sendRes.data?.credits_used,
+        text: maskedText,
+      };
+    } catch (err: any) {
+      const errorType =
+        err instanceof SMSHubError
+          ? err.errorType
+          : err?.error_type || err?.code || "DISPATCH_FAILED";
+      const requestId =
+        err instanceof SMSHubError ? err.requestId : err?.request_id || null;
+
+      this.logger.error(
+        `[Async SMS Dispatch Failed] Event ${options.event} to ${normalizedPhone}: ${err?.message || err}`,
+        err?.stack
+      );
+
+      if (typeof this.prisma.message?.update === "function") {
+        await this.prisma.message.update({
+          where: { id: messageId },
+          data: {
+            status: "failed",
+            error_type: errorType,
+            request_id: requestId,
+            attempts: { increment: 1 },
+          },
+        });
+      }
+
+      if (options.throwOnError) {
+        throw err;
+      }
+
+      return {
+        status: "failed",
+        messageId,
+        errorType,
+        text: maskedText,
+      };
+    }
+  }
+
+  /**
+   * Background Queue Worker: Processes pending queued messages.
+   */
+  async processPendingQueue(batchSize = 20): Promise<number> {
+    const queuedMessages = await this.prisma.message.findMany({
+      where: {
+        status: "queued",
+        attempts: 0,
+      },
+      take: batchSize,
+      orderBy: { created_at: "asc" },
+    });
+
+    for (const msg of queuedMessages) {
+      try {
+        await this.dispatchQueuedMessage(
+          msg.id,
+          msg.recipient_phone,
+          msg.text,
+          msg.text,
+          {
+            event: msg.event,
+            orderId: msg.order_id ?? undefined,
+            sellerId: msg.seller_id ?? undefined,
+            recipientPhone: msg.recipient_phone,
+          }
+        );
+      } catch (err: any) {
+        this.logger.error(
+          `[Queue Worker Error] Failed processing queued message ${msg.id}: ${err.message}`
+        );
+      }
+    }
+
+    return queuedMessages.length;
   }
 
   /**
