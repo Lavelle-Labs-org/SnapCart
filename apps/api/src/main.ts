@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
 import { Logger } from "@nestjs/common";
+import helmet from "helmet";
 import { AppModule } from "./app.module";
 import { validateEnv, env } from "./config/env";
 import { TransformInterceptor } from "./common/interceptors/transform.interceptor";
@@ -14,6 +15,9 @@ export async function bootstrap() {
   validateEnv();
 
   const app = await NestFactory.create(AppModule, { rawBody: true });
+
+  // HTTP security headers (PR-015, Issue #134)
+  app.use(helmet());
 
   // Global API routing prefix (excluding webhooks per SMSHub spec)
   app.setGlobalPrefix("api", {
