@@ -44,10 +44,12 @@ export interface SendOrderSMSOptions {
   dailyCap?: number;
   phoneRateLimit?: number;
   mode?: "test" | "live";
+  // Offload to background queue asynchronously (PR-014, Issue #133):
+  async?: boolean;
 }
 
 export interface SendSMSResult {
-  status: "sent" | "skipped" | "test_passed" | "failed";
+  status: "sent" | "skipped" | "test_passed" | "failed" | "queued";
   messageId?: string;
   smshubMessageId?: string;
   creditsUsed?: number;

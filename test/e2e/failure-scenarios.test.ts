@@ -290,6 +290,18 @@ describe("Scenario QA-007: Simulated Gateway Failure & Retry Tests (Issue #44)",
           dbMessages.push(record);
           return { ...record };
         },
+        update: async ({ where, data }: any) => {
+          const m = dbMessages.find((msg) => msg.id === where.id);
+          if (m) {
+            const resolvedData = { ...data };
+            if (data.attempts && typeof data.attempts === "object" && "increment" in data.attempts) {
+              resolvedData.attempts = (m.attempts || 0) + data.attempts.increment;
+            }
+            Object.assign(m, resolvedData);
+            return { ...m };
+          }
+          return null;
+        },
         findUnique: async ({ where }: any) => {
           const m = dbMessages.find((msg) => msg.id === where.id);
           return m ? { ...m } : null;
@@ -310,11 +322,6 @@ describe("Scenario QA-007: Simulated Gateway Failure & Retry Tests (Issue #44)",
             if (where.order_id && m.order_id !== where.order_id) return false;
             return true;
           });
-        },
-        update: async ({ where, data }: any) => {
-          const m = dbMessages.find((msg) => msg.id === where.id);
-          if (m) Object.assign(m, data);
-          return m ? { ...m } : null;
         },
       },
       rateCounter: {
@@ -634,11 +641,15 @@ describe("Scenario QA-007: Simulated Gateway Failure & Retry Tests (Issue #44)",
       expect(items[0].product_id).toBe(demoProduct.id);
       expect(items[0].quantity).toBe(2);
 
-      // 5. Verify seller alert message is logged as 'failed' in audit log
-      const sellerAlert = dbMessages.find((m) => m.order_id === orderId);
+      // 5. Verify seller alert message is offloaded and transitions to 'failed' once background retries exhaust
+      let sellerAlert = dbMessages.find((m) => m.order_id === orderId);
       expect(sellerAlert).toBeDefined();
-      expect(sellerAlert.status).toBe("failed");
-      expect(sellerAlert.error_type).toBe("provider_error");
+      for (let i = 0; i < 20 && sellerAlert?.status === "queued"; i++) {
+        await new Promise((r) => setTimeout(r, 50));
+        sellerAlert = dbMessages.find((m) => m.order_id === orderId);
+      }
+      expect(sellerAlert?.status).toBe("failed");
+      expect(sellerAlert?.error_type).toBe("provider_error");
     });
   });
 

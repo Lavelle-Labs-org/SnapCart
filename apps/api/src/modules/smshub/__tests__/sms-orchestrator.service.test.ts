@@ -29,6 +29,13 @@ describe("SMSOrchestratorService (BE-007, BE-017)", () => {
             ...data,
           })
         ),
+        update: vi.fn().mockImplementation(({ data }) =>
+          Promise.resolve({
+            id: "msg-db-uuid-1",
+            ...data,
+          })
+        ),
+        findMany: vi.fn().mockResolvedValue([]),
       },
       rateCounter: {
         findUnique: vi.fn().mockResolvedValue(null),
@@ -697,6 +704,131 @@ describe("SMSOrchestratorService (BE-007, BE-017)", () => {
       expect(smshubMock.sendSMS).toHaveBeenCalled();
       // Counter recording
       expect(prismaMock.rateCounter.upsert).toHaveBeenCalled();
+    });
+  });
+
+  describe("Asynchronous Background Queue Dispatch (PR-014, Issue #133)", () => {
+    it("persists message intent with status 'queued' and offloads gateway dispatch to background", async () => {
+      prismaMock.suppressionList.findUnique.mockResolvedValue(null);
+      prismaMock.message.create.mockResolvedValue({
+        id: "msg-queued-1",
+        status: "queued",
+        attempts: 0,
+      });
+      smshubMock.sendSMS.mockImplementation(async () => {
+        // Simulate latent carrier response (>100ms) to ensure background offloading
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        return {
+          status: "success",
+          data: { message_id: "smshub-async-1", credits_used: 1, network: "ethio_telecom" },
+        };
+      });
+
+      const res = await service.sendOrderSMS({
+        recipientPhone: "0911223344",
+        event: "seller_new_order",
+        shopName: "Habesha Cafe",
+        orderNumber: 1001,
+        async: true,
+      });
+
+      expect(res.status).toBe("queued");
+      expect(res.messageId).toBe("msg-queued-1");
+      expect(prismaMock.message.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          recipient_phone: "0911223344",
+          status: "queued",
+          attempts: 0,
+        }),
+      });
+
+      // Wait for background promise to complete
+      await new Promise((resolve) => setTimeout(resolve, 180));
+
+      expect(smshubMock.sendSMS).toHaveBeenCalledWith(
+        expect.objectContaining({
+          msisdn: "0911223344",
+        })
+      );
+      expect(prismaMock.message.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "msg-queued-1" },
+          data: expect.objectContaining({
+            status: "sent",
+            smshub_message_id: "smshub-async-1",
+          }),
+        })
+      );
+    });
+
+    it("queueOrderSMS enqueues message with status 'queued' and returns immediately", async () => {
+      prismaMock.suppressionList.findUnique.mockResolvedValue(null);
+      prismaMock.message.create.mockResolvedValue({
+        id: "msg-queued-2",
+        status: "queued",
+        attempts: 0,
+      });
+      smshubMock.sendSMS.mockImplementation(async () => {
+        // Simulate latent carrier response (>100ms) to ensure background offloading
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        return {
+          status: "success",
+          data: { would_send: true, message_id: "smshub-test-2" },
+        };
+      });
+
+      const res = await service.queueOrderSMS({
+        recipientPhone: "0911223344",
+        event: "seller_new_order",
+        shopName: "Habesha Cafe",
+        orderNumber: 1002,
+      });
+
+      expect(res.status).toBe("queued");
+      expect(res.messageId).toBe("msg-queued-2");
+
+      // Wait for background promise to complete
+      await new Promise((resolve) => setTimeout(resolve, 180));
+
+      expect(prismaMock.message.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "msg-queued-2" },
+          data: expect.objectContaining({
+            status: "test_passed",
+          }),
+        })
+      );
+    });
+
+    it("processPendingQueue processes unhandled queued messages from database", async () => {
+      prismaMock.message.findMany.mockResolvedValue([
+        {
+          id: "pending-1",
+          recipient_phone: "0911223344",
+          event: "seller_new_order",
+          text: "Order #1003 alert",
+          status: "queued",
+          attempts: 0,
+        },
+      ]);
+      smshubMock.sendSMS.mockResolvedValue({
+        status: "success",
+        data: { message_id: "smshub-worker-1" },
+      });
+
+      const count = await service.processPendingQueue();
+      expect(count).toBe(1);
+      expect(prismaMock.message.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ status: "queued" }),
+        })
+      );
+      expect(prismaMock.message.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "pending-1" },
+          data: expect.objectContaining({ status: "sent" }),
+        })
+      );
     });
   });
 });

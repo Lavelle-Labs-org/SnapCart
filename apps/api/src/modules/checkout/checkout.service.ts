@@ -649,6 +649,7 @@ export class CheckoutService {
         ),
         totalBirr: totalSantim / 100,
         link: actionLink,
+        async: true,
         throwOnError: false, // Don't abort buyer's confirmed order if outbound carrier SMS fails
       });
     }
