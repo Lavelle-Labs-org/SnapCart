@@ -36,6 +36,12 @@ jobs:
       - name: Pre-Commit Secret Scanner (INFRA-004)
         run: npm run check:secrets
 
+      - name: Dependency Vulnerability Audit (PR-016, PR-018)
+        run: npm audit --audit-level=high
+
+      - name: Code Quality & Linting (PR-011, PR-018)
+        run: npm run lint
+
       - name: Generate Prisma Client
         run: npm run prisma:generate
 
