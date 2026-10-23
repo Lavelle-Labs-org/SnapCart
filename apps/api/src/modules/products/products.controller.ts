@@ -14,6 +14,7 @@ import {
 import { SellerAuthGuard } from "../auth/auth.guard";
 import { CurrentSeller } from "../auth/current-seller.decorator";
 import { ProductsService } from "./products.service";
+import { CreateProductDto, UpdateProductDto } from "./products.dto";
 
 @Controller("products")
 @UseGuards(SellerAuthGuard)
@@ -30,7 +31,10 @@ export class ProductsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createProduct(@CurrentSeller() seller: any, @Body() body: any) {
+  async createProduct(
+    @CurrentSeller() seller: any,
+    @Body() body: CreateProductDto
+  ) {
     return this.productsService.createProduct(seller.id, body);
   }
 
@@ -38,7 +42,7 @@ export class ProductsController {
   async updateProduct(
     @CurrentSeller() seller: any,
     @Param("id") id: string,
-    @Body() body: any
+    @Body() body: UpdateProductDto
   ) {
     return this.productsService.updateProduct(seller.id, id, body);
   }

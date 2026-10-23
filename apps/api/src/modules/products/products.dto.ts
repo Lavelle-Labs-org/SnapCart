@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { createZodDto } from "../../common/pipes/zod-validation.pipe";
 import type { ProductDto } from "@order-by-sms/contracts";
 import { toSantim } from "@order-by-sms/contracts";
 import { HttpException, HttpStatus } from "@nestjs/common";
@@ -61,8 +62,8 @@ export const UpdateProductSchema = z
     }
   );
 
-export type CreateProductDto = z.infer<typeof CreateProductSchema>;
-export type UpdateProductDto = z.infer<typeof UpdateProductSchema>;
+export class CreateProductDto extends createZodDto(CreateProductSchema) {}
+export class UpdateProductDto extends createZodDto(UpdateProductSchema) {}
 
 export function resolveSantimPrice(
   input: {

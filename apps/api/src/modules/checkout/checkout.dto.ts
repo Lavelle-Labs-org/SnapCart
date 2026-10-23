@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { createZodDto } from "../../common/pipes/zod-validation.pipe";
 import { normalizeEthiopianPhone } from "@order-by-sms/contracts";
 
 export const CheckoutItemSchema = z.object({
@@ -73,6 +74,6 @@ export const VerifyCheckoutSchema = z
     path: ["draftId"],
   });
 
-export type CheckoutDto = z.infer<typeof CheckoutSchema>;
-export type ResendCheckoutOtpDto = z.infer<typeof ResendCheckoutOtpSchema>;
-export type VerifyCheckoutDto = z.infer<typeof VerifyCheckoutSchema>;
+export class CheckoutDto extends createZodDto(CheckoutSchema) {}
+export class ResendCheckoutOtpDto extends createZodDto(ResendCheckoutOtpSchema) {}
+export class VerifyCheckoutDto extends createZodDto(VerifyCheckoutSchema) {}
