@@ -48,6 +48,32 @@ export class OrdersController {
         unitPriceSantim: item.unit_price_santim,
         quantity: item.quantity,
       })),
+      events: order.order_events?.map((evt: any) => ({
+        id: evt.id,
+        orderId: evt.order_id,
+        fromState: evt.from_state,
+        toState: evt.to_state,
+        actor: evt.actor,
+        createdAt: evt.created_at ? new Date(evt.created_at).toISOString() : new Date().toISOString(),
+      })),
+      messages: order.messages?.map((msg: any) => ({
+        id: msg.id,
+        sellerId: msg.seller_id ?? null,
+        orderId: msg.order_id ?? null,
+        recipientPhone: msg.recipient_phone,
+        event: msg.event,
+        text: msg.text,
+        status: msg.status,
+        skipReason: msg.skip_reason ?? null,
+        smshubMessageId: msg.smshub_message_id ?? null,
+        requestId: msg.request_id ?? null,
+        network: msg.network ?? null,
+        creditsUsed: msg.credits_used ?? null,
+        errorType: msg.error_type ?? null,
+        attempts: msg.attempts ?? 0,
+        createdAt: msg.created_at ? new Date(msg.created_at).toISOString() : new Date().toISOString(),
+        updatedAt: msg.updated_at ? new Date(msg.updated_at).toISOString() : new Date().toISOString(),
+      })),
     };
   }
 
@@ -103,6 +129,9 @@ export class OrdersController {
         order_items: true,
         seller: true,
         order_events: {
+          orderBy: { created_at: "asc" },
+        },
+        messages: {
           orderBy: { created_at: "asc" },
         },
       },

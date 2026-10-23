@@ -33,19 +33,22 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   }
 
   let dbProducts: any[] = [];
+  let prismaSucceeded = false;
+
   try {
     if (prisma?.product?.findMany) {
       dbProducts = await prisma.product.findMany({
         where: { seller_id: sellerId, deleted_at: null },
         orderBy: { created_at: "asc" },
       });
+      prismaSucceeded = true;
     }
   } catch (err) {
     console.warn("[ProductsPage] Could not query database for products via Prisma:", err);
   }
 
-  // Fallback to NestJS API if Prisma query failed in serverless environment
-  if (dbProducts.length === 0 && token) {
+  // Fallback to internal NestJS API if Prisma direct connection failed or DATABASE_URL is omitted (PR-010)
+  if (!prismaSucceeded && token) {
     try {
       const apiUrl = process.env.INTERNAL_API_URL || "http://localhost:4000";
       const res = await fetch(`${apiUrl}/api/products`, {
