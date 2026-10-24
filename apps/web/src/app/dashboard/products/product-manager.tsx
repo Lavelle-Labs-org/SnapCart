@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Plus,
@@ -232,6 +232,21 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
     setFormError(null);
   };
 
+  const isAnyModalOpen = isAddOpen || !!editingProduct || !!deletingProduct;
+
+  useEffect(() => {
+    if (!isAnyModalOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeModals();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isAnyModalOpen]);
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     const validation = validateProductInput(formName, formPriceBirr);
@@ -364,7 +379,67 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
+          {/* Mobile Stacked Card View (< md) */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {products.map((p) => {
+              const priceFormatted = formatBirr(
+                typeof p?.priceSantim === "number" && !isNaN(p.priceSantim)
+                  ? p.priceSantim
+                  : 0
+              );
+              const isToggling = togglingId === p.id;
+
+              return (
+                <div key={`mobile-${p.id}`} className="p-4 space-y-3 hover:bg-slate-50/50 transition">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="font-semibold text-slate-900 text-base">{p.name}</h4>
+                      <p className="text-base font-bold text-emerald-600 tabular-nums">{priceFormatted}</p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={isToggling}
+                      onClick={() => handleToggleAvailability(p)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition min-h-[36px] ${
+                        p.available
+                          ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      } disabled:opacity-50`}
+                      title="Click to toggle storefront availability"
+                    >
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          p.available ? "bg-emerald-500" : "bg-slate-400"
+                        }`}
+                      />
+                      <span>{p.available ? "Available" : "Hidden"}</span>
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(p)}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition min-h-[40px]"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeletingProduct(p)}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition min-h-[40px]"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop Table (>= md) */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-sm text-slate-700">
               <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
                 <tr>
@@ -438,13 +513,26 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
 
       {/* Modal: Add Product */}
       {isAddOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xl max-w-md w-full space-y-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeModals();
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-product-title"
+            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xl max-w-md w-full space-y-4"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-lg font-bold text-slate-900">Add New Product</h3>
+              <h3 id="add-product-title" className="text-lg font-bold text-slate-900">
+                Add New Product
+              </h3>
               <button
                 type="button"
                 onClick={closeModals}
+                aria-label="Close modal"
                 className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
               >
                 <X className="w-5 h-5" />
@@ -542,13 +630,26 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
 
       {/* Modal: Edit Product */}
       {editingProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xl max-w-md w-full space-y-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeModals();
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-product-title"
+            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xl max-w-md w-full space-y-4"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-lg font-bold text-slate-900">Edit Product</h3>
+              <h3 id="edit-product-title" className="text-lg font-bold text-slate-900">
+                Edit Product
+              </h3>
               <button
                 type="button"
                 onClick={closeModals}
+                aria-label="Close modal"
                 className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
               >
                 <X className="w-5 h-5" />
@@ -644,13 +745,26 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
 
       {/* Modal: Delete Confirmation */}
       {deletingProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xl max-w-md w-full space-y-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeModals();
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-product-title"
+            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xl max-w-md w-full space-y-4"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-lg font-bold text-slate-900">Delete Product</h3>
+              <h3 id="delete-product-title" className="text-lg font-bold text-slate-900">
+                Delete Product
+              </h3>
               <button
                 type="button"
                 onClick={closeModals}
+                aria-label="Close modal"
                 className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
               >
                 <X className="w-5 h-5" />

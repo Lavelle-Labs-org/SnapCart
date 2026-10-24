@@ -132,7 +132,50 @@ export default async function OrdersDashboardPage({
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
+          {/* Mobile Stacked Card View (< md) */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {orders.map((order) => {
+              const maskedPhone = maskPhoneNumber(order.buyer_phone || "");
+              const totalFormatted = formatBirr(order.total_santim ?? 0);
+              const placedTime = formatOrderTime(order.created_at);
+
+              return (
+                <div key={`mobile-${order.id}`} className="p-4 space-y-3 hover:bg-slate-50/50 transition">
+                  <div className="flex items-center justify-between">
+                    <Link
+                      href={`/dashboard/orders/${order.id}`}
+                      className="font-bold text-slate-900 text-base hover:text-emerald-600 transition"
+                    >
+                      {`#${order.number}`}
+                    </Link>
+                    {getStatusBadge(order.state)}
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div>
+                      <div className="font-medium text-slate-900">{order.buyer_name || "Guest Customer"}</div>
+                      <div className="text-slate-500 font-mono text-xs tabular-nums">{maskedPhone}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-slate-900 text-base tabular-nums">{totalFormatted}</div>
+                      <div className="text-xs text-slate-400">{placedTime}</div>
+                    </div>
+                  </div>
+                  <div className="pt-1">
+                    <Link
+                      href={`/dashboard/orders/${order.id}`}
+                      className="w-full flex items-center justify-center space-x-1.5 py-2 px-3 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-emerald-700 transition"
+                    >
+                      <span>View Details</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop Table (>= md) */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-sm text-slate-700">
               <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
                 <tr>
