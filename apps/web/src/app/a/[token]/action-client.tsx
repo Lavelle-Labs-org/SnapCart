@@ -158,7 +158,7 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
         );
       case "ready":
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 uppercase">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-800 border border-teal-200 uppercase">
             Ready for Pickup
           </span>
         );
@@ -267,8 +267,8 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
         )}
 
         {currentState === "accepted" && (
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-800 flex items-start space-x-2">
-            <BellRing className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div className="bg-slate-100 border border-slate-200 rounded-xl p-3 text-xs text-slate-700 flex items-start space-x-2">
+            <BellRing className="w-4 h-4 text-slate-600 flex-shrink-0 mt-0.5" />
             <span>
               When preparation is finished, tap <strong>Mark Ready</strong> to text the customer their 4-digit pickup code.
             </span>
@@ -276,8 +276,8 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
         )}
 
         {currentState === "ready" && (
-          <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 text-xs text-purple-800 flex items-start space-x-2">
-            <ShieldCheck className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" />
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 flex items-start space-x-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
             <span>
               Ask customer for their 4-digit code from SMS to complete handover.
             </span>

@@ -81,9 +81,9 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between max-w-md mx-auto border-x border-slate-200">
       {/* Header */}
-      <header className="bg-white/95 backdrop-blur-md border-b px-4 py-3.5 sticky top-0 z-10 flex items-center justify-between shadow-xs">
+      <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3.5 sticky top-0 z-10 flex items-center justify-between shadow-xs">
         <div className="flex items-center space-x-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-extrabold flex items-center justify-center text-lg shadow-xs select-none">
+          <div className="w-11 h-11 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center text-lg shadow-xs select-none">
             {shopDisplayName.charAt(0).toUpperCase()}
           </div>
           <div>
@@ -97,7 +97,7 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
             <p className="text-xs text-slate-500 mt-0.5">Order online • Cash on pickup or delivery</p>
           </div>
         </div>
-        <div className="relative bg-emerald-50 text-emerald-700 p-2.5 rounded-full">
+        <div className="relative bg-emerald-50 text-emerald-700 p-2.5 rounded-xl border border-emerald-200">
           <ShoppingBag className="w-5 h-5" />
           {isMounted && totalItems > 0 && (
             <span className="absolute -top-1 -right-1 bg-emerald-600 text-white font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-xs">
@@ -180,7 +180,7 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
 
       {/* Sticky Bottom Checkout Footer */}
       {products.length > 0 && (
-        <footer className="bg-white border-t p-4 sticky bottom-0 z-20 shadow-lg">
+        <footer className="bg-white border-t border-slate-200 p-4 sticky bottom-0 z-20 shadow-xs">
           {isMounted && totalItems > 0 ? (
             <Link
               href={`/s/${seller.slug}/checkout`}

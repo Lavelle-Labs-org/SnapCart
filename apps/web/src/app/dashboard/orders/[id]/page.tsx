@@ -54,7 +54,7 @@ function getStatusBadge(state: string) {
       );
     case "ready":
       return (
-        <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-1.5">
+        <span className="px-3 py-1 bg-teal-50 text-teal-800 border border-teal-200 rounded-full text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-1.5">
           <PackageCheck className="w-3.5 h-3.5" />
           Ready for Pickup
         </span>

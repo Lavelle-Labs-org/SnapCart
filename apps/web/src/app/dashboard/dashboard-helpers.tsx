@@ -87,7 +87,7 @@ export function getStatusBadge(state: string) {
       );
     case "ready":
       return (
-        <span className="px-2.5 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold inline-flex items-center gap-1">
+        <span className="px-2.5 py-1 bg-teal-50 text-teal-800 border border-teal-200 rounded-full text-xs font-semibold inline-flex items-center gap-1">
           <PackageCheck className="w-3 h-3" />
           <span>Ready</span>
         </span>
