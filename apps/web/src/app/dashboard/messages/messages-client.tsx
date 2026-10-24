@@ -137,8 +137,8 @@ export function getMessageStatusBadge(status: string, skipReason?: string | null
       );
     case "queued":
       return (
-        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
-          <Clock className="w-3 h-3 text-purple-600" />
+        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+          <Clock className="w-3 h-3 text-slate-500" />
           <span>Queued</span>
         </span>
       );

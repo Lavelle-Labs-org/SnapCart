@@ -38,7 +38,7 @@ export default function Home() {
         </div>
 
         <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 max-w-3xl leading-tight">
-          A business you can run entirely from <span className="text-emerald-700">text messages</span>.
+          A business you can run entirely from text messages.
         </h1>
 
         <p className="mt-6 text-base md:text-lg text-slate-600 max-w-2xl leading-relaxed">

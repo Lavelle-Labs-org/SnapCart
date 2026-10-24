@@ -233,7 +233,7 @@ export default function OrderActions({
       {/* State: READY (Enter 4-Digit Pickup Code + Complete / Reissue) */}
       {currentState === "ready" && (
         <div className="space-y-4">
-          <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg text-xs text-purple-900">
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900">
             <span className="font-semibold block mb-1">Handover Verification</span>
             <span>Ask buyer for their 4-digit SMS pickup code to complete the order.</span>
           </div>
