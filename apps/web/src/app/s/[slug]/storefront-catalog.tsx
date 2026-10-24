@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ShoppingBag, ArrowRight, PackageX, Plus, Minus } from "lucide-react";
+import { ShoppingBag, ArrowRight, PackageX, Plus, Minus, CheckCircle2 } from "lucide-react";
 import { toBirr } from "@order-by-sms/contracts";
 
 export interface StorefrontSellerProp {
@@ -81,11 +81,21 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between max-w-md mx-auto border-x border-slate-200">
       {/* Header */}
-      <header className="bg-white border-b px-4 py-4 sticky top-0 z-10 flex items-center justify-between shadow-xs">
-        <div>
-          <span className="text-[11px] font-semibold text-emerald-700 tracking-wider uppercase">Storefront</span>
-          <h1 className="text-xl font-bold text-slate-900">{shopDisplayName}</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Order online • Cash on pickup or delivery</p>
+      <header className="bg-white/95 backdrop-blur-md border-b px-4 py-3.5 sticky top-0 z-10 flex items-center justify-between shadow-xs">
+        <div className="flex items-center space-x-3">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-extrabold flex items-center justify-center text-lg shadow-xs select-none">
+            {shopDisplayName.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-base font-bold text-slate-900 leading-tight">{shopDisplayName}</h1>
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">
+                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                Verified
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">Order online • Cash on pickup or delivery</p>
+          </div>
         </div>
         <div className="relative bg-emerald-50 text-emerald-700 p-2.5 rounded-full">
           <ShoppingBag className="w-5 h-5" />
@@ -124,7 +134,7 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
                 >
                   <div className="pr-3">
                     <h3 className="font-semibold text-slate-900 text-sm leading-snug">{product.name}</h3>
-                    <p className="text-sm font-bold text-emerald-600 mt-1">{priceBirr} ETB</p>
+                    <p className="text-sm font-bold text-emerald-700 tabular-nums mt-1">{priceBirr} ETB</p>
                   </div>
 
                   {/* Quantity Controls with >=44px touch targets */}

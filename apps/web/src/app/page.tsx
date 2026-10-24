@@ -48,18 +48,18 @@ export default function Home() {
 
         <div className="mt-8 flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
           <Link
-            href="/s/demo"
-            className="flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-6 py-3.5 rounded-xl transition shadow-md"
+            href="/s/habesha-cafe"
+            className="flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-medium px-6 py-3.5 rounded-xl transition shadow-md hover:shadow-lg focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
           >
             <ShoppingBag className="w-5 h-5" />
             <span>Try Buyer Storefront</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
-            href="/dashboard"
-            className="flex items-center justify-center space-x-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 font-medium px-6 py-3.5 rounded-xl transition shadow-sm"
+            href="/login"
+            className="flex items-center justify-center space-x-2 bg-white hover:bg-slate-50 active:scale-[0.98] border border-slate-300 text-slate-800 font-medium px-6 py-3.5 rounded-xl transition shadow-xs hover:border-slate-400 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
           >
-            <span>Seller Dashboard</span>
+            <span>Seller Dashboard Sign In</span>
           </Link>
         </div>
 

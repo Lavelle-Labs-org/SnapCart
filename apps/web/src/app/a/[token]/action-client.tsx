@@ -243,7 +243,7 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
                   <span className="font-bold text-slate-900 mr-2">{item.quantity}x</span>
                   <span className="text-slate-800">{item.name}</span>
                 </div>
-                <span className="font-semibold text-slate-700">
+                <span className="font-semibold text-slate-700 tabular-nums">
                   {item.quantity * item.priceBirr} ETB
                 </span>
               </div>
@@ -252,7 +252,7 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
 
           <div className="border-t pt-3 flex justify-between items-center text-slate-900">
             <span className="font-semibold text-sm">Total Payable (Cash)</span>
-            <span className="text-emerald-600 font-bold text-xl">{order.totalBirr} ETB</span>
+            <span className="text-emerald-600 font-bold text-xl tabular-nums">{order.totalBirr} ETB</span>
           </div>
         </div>
 

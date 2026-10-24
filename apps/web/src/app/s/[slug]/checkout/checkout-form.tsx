@@ -263,9 +263,14 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
               </div>
 
               <div>
-                <label htmlFor="phone" className="block text-xs font-medium text-slate-700 mb-1">
-                  Mobile Phone Number <span className="text-rose-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="phone" className="block text-xs font-medium text-slate-700">
+                    Mobile Phone Number <span className="text-rose-500">*</span>
+                  </label>
+                  <span className="text-[10px] font-medium text-slate-400">
+                    Ethio Telecom (09) • Safaricom (07)
+                  </span>
+                </div>
                 <input
                   id="phone"
                   type="tel"
@@ -289,14 +294,14 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
                   <p className="text-rose-600 text-xs mt-1">{fieldErrors.phone}</p>
                 ) : (
                   <p className="text-[11px] text-slate-500 mt-1">
-                    Ethio Telecom (09...) or Safaricom (07...). A 6-digit verification code will be sent to this number.
+                    A 6-digit SMS verification code will be sent to this number to confirm your order.
                   </p>
                 )}
               </div>
 
               {/* SMS Consent Checkbox (Unticked by default as per FR-9) */}
-              <div className="pt-2 border-t border-slate-100">
-                <label className="flex items-center space-x-3 text-xs text-slate-700 cursor-pointer select-none min-h-[44px] py-1">
+              <div className={`p-3 rounded-xl border transition ${smsConsent ? "bg-emerald-50/50 border-emerald-200" : "bg-slate-50 border-slate-200"}`}>
+                <label className="flex items-center space-x-3 text-xs text-slate-700 cursor-pointer select-none min-h-[44px]">
                   <input
                     type="checkbox"
                     id="sms_consent"
