@@ -7,7 +7,7 @@ import { HttpException, HttpStatus } from "@nestjs/common";
 export const CreateProductSchema = z
   .object({
     name: z
-      .string({ required_error: "Product name is required" })
+      .string({ message: "Product name is required" })
       .trim()
       .min(1, { message: "Product name cannot be empty" })
       .max(100, { message: "Product name cannot exceed 100 characters" }),

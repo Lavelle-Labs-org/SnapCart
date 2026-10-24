@@ -3,9 +3,9 @@ import { createZodDto } from "../../common/pipes/zod-validation.pipe";
 import { normalizeEthiopianPhone } from "@order-by-sms/contracts";
 
 export const CheckoutItemSchema = z.object({
-  productId: z.string({ required_error: "Product ID is required" }).min(1),
+  productId: z.string({ message: "Product ID is required" }).min(1),
   quantity: z
-    .number({ required_error: "Quantity is required" })
+    .number({ message: "Quantity is required" })
     .int()
     .min(1, { message: "Quantity must be at least 1" })
     .max(999, { message: "Quantity exceeds maximum allowable quantity" }),
@@ -13,7 +13,7 @@ export const CheckoutItemSchema = z.object({
 
 export const CheckoutSchema = z
   .object({
-    slug: z.string({ required_error: "Seller slug is required" }).trim().min(1),
+    slug: z.string({ message: "Seller slug is required" }).trim().min(1),
     buyerName: z.string().trim().min(1).max(100).optional(),
     buyer_name: z.string().trim().min(1).max(100).optional(),
     buyerPhone: z.string().trim().optional(),
@@ -23,7 +23,7 @@ export const CheckoutSchema = z
     consentWording: z.string().optional(),
     consent_wording: z.string().optional(),
     items: z
-      .array(CheckoutItemSchema, { required_error: "Cart items are required" })
+      .array(CheckoutItemSchema, { message: "Cart items are required" })
       .min(1, { message: "Cart cannot be empty" }),
   })
   .refine(
@@ -65,7 +65,7 @@ export const VerifyCheckoutSchema = z
     draftId: z.string().trim().min(1).optional(),
     draft_id: z.string().trim().min(1).optional(),
     code: z
-      .string({ required_error: "Verification code is required" })
+      .string({ message: "Verification code is required" })
       .trim()
       .min(1, { message: "Verification code cannot be empty" }),
   })
