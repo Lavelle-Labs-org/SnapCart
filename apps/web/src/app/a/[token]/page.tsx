@@ -127,7 +127,7 @@ function renderInvalidTokenView(reason?: string) {
         <div className="pt-2">
           <Link
             href="/dashboard"
-            className="w-full inline-flex items-center justify-center space-x-2 bg-slate-900 hover:bg-slate-800 text-white font-medium px-4 py-3 rounded-xl transition text-sm min-h-[44px]"
+            className="w-full inline-flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-3 rounded-xl transition text-sm min-h-[44px] shadow-xs"
           >
             <span>Go to Seller Dashboard</span>
             <ArrowRight className="w-4 h-4" />

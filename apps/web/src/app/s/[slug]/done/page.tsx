@@ -148,7 +148,7 @@ export default async function DonePage({ params, searchParams }: DonePageProps) 
       <div className="pt-6">
         <Link
           href={`/s/${slug}`}
-          className="w-full flex items-center justify-center space-x-2 bg-slate-900 hover:bg-slate-800 text-white font-medium px-5 py-3 rounded-xl transition shadow-sm min-h-[48px]"
+          className="w-full flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-3 rounded-xl transition shadow-xs min-h-[48px]"
         >
           <Home className="w-4 h-4" />
           <span>Back to Storefront</span>
