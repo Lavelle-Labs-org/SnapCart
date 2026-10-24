@@ -56,7 +56,9 @@ export class CheckoutService {
     const parseResult = CheckoutSchema.safeParse(input);
     if (!parseResult.success) {
       const firstError =
-        parseResult.error.errors[0]?.message || "Invalid checkout payload";
+        ((parseResult.error as any).issues?.[0]?.message ||
+          (parseResult.error as any).errors?.[0]?.message) ||
+        "Invalid checkout payload";
       throw new HttpException(
         {
           code: "VALIDATION_ERROR",
@@ -387,7 +389,9 @@ export class CheckoutService {
 
     if (!parseResult.success) {
       const firstError =
-        parseResult.error.errors[0]?.message || "Invalid verification input";
+        ((parseResult.error as any).issues?.[0]?.message ||
+          (parseResult.error as any).errors?.[0]?.message) ||
+        "Invalid verification input";
       throw new HttpException(
         {
           code: "VALIDATION_ERROR",

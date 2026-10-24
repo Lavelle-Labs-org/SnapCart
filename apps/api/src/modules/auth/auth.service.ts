@@ -200,7 +200,10 @@ export class AuthService {
       throw new HttpException(
         {
           code: "VALIDATION_ERROR",
-          message: parseResult.error.errors[0]?.message || "Invalid input data",
+          message:
+            ((parseResult.error as any).issues?.[0]?.message ||
+              (parseResult.error as any).errors?.[0]?.message) ||
+            "Invalid input data",
           details: parseResult.error.flatten().fieldErrors,
         },
         HttpStatus.BAD_REQUEST
@@ -320,7 +323,10 @@ export class AuthService {
       throw new HttpException(
         {
           code: "VALIDATION_ERROR",
-          message: parseResult.error.errors[0]?.message || "Invalid input data",
+          message:
+            ((parseResult.error as any).issues?.[0]?.message ||
+              (parseResult.error as any).errors?.[0]?.message) ||
+            "Invalid input data",
           details: parseResult.error.flatten().fieldErrors,
         },
         HttpStatus.BAD_REQUEST
@@ -431,7 +437,10 @@ export class AuthService {
       throw new HttpException(
         {
           code: "VALIDATION_ERROR",
-          message: parseResult.error.errors[0]?.message || "Invalid input data",
+          message:
+            ((parseResult.error as any).issues?.[0]?.message ||
+              (parseResult.error as any).errors?.[0]?.message) ||
+            "Invalid input data",
           details: parseResult.error.flatten().fieldErrors,
         },
         HttpStatus.BAD_REQUEST
@@ -516,7 +525,10 @@ export class AuthService {
       throw new HttpException(
         {
           code: "VALIDATION_ERROR",
-          message: parseResult.error.errors[0]?.message || "Invalid input data",
+          message:
+            ((parseResult.error as any).issues?.[0]?.message ||
+              (parseResult.error as any).errors?.[0]?.message) ||
+            "Invalid input data",
           details: parseResult.error.flatten().fieldErrors,
         },
         HttpStatus.BAD_REQUEST

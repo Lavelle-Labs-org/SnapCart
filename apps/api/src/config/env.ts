@@ -70,7 +70,7 @@ export const envSchema = z
     // SMSHub Execution Mode: "test" (calls /api/test, 0 credits) or "live" (calls /api/sms)
     SMSHUB_MODE: z
       .enum(["test", "live"], {
-        errorMap: () => ({ message: "SMSHUB_MODE must be either 'test' or 'live'" }),
+        message: "SMSHUB_MODE must be either 'test' or 'live'",
       })
       .default("test"),
 

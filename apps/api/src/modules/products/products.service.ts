@@ -57,7 +57,10 @@ export class ProductsService {
 
     const parseResult = CreateProductSchema.safeParse(input);
     if (!parseResult.success) {
-      const firstError = parseResult.error.errors[0]?.message || "Invalid input";
+      const firstError =
+        ((parseResult.error as any).issues?.[0]?.message ||
+          (parseResult.error as any).errors?.[0]?.message) ||
+        "Invalid input";
       throw new HttpException(
         {
           code: "VALIDATION_ERROR",
@@ -122,7 +125,10 @@ export class ProductsService {
 
     const parseResult = UpdateProductSchema.safeParse(input);
     if (!parseResult.success) {
-      const firstError = parseResult.error.errors[0]?.message || "Invalid input";
+      const firstError =
+        ((parseResult.error as any).issues?.[0]?.message ||
+          (parseResult.error as any).errors?.[0]?.message) ||
+        "Invalid input";
       throw new HttpException(
         {
           code: "VALIDATION_ERROR",

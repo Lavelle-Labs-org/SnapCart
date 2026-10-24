@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import {
   Copy,
   Check,
@@ -40,7 +40,11 @@ export interface SettingsClientProps {
  * (fallback to NEXT_PUBLIC_APP_URL or http://localhost:3000).
  */
 export function getStorefrontUrl(slug: string, baseUrl?: string): string {
-  const appBaseUrl = (baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
+  let appBaseUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL;
+  if (!appBaseUrl && typeof window !== "undefined" && window.location?.origin) {
+    appBaseUrl = window.location.origin;
+  }
+  appBaseUrl = (appBaseUrl || "http://localhost:3000").replace(/\/+$/, "");
   return `${appBaseUrl}/s/${slug}`;
 }
 
@@ -97,15 +101,21 @@ export function validateShopSettings(businessName: string, smsName: string): {
  */
 export function renderTemplatePreview(
   templateKey: TemplateKey,
-  smsName: string
+  smsName: string,
+  baseUrl?: string
 ): string {
+  let appBaseUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL;
+  if (!appBaseUrl && typeof window !== "undefined" && window.location?.origin) {
+    appBaseUrl = window.location.origin;
+  }
+  appBaseUrl = (appBaseUrl || "http://localhost:3000").replace(/\/+$/, "");
   const activeShopName = smsName.trim() || "Shop";
   switch (templateKey) {
     case "buyerAccepted":
       return SMS_TEMPLATES.buyerAccepted({
         shopName: activeShopName,
         orderNumber: 1043,
-        link: "https://ord.et/x/Z7y1",
+        link: `${appBaseUrl}/x/Z7y1`,
       });
     case "buyerReady":
       return SMS_TEMPLATES.buyerReady({
@@ -130,7 +140,7 @@ export function renderTemplatePreview(
         orderNumber: 1043,
         itemCount: 3,
         totalBirr: 850,
-        link: "https://ord.et/a/K9x2",
+        link: `${appBaseUrl}/a/K9x2`,
       });
     default:
       return "";
@@ -177,7 +187,21 @@ export default function SettingsClient({
   const [saveMessage, setSaveMessage] = useState("");
 
   const slug = initialSeller.slug || "shop";
-  const storefrontUrl = getStorefrontUrl(slug, baseUrl);
+  const [storefrontUrl, setStorefrontUrl] = useState(() => getStorefrontUrl(slug, baseUrl));
+
+  // Sync with browser origin if available on client mount
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location?.origin) {
+      const origin = window.location.origin.replace(/\/+$/, "");
+      if (!baseUrl || baseUrl === "http://localhost:3000" || window.location.hostname !== "localhost") {
+        setStorefrontUrl(`${origin}/s/${slug}`);
+      }
+    }
+  }, [baseUrl, slug]);
+
+  const currentBaseUrl = storefrontUrl
+    ? storefrontUrl.replace(/\/s\/[^/]+$/, "")
+    : (baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000");
 
   // Real-time validations
   const isBusinessNameValid =
@@ -190,45 +214,10 @@ export default function SettingsClient({
   const smsNameEncoding = detectEncoding(smsName);
   const smsNameHasNonGsm = smsName.length > 0 && smsNameEncoding === "UCS-2";
 
-  // Compute live rendered template text
+  // Compute live rendered template text using dynamic environment / current URL
   const renderedMessage = React.useMemo(() => {
-    const activeShopName = smsName.trim() || "Shop";
-    switch (selectedTemplate) {
-      case "buyerAccepted":
-        return SMS_TEMPLATES.buyerAccepted({
-          shopName: activeShopName,
-          orderNumber: 1043,
-          link: "https://ord.et/x/Z7y1",
-        });
-      case "buyerReady":
-        return SMS_TEMPLATES.buyerReady({
-          shopName: activeShopName,
-          orderNumber: 1043,
-          code: "4821",
-        });
-      case "buyerRejected":
-        return SMS_TEMPLATES.buyerRejected({
-          shopName: activeShopName,
-          orderNumber: 1043,
-        });
-      case "buyerNewPickupCode":
-        return SMS_TEMPLATES.buyerNewPickupCode({
-          shopName: activeShopName,
-          orderNumber: 1043,
-          code: "7305",
-        });
-      case "sellerNewOrder":
-        return SMS_TEMPLATES.sellerNewOrder({
-          shopName: activeShopName,
-          orderNumber: 1043,
-          itemCount: 3,
-          totalBirr: 850,
-          link: "https://ord.et/a/K9x2",
-        });
-      default:
-        return "";
-    }
-  }, [selectedTemplate, smsName]);
+    return renderTemplatePreview(selectedTemplate, smsName, currentBaseUrl);
+  }, [selectedTemplate, smsName, currentBaseUrl]);
 
   const smsAnalysis = React.useMemo(() => {
     return calculateSmsSegments(renderedMessage);
@@ -359,7 +348,7 @@ export default function SettingsClient({
 
             <a
               id="open-storefront-link"
-              href={`/s/${slug}`}
+              href={storefrontUrl}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Open storefront in new tab"

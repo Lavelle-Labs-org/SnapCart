@@ -82,7 +82,7 @@ export class ZodValidationPipe implements PipeTransform {
 
     const result = schema.safeParse(value);
     if (!result.success) {
-      const firstIssue = result.error.errors[0];
+      const firstIssue = (result.error as any).issues?.[0] || (result.error as any).errors?.[0];
       throw new HttpException(
         {
           code: "VALIDATION_ERROR",
