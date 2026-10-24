@@ -94,7 +94,7 @@ export function DashboardShell({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col md:flex-row transition-colors duration-200">
+    <div className="min-h-screen bg-[#f6f8f7] dark:bg-[#07130f] flex flex-col md:flex-row transition-colors duration-200">
       {/* Mobile Drawer Backdrop */}
       {isMobileOpen && (
         <div

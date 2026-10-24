@@ -1,108 +1,62 @@
 import Link from "next/link";
-import { MessageSquare, ShoppingBag, ShieldCheck, ArrowRight, Smartphone, CheckCircle } from "lucide-react";
+import { MessageSquare, ShoppingBag, ShieldCheck, ArrowRight, Smartphone, CheckCircle, Sparkles, Zap } from "lucide-react";
 import { ThemeToggle } from "../components/theme-toggle";
+
+const features = [
+  { icon: Smartphone, title: "Orders in the flow", text: "Share one storefront link anywhere. Customers browse and order from the phone they already use." },
+  { icon: ShieldCheck, title: "Built-in trust", text: "OTP verification and pickup codes keep every handover clear, secure, and accountable." },
+  { icon: CheckCircle, title: "A clear pulse", text: "See real delivery updates, order status, and message history without chasing a dashboard." },
+];
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-between transition-colors duration-200">
-      {/* Navigation */}
-      <header className="border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xs sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="bg-emerald-600 text-white p-2 rounded-xl shadow-xs">
-              <MessageSquare className="w-5 h-5" />
-            </div>
-            <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-slate-100">Order-by-SMS</span>
-          </div>
-          <div className="flex items-center space-x-2 sm:space-x-3">
+    <div className="min-h-screen overflow-hidden bg-[#f6f8f7] text-slate-900 dark:bg-[#07130f] dark:text-slate-100">
+      <header className="sticky top-0 z-50 border-b border-emerald-950/10 bg-[#f6f8f7]/80 backdrop-blur-xl dark:border-white/10 dark:bg-[#07130f]/80">
+        <div className="mx-auto flex h-[72px] max-w-6xl items-center justify-between px-5 lg:px-8">
+          <Link href="/" className="flex items-center gap-3" aria-label="Order-by-SMS home">
+            <span className="flex size-10 items-center justify-center rounded-[14px] bg-emerald-700 text-white shadow-[0_8px_20px_rgba(8,127,91,0.22)] dark:bg-emerald-500 dark:text-emerald-950"><MessageSquare className="size-5" /></span>
+            <span className="text-[17px] font-bold tracking-[-0.03em]">Order-by-SMS</span>
+          </Link>
+          <nav className="flex items-center gap-2 sm:gap-3">
             <ThemeToggle />
-            <Link
-              href="/login"
-              className="text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-touch flex items-center"
-            >
-              Seller Login
-            </Link>
-            <Link
-              href="/signup"
-              className="text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-4 py-2 rounded-xl transition shadow-xs min-h-touch flex items-center"
-            >
-              Start Selling
-            </Link>
-          </div>
+            <Link href="/login" className="hidden rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-white hover:text-slate-950 sm:flex dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white">Seller login</Link>
+            <Link href="/signup" className="flex min-h-touch items-center rounded-xl bg-emerald-700 px-4 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(8,127,91,0.2)] transition hover:-translate-y-0.5 hover:bg-emerald-800 dark:bg-emerald-500 dark:text-emerald-950 dark:hover:bg-emerald-400">Start selling</Link>
+          </nav>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <main className="flex-1 max-w-5xl mx-auto px-4 py-12 md:py-20 flex flex-col items-center text-center">
-        <div className="inline-flex items-center space-x-2 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold px-3.5 py-1.5 rounded-full mb-6 shadow-xs">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Powered by SMSHub.et &amp; Ethio Telecom / Safaricom</span>
-        </div>
-
-        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 max-w-3xl leading-tight">
-          A business you can run entirely from text messages.
-        </h1>
-
-        <p className="mt-6 text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
-          Paste one storefront link into Telegram or Instagram. Customers order without an account, and every step
-          happens by SMS. No app to install, no dashboard to monitor.
-        </p>
-
-        <div className="mt-8 flex flex-col sm:flex-row gap-3.5 w-full sm:w-auto">
-          <Link
-            href="/s/habesha-cafe"
-            className="flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold px-6 py-3.5 rounded-xl transition shadow-xs focus-visible:ring-2 focus-visible:ring-emerald-500 min-h-touch"
-          >
-            <ShoppingBag className="w-5 h-5" />
-            <span>Try Buyer Storefront</span>
-            <ArrowRight className="w-4 h-4 ml-1" />
-          </Link>
-          <Link
-            href="/login"
-            className="flex items-center justify-center space-x-2 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-semibold px-6 py-3.5 rounded-xl transition shadow-xs focus-visible:ring-2 focus-visible:ring-slate-400 min-h-touch"
-          >
-            <span>Seller Dashboard Sign In</span>
-          </Link>
-        </div>
-
-        {/* Feature Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 text-left w-full">
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-            <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 flex items-center justify-center mb-4">
-              <Smartphone className="w-5 h-5" />
+      <main>
+        <section className="relative mx-auto max-w-6xl px-5 pb-20 pt-16 lg:px-8 lg:pb-28 lg:pt-24">
+          <div className="pointer-events-none absolute -right-40 -top-32 size-[500px] rounded-full bg-emerald-300/20 blur-3xl dark:bg-emerald-500/10" />
+          <div className="relative grid items-center gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20">
+            <div>
+              <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/70 px-3.5 py-2 text-xs font-semibold text-emerald-800 shadow-sm dark:border-emerald-900 dark:bg-white/5 dark:text-emerald-300"><Sparkles className="size-3.5" />Commerce that starts with a text</div>
+              <h1 className="max-w-2xl text-5xl font-bold leading-[1.02] tracking-[-0.06em] text-slate-950 sm:text-6xl lg:text-7xl dark:text-white">Your storefront, <span className="text-emerald-700 dark:text-emerald-400">in every phone.</span></h1>
+              <p className="mt-7 max-w-xl text-lg leading-8 text-slate-600 dark:text-slate-300">A simpler way for Ethiopian micro-merchants to turn conversations into orders. No app download. No account friction. Just a storefront link and SMS that keeps everyone moving.</p>
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                <Link href="/signup" className="flex min-h-touch items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 text-sm font-bold text-white shadow-[0_12px_28px_rgba(8,127,91,0.22)] transition hover:-translate-y-0.5 hover:bg-emerald-800 dark:bg-emerald-500 dark:text-emerald-950 dark:hover:bg-emerald-400"><Zap className="size-4" />Launch your shop<ArrowRight className="size-4" /></Link>
+                <Link href="/s/habesha-cafe" className="flex min-h-touch items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white/80 px-6 text-sm font-bold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-300 hover:text-emerald-800 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:border-emerald-700"><ShoppingBag className="size-4" />Explore a storefront</Link>
+              </div>
+              <p className="mt-6 text-xs font-medium text-slate-500 dark:text-slate-400">Works with SMSHub.et · Ethio Telecom · Safaricom</p>
             </div>
-            <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">One-Tap Action Links</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-              Sellers receive an SMS alert with a secure signed link to accept, reject, or mark ready right from their phone without logging in.
-            </p>
-          </div>
 
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-            <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 flex items-center justify-center mb-4">
-              <ShieldCheck className="w-5 h-5" />
+            <div className="relative mx-auto w-full max-w-[430px] lg:mr-0">
+              <div className="absolute -inset-5 rounded-[38px] bg-emerald-500/10 blur-2xl" />
+              <div className="relative overflow-hidden rounded-[30px] border border-emerald-900/10 bg-white p-3 shadow-[0_24px_70px_rgba(16,68,50,0.16)] dark:border-white/10 dark:bg-[#0d211a]">
+                <div className="rounded-[22px] bg-[#f5faf7] p-6 dark:bg-[#102a20]">
+                  <div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-400">Today</p><h2 className="mt-1 text-xl font-bold">Seller pulse</h2></div><span className="flex size-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300"><MessageSquare className="size-5" /></span></div>
+                  <div className="mt-6 grid grid-cols-2 gap-3"><div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-white/5"><p className="text-xs text-slate-500">Orders today</p><p className="mt-2 text-2xl font-bold">24</p><p className="mt-1 text-xs font-semibold text-emerald-600">+18.4%</p></div><div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-white/5"><p className="text-xs text-slate-500">SMS delivered</p><p className="mt-2 text-2xl font-bold">98.7%</p><p className="mt-1 text-xs font-semibold text-emerald-600">Healthy</p></div></div>
+                  <div className="mt-3 rounded-2xl bg-white p-4 shadow-sm dark:bg-white/5"><div className="flex items-center justify-between"><div className="flex items-center gap-3"><span className="flex size-9 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"><ShoppingBag className="size-4" /></span><div><p className="text-sm font-bold">New order #1048</p><p className="text-xs text-slate-500">Mimi · 2 items</p></div></div><span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">Action needed</span></div></div>
+                  <div className="mt-3 rounded-2xl bg-emerald-700 p-4 text-white shadow-lg dark:bg-emerald-600"><p className="text-xs font-medium text-emerald-100">Your shop link</p><p className="mt-1 truncate text-sm font-bold">orderbysms.et/s/your-shop</p><div className="mt-4 flex items-center gap-2 text-xs text-emerald-100"><CheckCircle className="size-3.5" />Ready to share anywhere</div></div>
+                </div>
+              </div>
             </div>
-            <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">OTP &amp; Handover Proof</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-              Buyer phone numbers are verified via SMSHub OTP before order creation. Orders are completed only when the 4-digit pickup code matches.
-            </p>
           </div>
+        </section>
 
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-            <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 flex items-center justify-center mb-4">
-              <CheckCircle className="w-5 h-5" />
-            </div>
-            <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">Honest Audit Log</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-              Every SMS message status is verified by webhook callbacks, displaying real delivery reports, credit billing, and instant resend controls.
-            </p>
-          </div>
-        </div>
+        <section className="border-y border-emerald-950/10 bg-white/55 dark:border-white/10 dark:bg-white/[0.02]"><div className="mx-auto grid max-w-6xl gap-px px-5 py-5 sm:grid-cols-3 lg:px-8">{features.map(({ icon: Icon, title, text }) => <article key={title} className="rounded-2xl px-5 py-5 sm:px-6"><Icon className="size-5 text-emerald-700 dark:text-emerald-400" /><h3 className="mt-4 text-base font-bold">{title}</h3><p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">{text}</p></article>)}</div></section>
       </main>
-
-      {/* Footer */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
-        <p>Order-by-SMS • Built for Ethiopian micro-merchants on Ethio Telecom &amp; Safaricom networks.</p>
-      </footer>
+      <footer className="mx-auto flex max-w-6xl flex-col gap-2 px-5 py-8 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between lg:px-8"><span className="font-semibold text-slate-700 dark:text-slate-300">Order-by-SMS</span><span>Built for Ethiopian micro-merchants.</span></footer>
     </div>
   );
 }
