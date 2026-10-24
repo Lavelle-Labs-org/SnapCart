@@ -5,6 +5,12 @@
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
+  --color-canvas: #f8fafc;
+  --color-surface: #ffffff;
+  --color-border: #e2e8f0;
+  --color-primary: #059669;
+  --color-primary-hover: #047857;
+  --focus-ring: #059669;
 }
 
 html,
@@ -13,7 +19,7 @@ body {
   overflow-x: hidden;
   color: var(--foreground);
   background: var(--background);
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Ethiopic", "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-inter), "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Ethiopic", "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -48,7 +54,7 @@ body {
 
   /* Accessible focus indicators for outdoor visibility and keyboard navigation */
   :focus-visible {
-    outline: 2px solid #10b981;
+    outline: 2px solid var(--focus-ring, #059669);
     outline-offset: 2px;
   }
 }
