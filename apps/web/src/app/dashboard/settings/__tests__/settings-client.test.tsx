@@ -239,5 +239,21 @@ describe("SettingsClient Logic & Component (FE-013, Issue #36)", () => {
       delete process.env.NEXT_PUBLIC_APP_URL;
       expect(getStorefrontUrl("habesha-cafe")).toBe("http://localhost:3000/s/habesha-cafe");
     });
+
+    it("renders SMS template preview with dynamic environment base URL in action and opt-out links", () => {
+      process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
+      const buyerPreview = renderTemplatePreview("buyerAccepted", "Habesha Cafe");
+      expect(buyerPreview).toContain("Stop texts: http://localhost:3000/x/Z7y1");
+
+      const sellerPreview = renderTemplatePreview("sellerNewOrder", "Habesha Cafe");
+      expect(sellerPreview).toContain("Open: http://localhost:3000/a/K9x2");
+
+      const customPreview = renderTemplatePreview(
+        "buyerAccepted",
+        "Habesha Cafe",
+        "https://order-by-sms-six.vercel.app"
+      );
+      expect(customPreview).toContain("Stop texts: https://order-by-sms-six.vercel.app/x/Z7y1");
+    });
   });
 });
