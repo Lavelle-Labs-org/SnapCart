@@ -13,6 +13,17 @@
   --focus-ring: #059669;
 }
 
+.dark {
+  --background: #090d16;
+  --foreground: #f8fafc;
+  --color-canvas: #090d16;
+  --color-surface: #111827;
+  --color-border: #1e293b;
+  --color-primary: #10b981;
+  --color-primary-hover: #059669;
+  --focus-ring: #10b981;
+}
+
 html,
 body {
   max-width: 100vw;
