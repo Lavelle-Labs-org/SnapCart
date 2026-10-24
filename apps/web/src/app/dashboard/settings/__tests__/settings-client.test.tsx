@@ -255,5 +255,11 @@ describe("SettingsClient Logic & Component (FE-013, Issue #36)", () => {
       );
       expect(customPreview).toContain("Stop texts: https://order-by-sms-six.vercel.app/x/Z7y1");
     });
+
+    it("renders with a centered max-width container (mx-auto)", () => {
+      const { renderToString } = require("react-dom/server");
+      const html = renderToString(<SettingsClient initialSeller={mockSeller} />);
+      expect(html).toContain("max-w-4xl mx-auto");
+    });
   });
 });

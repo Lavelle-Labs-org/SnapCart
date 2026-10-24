@@ -4,6 +4,8 @@ import { prisma } from "../../lib/prisma";
 import { extractSellerIdFromToken } from "./dashboard-helpers";
 import { DashboardShell } from "./dashboard-shell";
 
+import { ThemeToggle } from "../../components/theme-toggle";
+
 export default async function DashboardLayout({
   children,
 }: {
@@ -63,32 +65,33 @@ export default async function DashboardLayout({
       displayName={displayName}
       displaySubtitle={displaySubtitle}
     >
-      <header className="bg-white border-b border-slate-200 px-4 md:px-6 py-3.5 flex items-center justify-between shadow-xs">
+      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 py-3.5 flex items-center justify-between shadow-xs">
         <div>
-          <h2 className="text-lg font-bold text-slate-900 leading-snug">Seller Dashboard</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-snug">Seller Dashboard</h2>
           {seller?.business_name && (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               <span>{seller.business_name}</span>
-              {seller.slug && <span className="ml-1.5 text-slate-400">{`@${seller.slug}`}</span>}
+              {seller.slug && <span className="ml-1.5 text-slate-400 dark:text-slate-500">{`@${seller.slug}`}</span>}
             </p>
           )}
         </div>
-        <div className="flex items-center space-x-3 text-xs">
+        <div className="flex items-center space-x-2 md:space-x-3 text-xs">
           {seller?.slug && (
             <a
               href={`/s/${seller.slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center space-x-1.5 text-xs text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-full font-medium transition"
+              className="inline-flex items-center space-x-1.5 text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 px-3 py-1.5 rounded-full font-medium transition"
             >
               <Store className="w-3.5 h-3.5" />
               <span>View Storefront</span>
             </a>
           )}
-          <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full font-medium border border-emerald-200">
+          <span className="inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-3 py-1.5 rounded-full font-medium border border-emerald-200 dark:border-emerald-800">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>SMSHub Mode: Test</span>
           </span>
+          <ThemeToggle />
         </div>
       </header>
 
