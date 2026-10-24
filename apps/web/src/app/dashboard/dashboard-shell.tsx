@@ -15,7 +15,6 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { ThemeToggle } from "../../components/theme-toggle";
 
 export interface DashboardShellProps {
   seller?: { business_name?: string; slug?: string } | null;
@@ -166,12 +165,8 @@ export function DashboardShell({
           </nav>
         </div>
 
-        {/* Drawer Footer Sign Out & Theme */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Theme</span>
-            <ThemeToggle />
-          </div>
+        {/* Drawer Footer Sign Out */}
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800">
           <Link
             href="/login"
             onClick={() => setIsMobileOpen(false)}
@@ -260,9 +255,8 @@ export function DashboardShell({
 
         {/* Sidebar Footer */}
         <div className="p-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
-          {isCollapsed ? (
-            <div className="flex flex-col items-center space-y-2">
-              <ThemeToggle />
+          {isCollapsed && (
+            <div className="flex justify-center">
               <button
                 type="button"
                 onClick={toggleCollapsed}
@@ -272,11 +266,6 @@ export function DashboardShell({
               >
                 <PanelLeftOpen className="w-5 h-5" />
               </button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between px-2 py-1">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Theme</span>
-              <ThemeToggle />
             </div>
           )}
 
@@ -316,8 +305,7 @@ export function DashboardShell({
               </span>
             </div>
           </div>
-          <div className="flex items-center space-x-1.5">
-            <ThemeToggle />
+          <div>
             {seller?.slug && (
               <a
                 href={`/s/${seller.slug}`}
