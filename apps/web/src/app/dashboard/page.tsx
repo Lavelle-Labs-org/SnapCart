@@ -156,7 +156,7 @@ export default async function OrdersDashboardPage({
                       key={order.id}
                       className="hover:bg-slate-50/80 transition group cursor-pointer"
                     >
-                      <td className="px-4 py-3.5 font-bold text-slate-900">
+                      <td className="px-4 py-3.5 font-bold text-slate-900 tabular-nums">
                         <Link
                           href={`/dashboard/orders/${order.id}`}
                           className="hover:text-emerald-600 hover:underline"
@@ -167,10 +167,10 @@ export default async function OrdersDashboardPage({
                       <td className="px-4 py-3.5 font-medium text-slate-900">
                         {order.buyer_name || "Guest Customer"}
                       </td>
-                      <td className="px-4 py-3.5 text-slate-600 font-mono text-xs">
+                      <td className="px-4 py-3.5 text-slate-600 font-mono text-xs tabular-nums">
                         {maskedPhone}
                       </td>
-                      <td className="px-4 py-3.5 font-semibold text-slate-900">
+                      <td className="px-4 py-3.5 font-semibold text-slate-900 tabular-nums">
                         {totalFormatted}
                       </td>
                       <td className="px-4 py-3.5">{getStatusBadge(order.state)}</td>

@@ -87,7 +87,7 @@ export default async function DashboardLayout({
           <nav className="p-4 space-y-1">
             <Link
               href="/dashboard"
-              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 text-slate-200 transition"
+              className="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 text-slate-200 transition focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
               <ListOrdered className="w-5 h-5 text-emerald-400" />
               <span>Orders</span>
@@ -95,7 +95,7 @@ export default async function DashboardLayout({
 
             <Link
               href="/dashboard/messages"
-              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 text-slate-200 transition"
+              className="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 text-slate-200 transition focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
               <Mail className="w-5 h-5 text-blue-400" />
               <span>SMS Message Log</span>
@@ -103,7 +103,7 @@ export default async function DashboardLayout({
 
             <Link
               href="/dashboard/products"
-              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 text-slate-200 transition"
+              className="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 text-slate-200 transition focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
               <ShoppingBag className="w-5 h-5 text-amber-400" />
               <span>Products</span>
@@ -111,7 +111,7 @@ export default async function DashboardLayout({
 
             <Link
               href="/dashboard/settings"
-              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 text-slate-200 transition"
+              className="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 text-slate-200 transition focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
               <Settings className="w-5 h-5 text-purple-400" />
               <span>Settings & Link</span>
@@ -122,7 +122,7 @@ export default async function DashboardLayout({
         <div className="p-4 border-t border-slate-800">
           <Link
             href="/login"
-            className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition focus-visible:ring-2 focus-visible:ring-emerald-400"
           >
             <LogOut className="w-4 h-4" />
             <span>Sign Out</span>
@@ -132,9 +132,9 @@ export default async function DashboardLayout({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b px-6 py-4 flex items-center justify-between">
+        <header className="bg-white border-b px-6 py-4 flex items-center justify-between shadow-xs">
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Seller Dashboard</h2>
+            <h2 className="text-lg font-bold text-slate-900 leading-snug">Seller Dashboard</h2>
             {seller?.business_name && (
               <p className="text-xs text-slate-500">{seller.business_name}</p>
             )}
@@ -151,8 +151,9 @@ export default async function DashboardLayout({
                 <span>View Storefront</span>
               </a>
             )}
-            <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full font-medium border border-emerald-200">
-              SMSHub Mode: Test
+            <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full font-medium border border-emerald-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>SMSHub Mode: Test</span>
             </span>
           </div>
         </header>

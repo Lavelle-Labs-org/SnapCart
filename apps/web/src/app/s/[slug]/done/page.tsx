@@ -104,7 +104,7 @@ export default async function DonePage({ params, searchParams }: DonePageProps) 
 
         <div
           data-testid="order-number"
-          className="inline-block bg-slate-100 px-5 py-2 rounded-full text-base font-bold text-slate-800 tracking-wide"
+          className="inline-block bg-white border border-slate-200 shadow-xs px-5 py-2 rounded-full text-base font-bold text-slate-900 tracking-wide tabular-nums"
         >
           {`Order #${displayOrderNumber}`}
         </div>
