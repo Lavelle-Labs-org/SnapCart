@@ -343,15 +343,15 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Products Catalog</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Products Catalog</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             Manage item pricing in Birr and storefront availability.
           </p>
         </div>
         <button
           type="button"
           onClick={openAddModal}
-          className="inline-flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2.5 rounded-xl transition shadow-sm text-sm"
+          className="inline-flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2.5 rounded-xl transition shadow-xs text-sm"
         >
           <Plus className="w-4 h-4" />
           <span>Add Product</span>
@@ -360,27 +360,27 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
 
       {/* Product List or Empty State */}
       {products.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center shadow-sm">
-          <div className="w-14 h-14 mx-auto mb-4 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center shadow-xs">
+          <div className="w-14 h-14 mx-auto mb-4 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center">
             <ShoppingBag className="w-7 h-7" />
           </div>
-          <h2 className="text-lg font-bold text-slate-900 mb-2">No products added yet</h2>
-          <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">No products added yet</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
             Add items to your catalog with prices in Birr so buyers can view and purchase them from your storefront.
           </p>
           <button
             type="button"
             onClick={openAddModal}
-            className="inline-flex items-center space-x-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition shadow-sm"
+            className="inline-flex items-center space-x-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition shadow-xs"
           >
             <Plus className="w-4 h-4" />
             <span>Add Your First Product</span>
           </button>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
           {/* Mobile Stacked Card View (< md) */}
-          <div className="md:hidden divide-y divide-slate-100">
+          <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
             {products.map((p) => {
               const priceFormatted = formatBirr(
                 typeof p?.priceSantim === "number" && !isNaN(p.priceSantim)
@@ -390,11 +390,11 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
               const isToggling = togglingId === p.id;
 
               return (
-                <div key={`mobile-${p.id}`} className="p-4 space-y-3 hover:bg-slate-50/50 transition">
+                <div key={`mobile-${p.id}`} className="p-4 space-y-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h4 className="font-semibold text-slate-900 text-base">{p.name}</h4>
-                      <p className="text-base font-bold text-emerald-600 tabular-nums">{priceFormatted}</p>
+                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 text-base">{p.name}</h4>
+                      <p className="text-base font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{priceFormatted}</p>
                     </div>
                     <button
                       type="button"
@@ -402,8 +402,8 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                       onClick={() => handleToggleAvailability(p)}
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition min-h-[36px] ${
                         p.available
-                          ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/60"
+                          : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
                       } disabled:opacity-50`}
                       title="Click to toggle storefront availability"
                     >
@@ -415,11 +415,11 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                       <span>{p.available ? "Available" : "Hidden"}</span>
                     </button>
                   </div>
-                  <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+                  <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
                     <button
                       type="button"
                       onClick={() => openEditModal(p)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition min-h-[40px]"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition min-h-[40px]"
                     >
                       <Edit className="w-3.5 h-3.5" />
                       <span>Edit</span>
@@ -427,7 +427,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                     <button
                       type="button"
                       onClick={() => setDeletingProduct(p)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition min-h-[40px]"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 rounded-lg transition min-h-[40px]"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       <span>Delete</span>
@@ -440,8 +440,8 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
 
           {/* Desktop Table (>= md) */}
           <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-700">
-              <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
+            <table className="w-full text-left text-sm text-slate-700 dark:text-slate-200">
+              <thead className="bg-slate-50 dark:bg-slate-800/80 text-xs uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <tr>
                   <th className="px-4 py-3">Product Name</th>
                   <th className="px-4 py-3">Price (ETB)</th>
@@ -449,7 +449,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {products.map((p) => {
                   const priceFormatted = formatBirr(
                     typeof p?.priceSantim === "number" && !isNaN(p.priceSantim)
@@ -459,9 +459,9 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                   const isToggling = togglingId === p.id;
 
                   return (
-                    <tr key={p.id} className="hover:bg-slate-50/80 transition">
-                      <td className="px-4 py-3.5 font-medium text-slate-900">{p.name}</td>
-                      <td className="px-4 py-3.5 font-semibold text-emerald-600">
+                    <tr key={p.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition">
+                      <td className="px-4 py-3.5 font-medium text-slate-900 dark:text-slate-100">{p.name}</td>
+                      <td className="px-4 py-3.5 font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">
                         {priceFormatted}
                       </td>
                       <td className="px-4 py-3.5">
@@ -471,8 +471,8 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                           onClick={() => handleToggleAvailability(p)}
                           className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition ${
                             p.available
-                              ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
-                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                              ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/60"
+                              : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
                           } disabled:opacity-50`}
                           title="Click to toggle storefront availability"
                         >
@@ -488,7 +488,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                         <button
                           type="button"
                           onClick={() => openEditModal(p)}
-                          className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition"
+                          className="p-1.5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
                           title="Edit product"
                         >
                           <Edit className="w-4 h-4" />
@@ -496,7 +496,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                         <button
                           type="button"
                           onClick={() => setDeletingProduct(p)}
-                          className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition"
+                          className="p-1.5 text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition"
                           title="Delete product"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -514,7 +514,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
       {/* Modal: Add Product */}
       {isAddOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs"
           onClick={(e) => {
             if (e.target === e.currentTarget) closeModals();
           }}
@@ -523,25 +523,25 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
             role="dialog"
             aria-modal="true"
             aria-labelledby="add-product-title"
-            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xl max-w-md w-full space-y-4"
+            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xl max-w-md w-full space-y-4"
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 id="add-product-title" className="text-lg font-bold text-slate-900">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 id="add-product-title" className="text-lg font-bold text-slate-900 dark:text-slate-100">
                 Add New Product
               </h3>
               <button
                 type="button"
                 onClick={closeModals}
                 aria-label="Close modal"
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {formError && (
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-2 text-rose-800 text-xs">
-                <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-600" />
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-lg flex items-center gap-2 text-rose-800 dark:text-rose-300 text-xs">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-600 dark:text-rose-400" />
                 <span>{formError}</span>
               </div>
             )}
@@ -550,7 +550,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
               <div>
                 <label
                   htmlFor="add-product-name"
-                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1"
+                  className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
                 >
                   Product Name *
                 </label>
@@ -561,14 +561,14 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   placeholder="e.g. Special Habesha Doro Wat"
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="add-product-price"
-                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1"
+                  className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
                 >
                   Price in Ethiopian Birr (ETB) *
                 </label>
@@ -582,9 +582,9 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                     value={formPriceBirr}
                     onChange={(e) => setFormPriceBirr(e.target.value)}
                     placeholder="350.00"
-                    className="w-full pl-3.5 pr-14 py-2.5 border border-slate-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full pl-3.5 pr-14 py-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl text-sm font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   />
-                  <span className="absolute right-3.5 top-2.5 text-xs text-slate-400 font-semibold">
+                  <span className="absolute right-3.5 top-2.5 text-xs text-slate-400 dark:text-slate-500 font-semibold">
                     ETB
                   </span>
                 </div>
@@ -596,28 +596,28 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                   type="checkbox"
                   checked={formAvailable}
                   onChange={(e) => setFormAvailable(e.target.checked)}
-                  className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                  className="w-4 h-4 text-emerald-600 rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-emerald-500"
                 />
                 <label
                   htmlFor="add-product-available"
-                  className="text-sm font-medium text-slate-700 select-none cursor-pointer"
+                  className="text-sm font-medium text-slate-700 dark:text-slate-300 select-none cursor-pointer"
                 >
                   Visible and available on storefront immediately
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={closeModals}
-                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition"
+                  className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition disabled:opacity-50 shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition disabled:opacity-50 shadow-xs"
                 >
                   {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                   <span>{isSubmitting ? "Creating..." : "Create Product"}</span>
@@ -631,7 +631,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
       {/* Modal: Edit Product */}
       {editingProduct && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs"
           onClick={(e) => {
             if (e.target === e.currentTarget) closeModals();
           }}
@@ -640,25 +640,25 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
             role="dialog"
             aria-modal="true"
             aria-labelledby="edit-product-title"
-            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xl max-w-md w-full space-y-4"
+            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xl max-w-md w-full space-y-4"
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 id="edit-product-title" className="text-lg font-bold text-slate-900">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 id="edit-product-title" className="text-lg font-bold text-slate-900 dark:text-slate-100">
                 Edit Product
               </h3>
               <button
                 type="button"
                 onClick={closeModals}
                 aria-label="Close modal"
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {formError && (
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-2 text-rose-800 text-xs">
-                <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-600" />
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-lg flex items-center gap-2 text-rose-800 dark:text-rose-300 text-xs">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-600 dark:text-rose-400" />
                 <span>{formError}</span>
               </div>
             )}
@@ -667,7 +667,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
               <div>
                 <label
                   htmlFor="edit-product-name"
-                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1"
+                  className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
                 >
                   Product Name *
                 </label>
@@ -677,14 +677,14 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                   required
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="edit-product-price"
-                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1"
+                  className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
                 >
                   Price in Ethiopian Birr (ETB) *
                 </label>
@@ -697,9 +697,9 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                     required
                     value={formPriceBirr}
                     onChange={(e) => setFormPriceBirr(e.target.value)}
-                    className="w-full pl-3.5 pr-14 py-2.5 border border-slate-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full pl-3.5 pr-14 py-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl text-sm font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   />
-                  <span className="absolute right-3.5 top-2.5 text-xs text-slate-400 font-semibold">
+                  <span className="absolute right-3.5 top-2.5 text-xs text-slate-400 dark:text-slate-500 font-semibold">
                     ETB
                   </span>
                 </div>
@@ -711,28 +711,28 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                   type="checkbox"
                   checked={formAvailable}
                   onChange={(e) => setFormAvailable(e.target.checked)}
-                  className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                  className="w-4 h-4 text-emerald-600 rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-emerald-500"
                 />
                 <label
                   htmlFor="edit-product-available"
-                  className="text-sm font-medium text-slate-700 select-none cursor-pointer"
+                  className="text-sm font-medium text-slate-700 dark:text-slate-300 select-none cursor-pointer"
                 >
                   Visible and available on storefront
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={closeModals}
-                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition"
+                  className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition disabled:opacity-50 shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition disabled:opacity-50 shadow-xs"
                 >
                   {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                   <span>{isSubmitting ? "Saving..." : "Save Changes"}</span>
@@ -746,7 +746,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
       {/* Modal: Delete Confirmation */}
       {deletingProduct && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs"
           onClick={(e) => {
             if (e.target === e.currentTarget) closeModals();
           }}
@@ -755,40 +755,40 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-product-title"
-            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xl max-w-md w-full space-y-4"
+            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xl max-w-md w-full space-y-4"
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 id="delete-product-title" className="text-lg font-bold text-slate-900">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 id="delete-product-title" className="text-lg font-bold text-slate-900 dark:text-slate-100">
                 Delete Product
               </h3>
               <button
                 type="button"
                 onClick={closeModals}
                 aria-label="Close modal"
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm text-slate-700">
+              <p className="text-sm text-slate-700 dark:text-slate-300">
                 Are you sure you want to delete{" "}
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold text-slate-900 dark:text-slate-100">
                   &ldquo;{deletingProduct.name}&rdquo;
                 </span>
                 ?
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 This item will be removed from your public storefront. Existing completed or past orders containing this product will remain completely intact.
               </p>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
               <button
                 type="button"
                 onClick={closeModals}
-                className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition"
+                className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
               >
                 Cancel
               </button>
@@ -796,7 +796,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleDelete}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold transition disabled:opacity-50 shadow-sm"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold transition disabled:opacity-50 shadow-xs"
               >
                 {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                 <span>{isSubmitting ? "Deleting..." : "Delete Product"}</span>
