@@ -65,7 +65,7 @@ export default async function DashboardLayout({
       displayName={displayName}
       displaySubtitle={displaySubtitle}
     >
-      <header className="bg-white/85 dark:bg-[#0d211a]/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-emerald-950/60 px-4 md:px-8 py-4 flex items-center justify-between shadow-[0_1px_0_rgba(16,68,50,0.04)] sticky top-0 z-20">
+      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 py-3.5 flex items-center justify-between shadow-xs">
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-snug">Seller Dashboard</h2>
           {seller?.business_name && (
