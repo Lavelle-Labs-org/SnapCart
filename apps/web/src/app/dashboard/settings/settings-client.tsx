@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  Sparkles,
   Smartphone,
   Store,
   Send,
@@ -524,7 +523,7 @@ export default function SettingsClient({
           <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-amber-500" />
+                <MessageSquare className="w-4 h-4 text-emerald-600" />
                 <span>Live SMS Template Previewer</span>
               </h2>
               <span className="text-[11px] font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
