@@ -297,7 +297,7 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
             <div className="pt-2">
               <Link
                 href="/dashboard"
-                className="inline-block bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition"
+                className="inline-block bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-xs"
               >
                 Go to Orders Dashboard
               </Link>
@@ -318,7 +318,7 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
             <div className="pt-2">
               <Link
                 href="/dashboard"
-                className="inline-block bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition"
+                className="inline-block bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-xs"
               >
                 Go to Orders Dashboard
               </Link>

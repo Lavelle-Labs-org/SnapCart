@@ -329,7 +329,7 @@ export default function SettingsClient({
               className={`flex-1 sm:flex-initial flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-medium transition min-h-[44px] shadow-sm ${
                 isCopied
                   ? "bg-emerald-600 text-white"
-                  : "bg-slate-900 hover:bg-slate-800 text-white active:scale-95"
+                  : "bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95"
               }`}
             >
               {isCopied ? (
@@ -564,21 +564,21 @@ export default function SettingsClient({
             </div>
 
             {/* Phone Message Bubble Mockup */}
-            <div className="bg-slate-900 rounded-2xl p-4 text-white space-y-3 shadow-inner">
-              <div className="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800 pb-2">
-                <span className="flex items-center gap-1.5">
-                  <Send className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="bg-slate-100 border border-slate-200 rounded-2xl p-4 text-slate-800 space-y-3">
+              <div className="flex items-center justify-between text-[11px] text-slate-500 border-b border-slate-200 pb-2">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <Send className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Outbound SMS Bubble</span>
                 </span>
                 <span>Ethio / Safaricom Gateway</span>
               </div>
 
               {/* Message Bubble */}
-              <div className="bg-emerald-800/40 border border-emerald-500/30 text-emerald-100 p-3.5 rounded-xl rounded-tl-sm text-xs font-mono leading-relaxed break-words whitespace-pre-wrap select-all">
+              <div className="bg-emerald-600 text-white p-3.5 rounded-xl rounded-tl-sm text-xs font-mono leading-relaxed break-words whitespace-pre-wrap select-all shadow-xs">
                 <span id="rendered-sms-preview">{renderedMessage}</span>
               </div>
 
-              <div className="text-[11px] text-slate-400 italic">
+              <div className="text-[11px] text-slate-500 italic">
                 + Default verified legal signature (~25 chars) appended by SMSHub upon dispatch
               </div>
             </div>

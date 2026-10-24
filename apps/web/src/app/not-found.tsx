@@ -17,7 +17,7 @@ export default function GlobalNotFound() {
         <div className="pt-2">
           <Link
             href="/"
-            className="inline-flex items-center justify-center space-x-2 w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 rounded-xl transition text-sm shadow-sm"
+            className="inline-flex items-center justify-center space-x-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition text-sm shadow-xs"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Return to Home</span>

@@ -167,7 +167,7 @@ export function OptOutClient({ token, initialData }: OptOutClientProps) {
         <button
           type="submit"
           disabled={status === "submitting"}
-          className="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white font-medium py-3 rounded-xl transition shadow-sm flex items-center justify-center space-x-2 min-h-[48px]"
+          className="w-full bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 text-white font-semibold py-3 rounded-xl transition shadow-xs flex items-center justify-center space-x-2 min-h-[48px]"
         >
           {status === "submitting" ? (
             <>
