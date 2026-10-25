@@ -27,6 +27,13 @@ import {
   checkIpRateLimit,
   enforceRateLimit,
 } from "../../lib/rate-limit";
+import {
+  signBuyerToken,
+  verifyBuyerToken,
+  createBuyerSessionCookie,
+  extractBuyerTokenFromRequest,
+} from "./buyer-auth";
+import type { SessionCookieOptions } from "../auth/auth.types";
 
 @Injectable()
 export class CheckoutService {
@@ -51,8 +58,13 @@ export class CheckoutService {
    * 2. Authoritatively calculates total Santim.
    * 3. Dispatches 6-digit OTP via SMSHub Verify API with seller shop name.
    * 4. Stores serialized cart details in phone_verifications.draft.
+   * 5. If returning recognized buyer (valid buyer_session matching phone), skips OTP and creates order immediately.
    */
-  async checkout(input: any, clientIp?: string): Promise<CheckoutResponse> {
+  async checkout(
+    input: any,
+    clientIp?: string,
+    req?: any
+  ): Promise<CheckoutResponse & { cookie?: SessionCookieOptions }> {
     const parseResult = CheckoutSchema.safeParse(input);
     if (!parseResult.success) {
       const firstError =
@@ -145,7 +157,76 @@ export class CheckoutService {
       };
     });
 
-    // 3. Dispatch OTP via SMSHub Verify API
+    const draftPayload = {
+      sellerId: seller.id,
+      slug: seller.slug,
+      buyerName,
+      buyerPhone: normalizedPhone,
+      smsConsent,
+      consentWording,
+      totalSantim,
+      items: itemDetails,
+    };
+
+    // 3. Check for recognized returning buyer (Instant Checkout - BE-008, FR-7)
+    const token = extractBuyerTokenFromRequest(req);
+    if (token) {
+      const buyerSession = await verifyBuyerToken(token);
+      if (buyerSession && buyerSession.phone === normalizedPhone) {
+        let customer: any = null;
+        if (typeof this.prisma.customer?.findUnique === "function") {
+          customer = await this.prisma.customer.findUnique({
+            where: { phone: normalizedPhone },
+          });
+        }
+
+        if (customer && customer.phone_verified_at) {
+          this.logger.log(
+            `[Instant Checkout] Recognized returning buyer ${normalizedPhone} (Customer ${customer.id}). Bypassing OTP verification.`
+          );
+
+          if (
+            typeof this.prisma.customer?.update === "function" &&
+            customer.name !== buyerName
+          ) {
+            await this.prisma.customer
+              .update({
+                where: { id: customer.id },
+                data: { name: buyerName },
+              })
+              .catch(() => {});
+          }
+
+          const orderResult = await this.executeOrderCreation({
+            seller,
+            draftData: draftPayload,
+            customerId: customer.id,
+          });
+
+          let refreshedCookie: SessionCookieOptions | undefined;
+          try {
+            const refreshedToken = await signBuyerToken({
+              customerId: customer.id,
+              phone: normalizedPhone,
+              name: buyerName,
+            });
+            refreshedCookie = createBuyerSessionCookie(refreshedToken);
+          } catch (err: any) {
+            this.logger.warn(`Failed to refresh buyer cookie: ${err?.message || err}`);
+          }
+
+          return {
+            verified: true,
+            orderId: orderResult.orderId,
+            orderNumber: orderResult.orderNumber,
+            order: orderResult.order,
+            cookie: refreshedCookie,
+          };
+        }
+      }
+    }
+
+    // 4. Dispatch OTP via SMSHub Verify API for first-time or unrecognized buyer
     const shopName = truncateShopName(seller.sms_name || seller.business_name);
     let verifyRes;
     try {
@@ -181,18 +262,7 @@ export class CheckoutService {
       );
     }
 
-    // 4. Serialize cart and consent into phone_verifications.draft
-    const draftPayload = {
-      sellerId: seller.id,
-      slug: seller.slug,
-      buyerName,
-      buyerPhone: normalizedPhone,
-      smsConsent,
-      consentWording,
-      totalSantim,
-      items: itemDetails,
-    };
-
+    // 5. Serialize cart and consent into phone_verifications.draft
     const expiresAt = new Date(Date.now() + 300 * 1000);
     const verification = await this.prisma.phoneVerification.create({
       data: {
@@ -211,6 +281,7 @@ export class CheckoutService {
     );
 
     return {
+      verified: false,
       draftId: verification.id,
       phone: normalizedPhone,
       expiresAt: expiresAt.toISOString(),
@@ -380,6 +451,7 @@ export class CheckoutService {
     orderNumber: number;
     orderId: string;
     order: OrderDto;
+    cookie?: SessionCookieOptions;
   }> {
     const rawDraftId = input?.draftId ?? input?.draft_id;
     const parseResult = VerifyCheckoutSchema.safeParse({
@@ -521,7 +593,106 @@ export class CheckoutService {
       };
     });
 
-    // 5. Generate 22-character action token & SHA-256 hash
+    // 5. Upsert Customer in database upon successful phone verification
+    let customerId: string | undefined;
+    if (typeof this.prisma.customer?.upsert === "function") {
+      try {
+        const customer = await this.prisma.customer.upsert({
+          where: { phone: draftData.buyerPhone },
+          update: {
+            name: draftData.buyerName,
+            phone_verified_at: new Date(),
+          },
+          create: {
+            phone: draftData.buyerPhone,
+            name: draftData.buyerName,
+            phone_verified_at: new Date(),
+          },
+        });
+        customerId = customer?.id;
+      } catch (err: any) {
+        this.logger.warn(
+          `Failed to upsert customer for ${draftData.buyerPhone}: ${err?.message || err}`
+        );
+      }
+    }
+
+    // 6. Execute authoritative order creation
+    const seller = await this.prisma.seller.findUnique({
+      where: { id: draftData.sellerId },
+    });
+
+    const orderResult = await this.executeOrderCreation({
+      seller,
+      draftData: {
+        sellerId: draftData.sellerId,
+        slug: draftData.slug,
+        buyerName: draftData.buyerName,
+        buyerPhone: draftData.buyerPhone,
+        smsConsent: draftData.smsConsent,
+        consentWording: draftData.consentWording,
+        items: finalItems,
+        totalSantim,
+      },
+      customerId,
+      verificationId: verification.id,
+    });
+
+    // 7. Issue buyer session cookie for future frictionless checkouts
+    let buyerCookie: SessionCookieOptions | undefined;
+    if (customerId) {
+      try {
+        const token = await signBuyerToken({
+          customerId,
+          phone: draftData.buyerPhone,
+          name: draftData.buyerName,
+        });
+        buyerCookie = createBuyerSessionCookie(token);
+      } catch (err: any) {
+        this.logger.warn(
+          `Failed to create buyer session cookie: ${err?.message || err}`
+        );
+      }
+    }
+
+    return {
+      orderNumber: orderResult.orderNumber,
+      orderId: orderResult.orderId,
+      order: orderResult.order,
+      cookie: buyerCookie,
+    };
+  }
+
+  /**
+   * Authoritative Order Creation helper (shared between OTP verification and Instant Checkout).
+   */
+  private async executeOrderCreation(params: {
+    seller: any;
+    draftData: {
+      sellerId: string;
+      slug?: string;
+      buyerName: string;
+      buyerPhone: string;
+      smsConsent: boolean;
+      consentWording: string;
+      items: Array<{
+        productId: string;
+        name: string;
+        unitPriceSantim: number;
+        quantity: number;
+      }>;
+      totalSantim: number;
+    };
+    customerId?: string | null;
+    verificationId?: string;
+  }): Promise<{
+    orderNumber: number;
+    orderId: string;
+    order: OrderDto;
+  }> {
+    const { seller, draftData, customerId, verificationId } = params;
+
+    // 1. Generate 22-character action token & SHA-256 hash
     const actionToken = this.cryptoService
       ? this.cryptoService.generateActionToken()
       : generateActionToken();
@@ -530,7 +701,7 @@ export class CheckoutService {
       : hashActionToken(actionToken);
     const tokenExpiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48h
 
-    // 6. Execute atomic database transaction with optimistic retry on order number collision (PR-008, Issue #127)
+    // 2. Execute atomic database transaction with optimistic retry on order number collision (PR-008, Issue #127)
     const MAX_ORDER_NUMBER_RETRIES = 5;
     let createdOrder: any;
 
@@ -549,6 +720,7 @@ export class CheckoutService {
           const order = await tx.order.create({
             data: {
               seller_id: draftData.sellerId,
+              customer_id: customerId ?? null,
               number: orderNumber,
               buyer_name: draftData.buyerName,
               buyer_phone: draftData.buyerPhone,
@@ -556,9 +728,9 @@ export class CheckoutService {
               consent_wording: draftData.consentWording,
               consent_at: draftData.smsConsent ? new Date() : null,
               state: "new",
-              total_santim: totalSantim,
+              total_santim: draftData.totalSantim,
               order_items: {
-                create: finalItems.map((item: any) => ({
+                create: draftData.items.map((item: any) => ({
                   product_id: item.productId,
                   name_at_order: item.name,
                   unit_price_santim: item.unitPriceSantim,
@@ -585,11 +757,13 @@ export class CheckoutService {
             },
           });
 
-          // Mark verification draft as approved
-          await tx.phoneVerification.update({
-            where: { id: verification.id },
-            data: { status: "approved" },
-          });
+          // Mark verification draft as approved (if OTP verification was used)
+          if (verificationId) {
+            await tx.phoneVerification.update({
+              where: { id: verificationId },
+              data: { status: "approved" },
+            });
+          }
 
           return order;
         });
@@ -628,12 +802,14 @@ export class CheckoutService {
       );
     }
 
-    // 7. Dispatch new-order alert SMS with action link to seller
-    const seller = await this.prisma.seller.findUnique({
-      where: { id: draftData.sellerId },
-    });
+    // 3. Dispatch new-order alert SMS with action link to seller
+    const targetSeller =
+      seller ||
+      (await this.prisma.seller.findUnique({
+        where: { id: draftData.sellerId },
+      }));
 
-    if (seller && this.smsOrchestrator) {
+    if (targetSeller && this.smsOrchestrator) {
       const appUrl =
         process.env.NEXT_PUBLIC_APP_URL ||
         process.env.FRONTEND_URL ||
@@ -641,17 +817,17 @@ export class CheckoutService {
       const actionLink = `${appUrl}/a/${actionToken}`;
 
       await this.smsOrchestrator.sendOrderSMS({
-        sellerId: seller.id,
+        sellerId: targetSeller.id,
         orderId: createdOrder.id,
-        recipientPhone: seller.phone,
+        recipientPhone: targetSeller.phone,
         event: "seller_new_order",
-        shopName: seller.sms_name || seller.business_name,
+        shopName: targetSeller.sms_name || targetSeller.business_name,
         orderNumber: createdOrder.number,
-        itemCount: finalItems.reduce(
+        itemCount: draftData.items.reduce(
           (sum: number, i: any) => sum + i.quantity,
           0
         ),
-        totalBirr: totalSantim / 100,
+        totalBirr: draftData.totalSantim / 100,
         link: actionLink,
         async: true,
         throwOnError: false, // Don't abort buyer's confirmed order if outbound carrier SMS fails
@@ -668,6 +844,7 @@ export class CheckoutService {
       order: {
         id: createdOrder.id,
         sellerId: createdOrder.seller_id,
+        customerId: createdOrder.customer_id ?? null,
         number: createdOrder.number,
         buyerName: createdOrder.buyer_name,
         buyerPhone: createdOrder.buyer_phone,
@@ -685,6 +862,45 @@ export class CheckoutService {
           unitPriceSantim: i.unit_price_santim,
           quantity: i.quantity,
         })),
+      },
+    };
+  }
+
+  /**
+   * Returns authenticated buyer profile for prefilling checkout forms.
+   */
+  async getBuyerProfile(req: any): Promise<{
+    authenticated: boolean;
+    customer?: { id: string; name: string; phone: string };
+  }> {
+    const token = extractBuyerTokenFromRequest(req);
+    if (!token) {
+      return { authenticated: false };
+    }
+
+    const session = await verifyBuyerToken(token);
+    if (!session?.phone) {
+      return { authenticated: false };
+    }
+
+    if (typeof this.prisma.customer?.findUnique !== "function") {
+      return { authenticated: false };
+    }
+
+    const customer = await this.prisma.customer.findUnique({
+      where: { phone: session.phone },
+    });
+
+    if (!customer || !customer.phone_verified_at) {
+      return { authenticated: false };
+    }
+
+    return {
+      authenticated: true,
+      customer: {
+        id: customer.id,
+        name: customer.name,
+        phone: customer.phone,
       },
     };
   }

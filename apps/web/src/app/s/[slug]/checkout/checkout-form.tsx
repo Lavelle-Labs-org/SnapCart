@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ShieldCheck, Loader2, AlertCircle, ShoppingBag } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Loader2, AlertCircle, ShoppingBag, CheckCircle2, Zap } from "lucide-react";
 import { normalizeEthiopianPhone, toBirr } from "@order-by-sms/contracts";
 
 export interface CheckoutSellerProp {
@@ -37,6 +37,29 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ name?: string; phone?: string }>({});
+  const [isRecognizedBuyer, setIsRecognizedBuyer] = useState(false);
+
+  // Check if returning verified buyer (Instant Checkout prefill)
+  useEffect(() => {
+    async function loadBuyerProfile() {
+      try {
+        const res = await fetch("/api/checkout/buyer/me", {
+          headers: { Accept: "application/json" },
+        });
+        if (res.ok) {
+          const profile = await res.json();
+          if (profile.authenticated && profile.customer) {
+            setName((prev) => prev || profile.customer.name || "");
+            setPhone((prev) => prev || profile.customer.phone || "");
+            setIsRecognizedBuyer(true);
+          }
+        }
+      } catch {
+        // Ignore network errors for optional prefill
+      }
+    }
+    loadBuyerProfile();
+  }, []);
 
   // Hydrate cart from localStorage on mount
   useEffect(() => {
@@ -136,10 +159,33 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
         return;
       }
 
-      // Successful verification creation: extract draftId and navigate
+      // Successful response: either instant order or OTP verification draft
       const responseData = data.data || data;
-      const draftId = responseData.draftId;
 
+      // Instant checkout for recognized verified customer (BE-008, FR-7)
+      if (responseData.verified === true) {
+        try {
+          if (typeof window !== "undefined") {
+            localStorage.removeItem(storageKey);
+          }
+        } catch (storageErr) {
+          console.warn("Could not clear localStorage cart:", storageErr);
+        }
+
+        const orderId = responseData.orderId || responseData.order?.id || "";
+        const orderNumber = responseData.orderNumber || responseData.order?.number || "";
+        const consentParam = smsConsent ? "&consent=true" : "&consent=false";
+
+        router.push(
+          `/s/${seller.slug}/done?orderId=${encodeURIComponent(
+            String(orderId)
+          )}&orderNumber=${encodeURIComponent(String(orderNumber))}${consentParam}`
+        );
+        return;
+      }
+
+      // First time or unrecognized device: extract draftId and navigate to verify
+      const draftId = responseData.draftId;
       if (!draftId) {
         throw new Error("Missing draft ID from checkout response");
       }
@@ -230,9 +276,24 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
 
             {/* Customer Information Form */}
             <form id="checkout-form" onSubmit={handleSubmit} className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-4">
-              <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Buyer Contact Details
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Buyer Contact Details
+                </h2>
+                {isRecognizedBuyer && (
+                  <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    <span>Verified Buyer</span>
+                  </span>
+                )}
+              </div>
+
+              {isRecognizedBuyer && (
+                <div className="flex items-center space-x-2 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl">
+                  <Zap className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Welcome back! Instant checkout is enabled on this device (No SMS OTP required).</span>
+                </div>
+              )}
 
               <div>
                 <label htmlFor="name" className="block text-xs font-medium text-slate-700 mb-1">
@@ -292,6 +353,11 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
                 />
                 {fieldErrors.phone ? (
                   <p className="text-rose-600 text-xs mt-1">{fieldErrors.phone}</p>
+                ) : isRecognizedBuyer ? (
+                  <p className="text-[11px] text-emerald-700 mt-1 flex items-center space-x-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600 inline shrink-0" />
+                    <span>Device recognized. Your order will be placed instantly.</span>
+                  </p>
                 ) : (
                   <p className="text-[11px] text-slate-500 mt-1">
                     A 6-digit SMS verification code will be sent to this number to confirm your order.
@@ -342,7 +408,12 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
             {isSubmitting ? (
               <span className="flex items-center space-x-2">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Sending Verification Code...</span>
+                <span>{isRecognizedBuyer ? "Placing Order..." : "Sending Verification Code..."}</span>
+              </span>
+            ) : isRecognizedBuyer ? (
+              <span className="flex items-center space-x-1.5">
+                <Zap className="w-4 h-4 text-emerald-200 fill-emerald-200" />
+                <span>Place Order (Instant Checkout)</span>
               </span>
             ) : (
               <span>Send Verification Code (SMS)</span>

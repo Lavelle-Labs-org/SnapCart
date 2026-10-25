@@ -49,6 +49,7 @@ export interface OrderItemDto {
 export interface OrderDto {
   id: string;
   sellerId: string;
+  customerId?: string | null;
   number: number;
   buyerName: string;
   buyerPhone: string;
@@ -61,6 +62,15 @@ export interface OrderDto {
   items?: OrderItemDto[];
   events?: OrderEventDto[];
   messages?: MessageDto[];
+}
+
+export interface CustomerDto {
+  id: string;
+  phone: string;
+  name: string;
+  phoneVerifiedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface OrderEventDto {
@@ -149,9 +159,13 @@ export interface StorefrontDto {
 }
 
 export interface CheckoutResponse {
-  draftId: string;
-  phone: string;
-  expiresAt: string;
+  verified?: boolean;
+  draftId?: string;
+  phone?: string;
+  expiresAt?: string;
+  orderId?: string;
+  orderNumber?: number;
+  order?: OrderDto;
 }
 
 export interface VerifyCheckoutInput {

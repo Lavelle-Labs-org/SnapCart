@@ -58,6 +58,16 @@ describe("CheckoutService (BE-008)", () => {
           })
         ),
       },
+      customer: {
+        findUnique: vi.fn(),
+        update: vi.fn(),
+        upsert: vi.fn(),
+      },
+      order: {
+        findFirst: vi.fn(),
+        create: vi.fn(),
+      },
+      $transaction: vi.fn().mockImplementation((cb) => cb(prismaMock)),
     };
 
     smshubMock = {
@@ -293,6 +303,156 @@ describe("CheckoutService (BE-008)", () => {
 
       expect(res.sent).toBe(true);
       expect(res.retryAfter).toBe(60);
+    });
+  });
+
+  describe("Instant Checkout for Returning Verified Buyers", () => {
+    it("bypasses OTP and places order immediately when buyer session matches verified customer phone", async () => {
+      const mockCustomer = {
+        id: "cust-123",
+        phone: "0911223344",
+        name: "Abebe Bikila",
+        phone_verified_at: new Date(),
+      };
+
+      prismaMock.seller.findUnique.mockResolvedValue(mockSeller);
+      prismaMock.product.findMany.mockResolvedValue([mockProducts[0]]);
+      prismaMock.customer.findUnique.mockResolvedValue(mockCustomer);
+      prismaMock.customer.update.mockResolvedValue(mockCustomer);
+      prismaMock.order.findFirst.mockResolvedValue({ number: 1005 });
+      prismaMock.order.create.mockResolvedValue({
+        id: "order-inst-1",
+        seller_id: mockSeller.id,
+        customer_id: mockCustomer.id,
+        number: 1006,
+        buyer_name: "Abebe Bikila",
+        buyer_phone: "0911223344",
+        sms_consent: true,
+        consent_wording: "Send me updates",
+        consent_at: new Date(),
+        state: "new",
+        total_santim: 50000,
+        created_at: new Date(),
+        order_items: [
+          {
+            id: "item-1",
+            order_id: "order-inst-1",
+            product_id: "prod-1",
+            name_at_order: "Sidama Coffee",
+            unit_price_santim: 45000,
+            quantity: 1,
+          },
+        ],
+      });
+
+      const { signBuyerToken, BUYER_SESSION_COOKIE } = await import("../buyer-auth");
+      const token = await signBuyerToken({
+        customerId: mockCustomer.id,
+        phone: mockCustomer.phone,
+        name: mockCustomer.name,
+      });
+
+      const reqMock = {
+        cookies: { [BUYER_SESSION_COOKIE]: token },
+      };
+
+      const res = await service.checkout(
+        {
+          slug: "habesha-cafe",
+          buyerName: "Abebe Bikila",
+          buyerPhone: "0911223344",
+          smsConsent: true,
+          consentWording: "Send me updates",
+          items: [{ productId: "prod-1", quantity: 1 }],
+        },
+        "127.0.0.1",
+        reqMock
+      );
+
+      // Verify OTP was NOT dispatched
+      expect(smshubMock.verifySend).not.toHaveBeenCalled();
+      expect(prismaMock.phoneVerification.create).not.toHaveBeenCalled();
+
+      // Verify order was created immediately
+      expect(res.verified).toBe(true);
+      expect(res.orderId).toBe("order-inst-1");
+      expect(res.orderNumber).toBe(1006);
+      expect(res.cookie).toBeDefined();
+    });
+
+    it("falls back to OTP dispatch when buyer session phone does not match checkout phone", async () => {
+      prismaMock.seller.findUnique.mockResolvedValue(mockSeller);
+      prismaMock.product.findMany.mockResolvedValue([mockProducts[0]]);
+      smshubMock.verifySend.mockResolvedValue({
+        status: "success",
+        data: { verification_id: "ver-fallback-123", expires_in: 300 },
+      });
+
+      const { signBuyerToken, BUYER_SESSION_COOKIE } = await import("../buyer-auth");
+      // Token is for 0911223344
+      const token = await signBuyerToken({
+        customerId: "cust-1",
+        phone: "0911223344",
+      });
+
+      // But checkout is for a different phone: 0922334455
+      const reqMock = {
+        cookies: { [BUYER_SESSION_COOKIE]: token },
+      };
+
+      const res = await service.checkout(
+        {
+          slug: "habesha-cafe",
+          buyerName: "Different Person",
+          buyerPhone: "0922334455",
+          items: [{ productId: "prod-1", quantity: 1 }],
+        },
+        "127.0.0.1",
+        reqMock
+      );
+
+      // Verify fallback to SMSHub OTP dispatch
+      expect(smshubMock.verifySend).toHaveBeenCalledWith(
+        "0922334455",
+        "Habesha Cafe",
+        6,
+        300
+      );
+      expect(res.verified).toBe(false);
+      expect(res.draftId).toBe("draft-uuid-1");
+    });
+  });
+
+  describe("getBuyerProfile", () => {
+    it("returns customer profile when valid session cookie is provided", async () => {
+      const mockCustomer = {
+        id: "cust-abc",
+        phone: "0911223344",
+        name: "Derartu Tulu",
+        phone_verified_at: new Date(),
+      };
+      prismaMock.customer.findUnique.mockResolvedValue(mockCustomer);
+
+      const { signBuyerToken, BUYER_SESSION_COOKIE } = await import("../buyer-auth");
+      const token = await signBuyerToken({
+        customerId: mockCustomer.id,
+        phone: mockCustomer.phone,
+        name: mockCustomer.name,
+      });
+
+      const reqMock = {
+        cookies: { [BUYER_SESSION_COOKIE]: token },
+      };
+
+      const result = await service.getBuyerProfile(reqMock);
+      expect(result.authenticated).toBe(true);
+      expect(result.customer?.name).toBe("Derartu Tulu");
+      expect(result.customer?.phone).toBe("0911223344");
+    });
+
+    it("returns authenticated: false when session is missing or invalid", async () => {
+      expect(await service.getBuyerProfile({})).toEqual({ authenticated: false });
+      expect(await service.getBuyerProfile(null)).toEqual({ authenticated: false });
     });
   });
 });
