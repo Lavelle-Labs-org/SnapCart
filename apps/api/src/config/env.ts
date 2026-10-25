@@ -123,6 +123,13 @@ export const envSchema = z
     RATE_LIMIT_OTP_COOLDOWN_SECONDS: z.coerce.number().int().positive().default(60),
     RATE_LIMIT_OTP_EXPIRY_SECONDS: z.coerce.number().int().positive().default(300),
     RATE_LIMIT_PICKUP_CODE_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
+
+    // Chapa Payment Gateway & Seller Billing
+    CHAPA_PUBLIC_KEY: z.string().optional().default("CHAPUBK_TEST-mock-key"),
+    CHAPA_SECRET_KEY: z.string().optional().default("CHASECK_TEST-mock-key"),
+    CHAPA_WEBHOOK_SECRET: z.string().optional().default("mock-chapa-webhook-secret"),
+    CHAPA_BASE_URL: z.string().url().optional().default("https://api.chapa.co/v1"),
+    FREE_TRIAL_SMS_CREDITS: z.coerce.number().int().nonnegative().default(10),
   })
   .superRefine((data, ctx) => {
     const isProd = data.NODE_ENV === "production" || process.env.NODE_ENV === "production";

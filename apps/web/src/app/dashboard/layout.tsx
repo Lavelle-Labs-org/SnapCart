@@ -1,5 +1,6 @@
 import React from "react";
-import { Store } from "lucide-react";
+import Link from "next/link";
+import { Store, Zap, AlertTriangle } from "lucide-react";
 import { prisma } from "../../lib/prisma";
 import { extractSellerIdFromToken } from "./dashboard-helpers";
 import { DashboardShell } from "./dashboard-shell";
@@ -11,7 +12,12 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  let seller: { business_name?: string; slug?: string } | null = null;
+  let seller: {
+    business_name?: string;
+    slug?: string;
+    sms_credits?: number;
+    sms_credits_used?: number;
+  } | null = null;
 
   try {
     const { cookies } = await import("next/headers");
@@ -23,7 +29,12 @@ export default async function DashboardLayout({
         try {
           seller = await prisma.seller.findUnique({
             where: { id: sellerId },
-            select: { business_name: true, slug: true },
+            select: {
+              business_name: true,
+              slug: true,
+              sms_credits: true,
+              sms_credits_used: true,
+            },
           });
         } catch {
           // Prisma query failed
@@ -44,7 +55,12 @@ export default async function DashboardLayout({
             const body = await res.json();
             const s = body?.data?.seller || body?.seller;
             if (s) {
-              seller = { business_name: s.business_name, slug: s.slug };
+              seller = {
+                business_name: s.business_name,
+                slug: s.slug,
+                sms_credits: s.sms_credits,
+                sms_credits_used: s.sms_credits_used,
+              };
             }
           }
         } catch {
@@ -76,6 +92,31 @@ export default async function DashboardLayout({
           )}
         </div>
         <div className="flex items-center space-x-2 md:space-x-3 text-xs">
+          {seller && (
+            <Link
+              href="/dashboard/billing"
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition border ${
+                (seller.sms_credits ?? 0) > 3
+                  ? "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700"
+                  : (seller.sms_credits ?? 0) > 0
+                  ? "bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700"
+                  : "bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-800 dark:text-rose-200 border-rose-300 dark:border-rose-700"
+              }`}
+              title="SMS Credits (Click to top up via Chapa)"
+            >
+              <Zap
+                className={`w-3.5 h-3.5 ${
+                  (seller.sms_credits ?? 0) <= 0
+                    ? "text-rose-500 fill-rose-500"
+                    : (seller.sms_credits ?? 0) <= 3
+                    ? "text-amber-500 fill-amber-500"
+                    : "text-amber-500 fill-amber-500"
+                }`}
+              />
+              <span className="font-bold">{seller.sms_credits ?? 0}</span>
+              <span>SMS</span>
+            </Link>
+          )}
           {seller?.slug && (
             <a
               href={`/s/${seller.slug}`}
@@ -95,7 +136,33 @@ export default async function DashboardLayout({
         </div>
       </header>
 
+      {seller && (seller.sms_credits ?? 0) <= 3 && (
+        <div
+          className={`px-4 md:px-6 py-2 text-xs flex items-center justify-between border-b ${
+            (seller.sms_credits ?? 0) <= 0
+              ? "bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-200 border-rose-200 dark:border-rose-800"
+              : "bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+            <span>
+              {(seller.sms_credits ?? 0) <= 0
+                ? "Your SMS credits are exhausted. Buyer orders will succeed, but SMS updates are paused until you recharge."
+                : `You have ${seller.sms_credits} SMS credits remaining. Recharge soon to avoid SMS notification delays.`}
+            </span>
+          </div>
+          <Link
+            href="/dashboard/billing"
+            className="underline font-bold hover:opacity-80 ml-4 flex-shrink-0 text-xs"
+          >
+            Top Up with Chapa →
+          </Link>
+        </div>
+      )}
+
       <main className="p-4 md:p-6 flex-1 overflow-y-auto">{children}</main>
     </DashboardShell>
   );
 }
+

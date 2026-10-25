@@ -223,7 +223,50 @@ export class SMSOrchestratorService {
       };
     }
 
-    // 7. Async Queue Dispatch (PR-014, Issue #133)
+    // 7. Seller SMS Credit Balance Guard (Free trial of 10 SMS or purchased credits)
+    if (options.sellerId && typeof this.prisma.seller?.findUnique === "function") {
+      try {
+        const seller = await this.prisma.seller.findUnique({
+          where: { id: options.sellerId },
+          select: { id: true, sms_credits: true },
+        });
+
+        const credits =
+          seller?.sms_credits !== undefined && seller?.sms_credits !== null
+            ? seller.sms_credits
+            : 10;
+
+        if (seller && credits <= 0) {
+          this.logger.warn(
+            `[SMS Skipped] Seller ${seller.id} has 0 SMS credits remaining. Skipping outbound SMS for event: ${options.event}`
+          );
+
+          const msg = await this.prisma.message.create({
+            data: {
+              seller_id: seller.id,
+              order_id: options.orderId ?? null,
+              recipient_phone: normalizedPhone,
+              event: options.event,
+              text: maskedText,
+              status: "skipped",
+              skip_reason: "insufficient_credits",
+              attempts: 0,
+            },
+          });
+
+          return {
+            status: "skipped",
+            messageId: msg.id,
+            skipReason: "insufficient_credits",
+            text: maskedText,
+          };
+        }
+      } catch (err: any) {
+        this.logger.warn(`Failed to check seller credit balance: ${err?.message || err}`);
+      }
+    }
+
+    // 8. Async Queue Dispatch (PR-014, Issue #133)
     if (options.async === true) {
       const msg = await this.prisma.message.create({
         data: {
@@ -309,6 +352,7 @@ export class SMSOrchestratorService {
       );
 
       await this.recordDispatchCounters(normalizedPhone);
+      await this.decrementSellerCredits(options.sellerId);
 
       return {
         status,
@@ -397,6 +441,7 @@ export class SMSOrchestratorService {
       );
 
       await this.recordDispatchCounters(normalizedPhone);
+      await this.decrementSellerCredits(options.sellerId);
 
       return {
         status,
@@ -684,6 +729,27 @@ export class SMSOrchestratorService {
       }
     } catch {
       // Non-critical background counter update
+    }
+  }
+
+  /**
+   * Decrements seller SMS credits and increments usage counter upon successful dispatch.
+   */
+  async decrementSellerCredits(sellerId?: string): Promise<void> {
+    if (!sellerId || typeof this.prisma.seller?.update !== "function") return;
+
+    try {
+      await this.prisma.seller.update({
+        where: { id: sellerId },
+        data: {
+          sms_credits: { decrement: 1 },
+          sms_credits_used: { increment: 1 },
+        },
+      });
+    } catch (err: any) {
+      this.logger.warn(
+        `Failed to decrement SMS credits for seller ${sellerId}: ${err?.message || err}`
+      );
     }
   }
 }

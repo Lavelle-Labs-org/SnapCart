@@ -11,4 +11,5 @@ export * from "./api";
 export * from "./domain";
 export * from "./money";
 export * from "./templates";
+export * from "./billing";
 
