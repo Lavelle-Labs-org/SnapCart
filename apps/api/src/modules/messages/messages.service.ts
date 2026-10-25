@@ -90,7 +90,7 @@ export class MessagesService {
   ): Promise<{ resent: boolean; message: MessageDto }> {
     if (clientIp) {
       await enforceRateLimit(
-        checkIpRateLimit(this.prisma, clientIp, 10, 3600),
+        checkIpRateLimit(this.prisma, clientIp),
         "Too many message resend attempts from this IP address. Please try again later."
       );
     }
@@ -131,7 +131,7 @@ export class MessagesService {
     }
 
     await enforceRateLimit(
-      checkPhoneRateLimit(this.prisma, message.recipient_phone, 5, 3600),
+      checkPhoneRateLimit(this.prisma, message.recipient_phone),
       "Too many message resend attempts for this phone number. Please try again later."
     );
 

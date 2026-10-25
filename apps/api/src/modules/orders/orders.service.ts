@@ -19,6 +19,7 @@ import {
   generateActionToken as defaultGenerateActionToken,
   hashActionToken as defaultHashActionToken,
 } from "../crypto/crypto.service";
+import { getRateLimitConfig } from "../../lib/rate-limit";
 import {
   OrderState,
   validateStateTransition,
@@ -455,13 +456,16 @@ export class OrdersService {
       );
     }
 
-    // 1. Check if locked (>= 5 attempts)
-    if (pickupRecord.attempts >= 5) {
+    const config = getRateLimitConfig();
+    const maxAttempts = config.pickupCodeMaxAttempts;
+
+    // 1. Check if locked (>= maxAttempts)
+    if (pickupRecord.attempts >= maxAttempts) {
       throw new HttpException(
         {
           code: "PICKUP_CODE_LOCKED",
           message:
-            "Pickup code is locked after 5 failed attempts. Seller must reissue code.",
+            `Pickup code is locked after ${maxAttempts} failed attempts. Seller must reissue code.`,
           remainingAttempts: 0,
           isLocked: true,
         },
@@ -494,18 +498,18 @@ export class OrdersService {
         data: { attempts: newAttempts },
       });
 
-      const remainingAttempts = Math.max(0, 5 - newAttempts);
-      const isLocked = newAttempts >= 5;
+      const remainingAttempts = Math.max(0, maxAttempts - newAttempts);
+      const isLocked = newAttempts >= maxAttempts;
 
       this.logger.warn(
-        `[Pickup Code Failed] Order #${order.number} (${orderId}): attempt ${newAttempts}/5 failed`
+        `[Pickup Code Failed] Order #${order.number} (${orderId}): attempt ${newAttempts}/${maxAttempts} failed`
       );
 
       throw new HttpException(
         {
           code: "INVALID_PICKUP_CODE",
           message: isLocked
-            ? "Pickup code locked after 5 failed attempts. Please reissue a new code."
+            ? `Pickup code locked after ${maxAttempts} failed attempts. Please reissue a new code.`
             : `Invalid pickup code. ${remainingAttempts} attempts remaining.`,
           remainingAttempts,
           isLocked,
