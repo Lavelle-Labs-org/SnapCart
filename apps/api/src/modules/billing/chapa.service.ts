@@ -94,10 +94,21 @@ export class ChapaService {
       const data = (await res.json()) as any;
 
       if (!res.ok || data?.status !== "success") {
-        this.logger.error(`[Chapa Init Error] ${data?.message || res.statusText}`, JSON.stringify(data));
+        let errorMsg = "Failed to initialize payment with Chapa";
+        if (typeof data?.message === "string") {
+          errorMsg = data.message;
+        } else if (data?.message && typeof data.message === "object") {
+          errorMsg = Object.entries(data.message)
+            .map(([field, errs]) => `${field}: ${Array.isArray(errs) ? errs.join(", ") : String(errs)}`)
+            .join("; ");
+        } else if (res.statusText) {
+          errorMsg = res.statusText;
+        }
+
+        this.logger.error(`[Chapa Init Error] ${errorMsg}`, JSON.stringify(data));
         return {
           status: "error",
-          message: data?.message || "Failed to initialize payment with Chapa",
+          message: errorMsg,
         };
       }
 
