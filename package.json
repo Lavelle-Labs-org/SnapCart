@@ -12,7 +12,7 @@
     "dev:api": "npm --workspace=@order-by-sms/api run dev",
     "build": "npm run build:contracts && npm run build:web && npm run build:api",
     "build:contracts": "npm --workspace=@order-by-sms/contracts run build",
-    "build:web": "npm --workspace=@order-by-sms/web run build",
+    "build:web": "npm --workspace=@order-by-sms/web run build && node scripts/sync-next-output.js",
     "build:api": "npm run build:contracts && npm --workspace=@order-by-sms/api run build",
     "start": "npm --workspace=@order-by-sms/web run start",
     "lint": "npm --workspace=@order-by-sms/web run lint && npm --workspace=@order-by-sms/api run lint",
