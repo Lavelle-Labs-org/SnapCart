@@ -11,8 +11,9 @@ if (fs.existsSync(webNext)) {
         fs.rmSync(rootNext, { recursive: true, force: true });
       } catch (_) {}
     }
+    const type = process.platform === 'win32' ? 'junction' : 'dir';
     try {
-      fs.symlinkSync(webNext, rootNext, 'junction');
+      fs.symlinkSync(webNext, rootNext, type);
       console.log('✔ Successfully linked apps/web/.next to root .next');
     } catch (_) {
       fs.cpSync(webNext, rootNext, { recursive: true });
