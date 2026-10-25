@@ -58,9 +58,23 @@ model Product {
   @@map("products")
 }
 
+model Customer {
+  id                String    @id @default(uuid())
+  phone             String    @unique
+  name              String
+  phone_verified_at DateTime?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  orders            Order[]
+
+  @@map("customers")
+}
+
 model Order {
   id              String       @id @default(uuid())
   seller_id       String
+  customer_id     String?
   number          Int
   buyer_name      String
   buyer_phone     String
@@ -72,6 +86,7 @@ model Order {
   created_at      DateTime     @default(now())
 
   seller          Seller       @relation(fields: [seller_id], references: [id], onDelete: Cascade)
+  customer        Customer?    @relation(fields: [customer_id], references: [id], onDelete: SetNull)
   order_items     OrderItem[]
   order_events    OrderEvent[]
   pickup_code     PickupCode?
@@ -81,6 +96,7 @@ model Order {
   @@unique([seller_id, number])
   @@index([seller_id, created_at])
   @@index([seller_id, state])
+  @@index([customer_id])
   @@map("orders")
 }
 
