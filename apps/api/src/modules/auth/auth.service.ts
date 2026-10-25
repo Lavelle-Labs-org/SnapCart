@@ -14,6 +14,7 @@ import {
   checkPhoneRateLimit,
   checkIpRateLimit,
   enforceRateLimit,
+  getRateLimitConfig,
 } from "../../lib/rate-limit";
 import {
   SESSION_COOKIE_NAME,
@@ -190,7 +191,7 @@ export class AuthService {
   async signup(dto: SignupDto, clientIp?: string) {
     if (clientIp) {
       await enforceRateLimit(
-        checkIpRateLimit(this.prisma, clientIp, 10, 3600),
+        checkIpRateLimit(this.prisma, clientIp),
         "Too many signup attempts from this IP address. Please try again later."
       );
     }
@@ -226,7 +227,7 @@ export class AuthService {
     const normalizedPhone = phoneValidation.normalized;
 
     await enforceRateLimit(
-      checkPhoneRateLimit(this.prisma, normalizedPhone, 5, 3600),
+      checkPhoneRateLimit(this.prisma, normalizedPhone),
       "Too many signup attempts for this phone number. Please try again later."
     );
 
@@ -303,7 +304,7 @@ export class AuthService {
         purpose: "seller_signup",
         verification_id: verificationId,
         status: "pending",
-        expires_at: new Date(Date.now() + 300 * 1000),
+        expires_at: new Date(Date.now() + getRateLimitConfig().otpExpiry * 1000),
         last_sent_at: new Date(),
       },
     });
@@ -427,7 +428,7 @@ export class AuthService {
   async login(dto: LoginDto, clientIp?: string) {
     if (clientIp) {
       await enforceRateLimit(
-        checkIpRateLimit(this.prisma, clientIp, 10, 3600),
+        checkIpRateLimit(this.prisma, clientIp),
         "Too many login attempts from this IP address. Please try again later."
       );
     }

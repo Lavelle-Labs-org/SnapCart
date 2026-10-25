@@ -9,6 +9,7 @@ import {
   isBuyerConsentRequiredEvent,
   maskCodeInText,
 } from "./sms.types";
+import { getRateLimitConfig } from "../../lib/rate-limit";
 
 @Injectable()
 export class SMSOrchestratorService {
@@ -614,11 +615,12 @@ export class SMSOrchestratorService {
     options: SendOrderSMSOptions,
     normalizedPhone: string
   ): Promise<boolean> {
-    const limit = options?.phoneRateLimit ?? 5;
+    const config = getRateLimitConfig();
+    const limit = options?.phoneRateLimit ?? config.phoneMax;
     if (!this.prisma.rateCounter) return false;
 
     const key = `rate:phone:${normalizedPhone}`;
-    const windowMs = 3600 * 1000;
+    const windowMs = config.phoneWindow * 1000;
     const now = Date.now();
 
     try {
@@ -643,7 +645,8 @@ export class SMSOrchestratorService {
     const today = now.toISOString().slice(0, 10);
     const dailyKey = `sms_daily:${today}`;
     const phoneKey = `rate:phone:${normalizedPhone}`;
-    const windowMs = 3600 * 1000;
+    const config = getRateLimitConfig();
+    const windowMs = config.phoneWindow * 1000;
 
     try {
       // 1. Daily budget counter

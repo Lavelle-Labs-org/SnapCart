@@ -26,6 +26,7 @@ import {
   checkPhoneRateLimit,
   checkIpRateLimit,
   enforceRateLimit,
+  getRateLimitConfig,
 } from "../../lib/rate-limit";
 import {
   signBuyerToken,
@@ -86,19 +87,19 @@ export class CheckoutService {
     const phoneRes = normalizeEthiopianPhone(rawPhone);
     const normalizedPhone = phoneRes.normalized;
 
-    // Rate limit checks (PR-005, Issue #124)
+    // Rate limit checks (PR-005, Issue #124, configurable via env)
     if (clientIp) {
-      const ipLimit = await checkIpRateLimit(this.prisma, clientIp, 10, 3600);
+      const ipLimit = await checkIpRateLimit(this.prisma, clientIp);
       enforceRateLimit(
         ipLimit,
         "Too many checkout attempts from this IP address. Please try again later."
       );
     }
 
-    const phoneLimit = await checkPhoneRateLimit(this.prisma, normalizedPhone, 5, 3600);
+    const phoneLimit = await checkPhoneRateLimit(this.prisma, normalizedPhone);
     enforceRateLimit(
       phoneLimit,
-      `Too many checkout verification attempts for ${normalizedPhone}. Maximum 5 attempts per hour.`
+      `Too many checkout verification attempts for ${normalizedPhone}. Maximum ${phoneLimit.limit} attempts per hour.`
     );
 
     const smsConsent = parseResult.data.smsConsent ?? parseResult.data.sms_consent ?? false;
@@ -263,7 +264,7 @@ export class CheckoutService {
     }
 
     // 5. Serialize cart and consent into phone_verifications.draft
-    const expiresAt = new Date(Date.now() + 300 * 1000);
+    const expiresAt = new Date(Date.now() + getRateLimitConfig().otpExpiry * 1000);
     const verification = await this.prisma.phoneVerification.create({
       data: {
         phone: normalizedPhone,
@@ -335,26 +336,26 @@ export class CheckoutService {
       );
     }
 
-    // Rate limit checks (PR-005, Issue #124)
+    // Rate limit checks (PR-005, Issue #124, configurable via env)
     if (clientIp) {
-      const ipLimit = await checkIpRateLimit(this.prisma, clientIp, 10, 3600);
+      const ipLimit = await checkIpRateLimit(this.prisma, clientIp);
       enforceRateLimit(
         ipLimit,
         "Too many OTP resend attempts from this IP address. Please try again later."
       );
     }
 
-    const phoneLimit = await checkPhoneRateLimit(this.prisma, verification.phone, 5, 3600);
+    const phoneLimit = await checkPhoneRateLimit(this.prisma, verification.phone);
     enforceRateLimit(
       phoneLimit,
-      `Too many OTP resend attempts for ${verification.phone}. Maximum 5 attempts per hour.`
+      `Too many OTP resend attempts for ${verification.phone}. Maximum ${phoneLimit.limit} attempts per hour.`
     );
 
-    // Enforce 60-second application cooldown (FR-13)
+    // Enforce application cooldown (FR-13, configurable via RATE_LIMIT_OTP_COOLDOWN_SECONDS)
     const elapsedSeconds = Math.floor(
       (Date.now() - verification.last_sent_at.getTime()) / 1000
     );
-    const COOLDOWN_SECONDS = 60;
+    const COOLDOWN_SECONDS = getRateLimitConfig().otpCooldown;
 
     if (elapsedSeconds < COOLDOWN_SECONDS) {
       const retryAfter = COOLDOWN_SECONDS - elapsedSeconds;
@@ -425,7 +426,7 @@ export class CheckoutService {
       data: {
         verification_id: verifyRes.data.verification_id,
         last_sent_at: new Date(),
-        expires_at: new Date(Date.now() + 300 * 1000),
+        expires_at: new Date(Date.now() + getRateLimitConfig().otpExpiry * 1000),
       },
     });
 

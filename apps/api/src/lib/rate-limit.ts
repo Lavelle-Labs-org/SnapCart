@@ -213,30 +213,67 @@ export async function checkRateLimit(
   };
 }
 
+export interface RateLimitConfig {
+  phoneMax: number;
+  phoneWindow: number;
+  ipMax: number;
+  ipWindow: number;
+  otpCooldown: number;
+  otpExpiry: number;
+  pickupCodeMaxAttempts: number;
+}
+
 /**
- * Checks phone verification/dispatch rate limit per phone number (default: 5 per hour).
- * docs/06 Section 2: Max 5 per phone/hr
+ * Resolves rate limit configuration from environment variables with safe defaults.
+ */
+export function getRateLimitConfig(): RateLimitConfig {
+  const parseNum = (val: string | undefined, defaultVal: number): number => {
+    if (!val) return defaultVal;
+    const parsed = parseInt(val, 10);
+    return isNaN(parsed) || parsed <= 0 ? defaultVal : parsed;
+  };
+
+  return {
+    phoneMax: parseNum(process.env.RATE_LIMIT_PHONE_MAX, 5),
+    phoneWindow: parseNum(process.env.RATE_LIMIT_PHONE_WINDOW_SECONDS, 3600),
+    ipMax: parseNum(process.env.RATE_LIMIT_IP_MAX, 10),
+    ipWindow: parseNum(process.env.RATE_LIMIT_IP_WINDOW_SECONDS, 3600),
+    otpCooldown: parseNum(process.env.RATE_LIMIT_OTP_COOLDOWN_SECONDS, 60),
+    otpExpiry: parseNum(process.env.RATE_LIMIT_OTP_EXPIRY_SECONDS, 300),
+    pickupCodeMaxAttempts: parseNum(process.env.RATE_LIMIT_PICKUP_CODE_MAX_ATTEMPTS, 5),
+  };
+}
+
+/**
+ * Checks phone verification/dispatch rate limit per phone number.
+ * Uses RATE_LIMIT_PHONE_MAX (default: 5) and RATE_LIMIT_PHONE_WINDOW_SECONDS (default: 3600).
  */
 export async function checkPhoneRateLimit(
   prisma: any,
   phone: string,
-  limit: number = 5,
-  windowSeconds: number = 3600
+  limit?: number,
+  windowSeconds?: number
 ): Promise<RateLimitResult> {
+  const config = getRateLimitConfig();
+  const effectiveLimit = limit ?? config.phoneMax;
+  const effectiveWindow = windowSeconds ?? config.phoneWindow;
   const key = `rate:phone:${phone}`;
-  return consumeRateLimit(prisma, { key, limit, windowSeconds });
+  return consumeRateLimit(prisma, { key, limit: effectiveLimit, windowSeconds: effectiveWindow });
 }
 
 /**
- * Checks IP rate limit (default: 10 per hour).
- * docs/06 Section 2: Max 10 per IP/hr
+ * Checks IP rate limit.
+ * Uses RATE_LIMIT_IP_MAX (default: 10) and RATE_LIMIT_IP_WINDOW_SECONDS (default: 3600).
  */
 export async function checkIpRateLimit(
   prisma: any,
   ip: string,
-  limit: number = 10,
-  windowSeconds: number = 3600
+  limit?: number,
+  windowSeconds?: number
 ): Promise<RateLimitResult> {
+  const config = getRateLimitConfig();
+  const effectiveLimit = limit ?? config.ipMax;
+  const effectiveWindow = windowSeconds ?? config.ipWindow;
   const key = `rate:ip:${ip}`;
-  return consumeRateLimit(prisma, { key, limit, windowSeconds });
+  return consumeRateLimit(prisma, { key, limit: effectiveLimit, windowSeconds: effectiveWindow });
 }

@@ -114,6 +114,15 @@ export const envSchema = z
         return false;
       }, z.boolean())
       .default(false),
+
+    // Rate Limiting Config (configurable per-environment)
+    RATE_LIMIT_PHONE_MAX: z.coerce.number().int().positive().default(5),
+    RATE_LIMIT_PHONE_WINDOW_SECONDS: z.coerce.number().int().positive().default(3600),
+    RATE_LIMIT_IP_MAX: z.coerce.number().int().positive().default(10),
+    RATE_LIMIT_IP_WINDOW_SECONDS: z.coerce.number().int().positive().default(3600),
+    RATE_LIMIT_OTP_COOLDOWN_SECONDS: z.coerce.number().int().positive().default(60),
+    RATE_LIMIT_OTP_EXPIRY_SECONDS: z.coerce.number().int().positive().default(300),
+    RATE_LIMIT_PICKUP_CODE_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
   })
   .superRefine((data, ctx) => {
     const isProd = data.NODE_ENV === "production" || process.env.NODE_ENV === "production";
