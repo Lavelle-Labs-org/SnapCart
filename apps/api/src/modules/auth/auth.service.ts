@@ -287,6 +287,10 @@ export class AuthService {
 
     const verificationId = verifyRes.data.verification_id;
 
+    const initialCredits = process.env.FREE_TRIAL_SMS_CREDITS
+      ? parseInt(process.env.FREE_TRIAL_SMS_CREDITS, 10)
+      : 10;
+
     const seller = await this.prisma.seller.create({
       data: {
         business_name: business_name.trim(),
@@ -295,6 +299,8 @@ export class AuthService {
         password_hash,
         slug: finalSlug,
         phone_verified_at: null,
+        sms_credits: isNaN(initialCredits) ? 10 : initialCredits,
+        sms_credits_used: 0,
       },
     });
 

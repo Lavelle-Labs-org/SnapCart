@@ -9,6 +9,7 @@ import {
   Mail,
   ShoppingBag,
   Settings,
+  Zap,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
@@ -17,7 +18,12 @@ import {
 } from "lucide-react";
 
 export interface DashboardShellProps {
-  seller?: { business_name?: string; slug?: string } | null;
+  seller?: {
+    business_name?: string;
+    slug?: string;
+    sms_credits?: number;
+    sms_credits_used?: number;
+  } | null;
   displayName: string;
   displaySubtitle: string;
   children: React.ReactNode;
@@ -40,6 +46,12 @@ const NAV_ITEMS = [
     href: "/dashboard/products",
     label: "Products",
     icon: ShoppingBag,
+    exact: false,
+  },
+  {
+    href: "/dashboard/billing",
+    label: "Billing & Credits",
+    icon: Zap,
     exact: false,
   },
   {

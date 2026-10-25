@@ -42,6 +42,10 @@ describe("SMSOrchestratorService (BE-007, BE-017)", () => {
         upsert: vi.fn().mockResolvedValue({}),
         update: vi.fn().mockResolvedValue({}),
       },
+      seller: {
+        findUnique: vi.fn().mockResolvedValue({ id: "seller-1", sms_credits: 10 }),
+        update: vi.fn().mockResolvedValue({}),
+      },
     };
 
     smshubMock = {
@@ -831,4 +835,63 @@ describe("SMSOrchestratorService (BE-007, BE-017)", () => {
       );
     });
   });
+
+  describe("Seller SMS Credit Metering & Graceful Degradation", () => {
+    it("skips dispatch with status 'skipped' and skip_reason 'insufficient_credits' when seller has 0 credits", async () => {
+      prismaMock.seller.findUnique.mockResolvedValue({
+        id: "seller-no-credits",
+        sms_credits: 0,
+      });
+
+      const res = await service.sendOrderSMS({
+        sellerId: "seller-no-credits",
+        recipientPhone: "0911223344",
+        event: "buyer_order_ready",
+        shopName: "Habesha Cafe",
+        code: "1234",
+      });
+
+      expect(res.status).toBe("skipped");
+      expect(res.skipReason).toBe("insufficient_credits");
+      expect(smshubMock.sendSMS).not.toHaveBeenCalled();
+      expect(prismaMock.message.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            seller_id: "seller-no-credits",
+            status: "skipped",
+            skip_reason: "insufficient_credits",
+          }),
+        })
+      );
+    });
+
+    it("decrements seller credits upon successful SMS dispatch", async () => {
+      prismaMock.seller.findUnique.mockResolvedValue({
+        id: "seller-with-credits",
+        sms_credits: 5,
+      });
+      smshubMock.sendSMS.mockResolvedValue({
+        status: "success",
+        data: { message_id: "smshub-credited-1", credits_used: 1 },
+      });
+
+      const res = await service.sendOrderSMS({
+        sellerId: "seller-with-credits",
+        recipientPhone: "0911223344",
+        event: "buyer_order_accepted",
+        shopName: "Habesha Cafe",
+        orderNumber: 1042,
+      });
+
+      expect(res.status).toBe("sent");
+      expect(prismaMock.seller.update).toHaveBeenCalledWith({
+        where: { id: "seller-with-credits" },
+        data: {
+          sms_credits: { decrement: 1 },
+          sms_credits_used: { increment: 1 },
+        },
+      });
+    });
+  });
 });
+

@@ -25,19 +25,29 @@ enum MessageStatus {
   test_passed
 }
 
+enum PaymentStatus {
+  pending
+  completed
+  failed
+}
+
 model Seller {
-  id                String     @id @default(uuid())
+  id                String               @id @default(uuid())
   business_name     String
-  sms_name          String     @db.VarChar(20)
-  phone             String     @unique
+  sms_name          String               @db.VarChar(20)
+  phone             String               @unique
   phone_verified_at DateTime?
   password_hash     String
-  slug              String     @unique
-  created_at        DateTime   @default(now())
+  slug              String               @unique
+  created_at        DateTime             @default(now())
+
+  sms_credits       Int                  @default(10)
+  sms_credits_used  Int                  @default(0)
 
   products          Product[]
   orders            Order[]
   messages          Message[]
+  transactions      PaymentTransaction[]
 
   @@map("sellers")
 }
@@ -223,4 +233,24 @@ model RateCounter {
   count        Int      @default(0)
 
   @@map("rate_counters")
+}
+
+model PaymentTransaction {
+  id              String        @id @default(uuid())
+  seller_id       String
+  tx_ref          String        @unique
+  package_id      String
+  credits_added   Int
+  amount_etb      Int
+  currency        String        @default("ETB")
+  status          PaymentStatus @default(pending)
+  chapa_reference String?
+  payment_method  String?
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+
+  seller          Seller        @relation(fields: [seller_id], references: [id], onDelete: Cascade)
+
+  @@index([seller_id, status])
+  @@map("payment_transactions")
 }
