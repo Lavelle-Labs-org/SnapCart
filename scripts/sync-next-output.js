@@ -11,15 +11,10 @@ if (fs.existsSync(webNext)) {
         fs.rmSync(rootNext, { recursive: true, force: true });
       } catch (_) {}
     }
-    const type = process.platform === 'win32' ? 'junction' : 'dir';
-    try {
-      fs.symlinkSync(webNext, rootNext, type);
-      console.log('✔ Successfully linked apps/web/.next to root .next');
-    } catch (_) {
-      fs.cpSync(webNext, rootNext, { recursive: true });
-      console.log('✔ Successfully copied apps/web/.next to root .next');
-    }
+    // Always perform a physical recursive copy so Vercel bundler finds actual directory at root/.next
+    fs.cpSync(webNext, rootNext, { recursive: true });
+    console.log('✔ Successfully copied apps/web/.next to root .next directory');
   } catch (err) {
-    console.warn('[sync-next-output] Could not sync .next output directory:', err);
+    console.warn('[sync-next-output] Could not copy .next output directory:', err);
   }
 }
