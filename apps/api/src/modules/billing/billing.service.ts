@@ -123,12 +123,16 @@ export class BillingService {
     const callbackUrl = `${frontendUrl}/api/webhooks/chapa`;
 
     // 2. Initialize with Chapa
+    const cleanSlug = (seller.slug || "seller").replace(/[^a-zA-Z0-9_-]/g, "");
+    const emailDomain = process.env.CHAPA_EMAIL_DOMAIN || "gmail.com";
+    const cleanPhone = seller.phone.replace(/[^0-9]/g, "");
+
     const chapaRes = await this.chapaService.initializeTransaction({
       amount: pkg.priceEtb,
       currency: "ETB",
-      email: `${seller.slug}@order-by-sms.local`,
+      email: `${cleanSlug}@${emailDomain}`,
       firstName: seller.business_name || "Seller",
-      phoneNumber: seller.phone,
+      phoneNumber: cleanPhone,
       txRef,
       callbackUrl,
       returnUrl: customReturnUrl || defaultReturnUrl,
@@ -138,7 +142,9 @@ export class BillingService {
 
     if (chapaRes.status !== "success" || !chapaRes.checkoutUrl) {
       throw new BadRequestException(
-        chapaRes.message || "Failed to initialize payment gateway session"
+        typeof chapaRes.message === "string"
+          ? chapaRes.message
+          : "Failed to initialize payment gateway session"
       );
     }
 
