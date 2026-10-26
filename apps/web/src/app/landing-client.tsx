@@ -23,6 +23,8 @@ import {
   Check,
 } from "lucide-react";
 import { ThemeToggle } from "../components/theme-toggle";
+import { LanguageToggle } from "../components/language-toggle";
+import { useTranslation } from "../lib/i18n";
 
 interface FaqItem {
   question: string;
@@ -58,6 +60,7 @@ const FAQS: FaqItem[] = [
 ];
 
 export default function LandingClient() {
+  const { t, isAmharic } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
@@ -94,51 +97,53 @@ export default function LandingClient() {
               href="#how-it-works"
               className="px-3 py-2 rounded-lg hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] inline-flex items-center"
             >
-              How It Works
+              {isAmharic ? t.landing.howItWorksNav : "How It Works"}
             </a>
             <a
               href="#features"
               className="px-3 py-2 rounded-lg hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] inline-flex items-center"
             >
-              Features
+              {isAmharic ? t.landing.featuresNav : "Features"}
             </a>
             <Link
               href="/s/habesha-cafe"
               className="px-3 py-2 rounded-lg hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] inline-flex items-center gap-1.5"
             >
-              <span>Demo Store</span>
+              <span>{isAmharic ? "የሙከራ መደብር" : "Demo Store"}</span>
               <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
-                Live
+                {isAmharic ? "ቀጥታ" : "Live"}
               </span>
             </Link>
             <a
               href="#faq"
               className="px-3 py-2 rounded-lg hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] inline-flex items-center"
             >
-              FAQ
+              {isAmharic ? t.landing.faqNav : "FAQ"}
             </a>
           </nav>
 
           {/* Desktop Action Controls */}
           <div className="hidden md:flex items-center space-x-2.5">
+            <LanguageToggle />
             <ThemeToggle />
             <Link
               href="/login"
               className="text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 px-3.5 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] inline-flex items-center"
             >
-              Seller Login
+              {isAmharic ? t.landing.signInBtn : "Seller Login"}
             </Link>
             <Link
               href="/signup"
               className="text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-4 py-2 rounded-xl transition shadow-xs min-h-[44px] inline-flex items-center gap-1.5"
             >
-              <span>Start Selling</span>
+              <span>{isAmharic ? t.landing.createStoreBtn : "Start Selling"}</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
-          {/* Mobile Right Controls: Theme Toggle & Hamburger */}
+          {/* Mobile Right Controls: Theme Toggle, Language Toggle & Hamburger */}
           <div className="flex items-center space-x-2 md:hidden">
+            <LanguageToggle />
             <ThemeToggle />
             <button
               type="button"

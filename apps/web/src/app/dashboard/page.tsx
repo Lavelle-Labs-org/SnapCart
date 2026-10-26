@@ -10,6 +10,7 @@ import {
   formatOrderTime,
   getStatusBadge,
 } from "./dashboard-helpers";
+import { en, am } from "../../lib/i18n";
 
 /**
  * Orders Dashboard Server Component (FE-009, FR-16).
@@ -22,6 +23,7 @@ export default async function OrdersDashboardPage({
   let sellerId: string | null = null;
   let token: string | undefined;
 
+  let isAmharic = false;
   try {
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();
@@ -29,9 +31,11 @@ export default async function OrdersDashboardPage({
     if (token) {
       sellerId = await extractSellerIdFromToken(token);
     }
+    isAmharic = cookieStore.get("obs_locale")?.value === "am";
   } catch {
     // Outside request context (e.g. testing or static build)
   }
+  const t = isAmharic ? am : en;
 
   if (!sellerId) {
     redirect("/login");
@@ -95,13 +99,17 @@ export default async function OrdersDashboardPage({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Orders</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Live order queue and handover status.</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            {isAmharic ? t.orders.title : "Orders"}
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {isAmharic ? t.orders.subtitle : "Live order queue and handover status."}
+          </p>
         </div>
         {orders.length > 0 && (
           <div className="flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{`${orders.length} ${orders.length === 1 ? "order" : "orders"} live`}</span>
+            <span>{isAmharic ? `${orders.length} ትዕዛዞች በሂደት ላይ` : `${orders.length} ${orders.length === 1 ? "order" : "orders"} live`}</span>
           </div>
         )}
       </div>
@@ -111,22 +119,24 @@ export default async function OrdersDashboardPage({
           <div className="w-14 h-14 mx-auto mb-4 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center">
             <ShoppingBag className="w-7 h-7" />
           </div>
-          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">No orders yet</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
+            {isAmharic ? t.orders.emptyTitle : "No orders yet"}
+          </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
-            When customers place orders from your storefront, they will appear here in real time. Share your shop link to start receiving orders!
+            {isAmharic ? t.orders.emptyDesc : "When customers place orders from your storefront, they will appear here in real time. Share your shop link to start receiving orders!"}
           </p>
           <div className="flex items-center justify-center gap-3">
             <Link
               href="/dashboard/settings"
               className="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition"
             >
-              View Storefront Link
+              {isAmharic ? "የመደብር ሊንክ ይመልከቱ" : "View Storefront Link"}
             </Link>
             <Link
               href="/dashboard/products"
               className="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition"
             >
-              Manage Products
+              {isAmharic ? "እቃዎችን ያስተዳድሩ" : "Manage Products"}
             </Link>
           </div>
         </div>
@@ -148,11 +158,11 @@ export default async function OrdersDashboardPage({
                     >
                       {`#${order.number}`}
                     </Link>
-                    {getStatusBadge(order.state)}
+                    {getStatusBadge(order.state, isAmharic)}
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <div>
-                      <div className="font-medium text-slate-900 dark:text-slate-100">{order.buyer_name || "Guest Customer"}</div>
+                      <div className="font-medium text-slate-900 dark:text-slate-100">{order.buyer_name || (isAmharic ? "እንግዳ ደንበኛ" : "Guest Customer")}</div>
                       <div className="text-slate-500 dark:text-slate-400 font-mono text-xs tabular-nums">{maskedPhone}</div>
                     </div>
                     <div className="text-right">
@@ -165,7 +175,7 @@ export default async function OrdersDashboardPage({
                       href={`/dashboard/orders/${order.id}`}
                       className="w-full flex items-center justify-center space-x-1.5 py-2 px-3 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-400 transition"
                     >
-                      <span>View Details</span>
+                      <span>{isAmharic ? t.orders.viewDetails : "View Details"}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
@@ -179,13 +189,13 @@ export default async function OrdersDashboardPage({
             <table className="w-full text-left text-sm text-slate-700 dark:text-slate-200">
               <thead className="bg-slate-50 dark:bg-slate-800/80 text-xs uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <th className="px-4 py-3">Order #</th>
-                  <th className="px-4 py-3">Customer</th>
-                  <th className="px-4 py-3">Phone</th>
-                  <th className="px-4 py-3">Total</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Placed</th>
-                  <th className="px-4 py-3 text-right">Action</th>
+                  <th className="px-4 py-3">{isAmharic ? t.orders.colOrder : "Order #"}</th>
+                  <th className="px-4 py-3">{isAmharic ? t.orders.colCustomer : "Customer"}</th>
+                  <th className="px-4 py-3">{isAmharic ? t.orders.colPhone : "Phone"}</th>
+                  <th className="px-4 py-3">{isAmharic ? t.orders.colTotal : "Total"}</th>
+                  <th className="px-4 py-3">{isAmharic ? t.orders.colStatus : "Status"}</th>
+                  <th className="px-4 py-3">{isAmharic ? t.orders.colPlaced : "Placed"}</th>
+                  <th className="px-4 py-3 text-right">{isAmharic ? t.orders.colAction : "Action"}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -208,7 +218,7 @@ export default async function OrdersDashboardPage({
                         </Link>
                       </td>
                       <td className="px-4 py-3.5 font-medium text-slate-900 dark:text-slate-100">
-                        {order.buyer_name || "Guest Customer"}
+                        {order.buyer_name || (isAmharic ? "እንግዳ ደንበኛ" : "Guest Customer")}
                       </td>
                       <td className="px-4 py-3.5 text-slate-600 dark:text-slate-400 font-mono text-xs tabular-nums">
                         {maskedPhone}
@@ -216,7 +226,7 @@ export default async function OrdersDashboardPage({
                       <td className="px-4 py-3.5 font-semibold text-slate-900 dark:text-slate-100 tabular-nums">
                         {totalFormatted}
                       </td>
-                      <td className="px-4 py-3.5">{getStatusBadge(order.state)}</td>
+                      <td className="px-4 py-3.5">{getStatusBadge(order.state, isAmharic)}</td>
                       <td className="px-4 py-3.5 text-xs text-slate-500 dark:text-slate-400">
                         {placedTime}
                       </td>
@@ -225,7 +235,7 @@ export default async function OrdersDashboardPage({
                           href={`/dashboard/orders/${order.id}`}
                           className="inline-flex items-center space-x-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 group-hover:underline"
                         >
-                          <span>View Details</span>
+                          <span>{isAmharic ? t.orders.viewDetails : "View Details"}</span>
                           <ArrowRight className="w-3.5 h-3.5" />
                         </Link>
                       </td>

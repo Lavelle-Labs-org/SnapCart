@@ -14,6 +14,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { normalizeEthiopianPhone } from "@order-by-sms/contracts";
+import { useTranslation } from "../../lib/i18n";
 
 export interface SignupValidationErrors {
   business_name?: string;
@@ -67,6 +68,7 @@ export function validateSignupForm(values: {
 
 export function SignupForm() {
   const router = useRouter();
+  const { t, isAmharic } = useTranslation();
 
   // Step state: 1 = Details, 2 = Phone OTP
   const [step, setStep] = useState<1 | 2>(1);
@@ -279,10 +281,20 @@ export function SignupForm() {
       </div>
 
       <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-        {step === 1 ? "Create Seller Account" : "Verify Alert Phone Number"}
+        {isAmharic
+          ? step === 1
+            ? t.auth.signupTitle
+            : t.auth.otpTitle
+          : step === 1
+          ? "Create Seller Account"
+          : "Verify Alert Phone Number"}
       </h1>
       <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-        {step === 1
+        {isAmharic
+          ? step === 1
+            ? t.auth.signupSubtitle
+            : t.auth.otpSubtitle(registeredPhone || phone)
+          : step === 1
           ? "Set up your storefront and handle customer orders by SMS."
           : `We texted a 6-digit verification code to ${registeredPhone || phone}.`}
       </p>
@@ -534,12 +546,12 @@ export function SignupForm() {
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Verifying code...</span>
+                <span>{isAmharic ? t.otp.verifying : "Verifying code..."}</span>
               </>
             ) : (
               <>
                 <ShieldCheck className="w-4 h-4" />
-                <span>Verify & Complete Signup</span>
+                <span>{isAmharic ? t.auth.otpVerifyBtn : "Verify & Complete Signup"}</span>
               </>
             )}
           </button>
@@ -548,7 +560,7 @@ export function SignupForm() {
           <div className="pt-2 text-center">
             {cooldown > 0 ? (
               <span className="text-xs text-slate-500 dark:text-slate-400">
-                Resend code in <strong className="text-slate-700 dark:text-slate-200">{cooldown}s</strong>
+                {isAmharic ? t.otp.resendCooldown(cooldown) : `Resend code in ${cooldown}s`}
               </span>
             ) : (
               <button
@@ -560,12 +572,12 @@ export function SignupForm() {
                 {isResending ? (
                   <>
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Resending...</span>
+                    <span>{isAmharic ? "በመላክ ላይ..." : "Resending..."}</span>
                   </>
                 ) : (
                   <>
                     <RefreshCw className="w-3.5 h-3.5" />
-                    <span>Resend Code</span>
+                    <span>{isAmharic ? t.auth.otpResendBtn : "Resend Code"}</span>
                   </>
                 )}
               </button>
@@ -576,9 +588,9 @@ export function SignupForm() {
 
       {/* Footer Link */}
       <p className="text-center text-xs text-slate-500 dark:text-slate-400 mt-6">
-        Already have an account?{" "}
+        {isAmharic ? t.auth.haveAccount : "Already have an account?"}{" "}
         <Link href="/login" className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline">
-          Sign in
+          {isAmharic ? t.auth.loginLink : "Sign in"}
         </Link>
       </p>
     </div>

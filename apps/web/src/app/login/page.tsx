@@ -3,6 +3,7 @@ import Link from "next/link";
 import { MessageSquare, ArrowLeft } from "lucide-react";
 import { LoginForm } from "./login-form";
 import { ThemeToggle } from "../../components/theme-toggle";
+import { LanguageToggle } from "../../components/language-toggle";
 
 export const metadata = {
   title: "Seller Sign In | Order-by-SMS",
@@ -27,6 +28,7 @@ export default function LoginPage() {
           </Link>
 
           <div className="flex items-center space-x-2 sm:space-x-3">
+            <LanguageToggle />
             <ThemeToggle />
             <Link
               href="/"
