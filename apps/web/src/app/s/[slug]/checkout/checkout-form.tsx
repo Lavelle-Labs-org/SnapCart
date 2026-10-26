@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ShieldCheck, Loader2, AlertCircle, ShoppingBag, CheckCircle2, Zap } from "lucide-react";
 import { normalizeEthiopianPhone, toBirr } from "@order-by-sms/contracts";
+import { useTranslation } from "../../../../lib/i18n";
+import { LanguageToggle } from "../../../../components/language-toggle";
 
 export interface CheckoutSellerProp {
   id: string;
@@ -27,6 +29,7 @@ interface CheckoutFormProps {
 
 export function CheckoutForm({ seller, products }: CheckoutFormProps) {
   const router = useRouter();
+  const { t, isAmharic } = useTranslation();
   const storageKey = `order_by_sms_cart_${seller.slug}`;
 
   const [cart, setCart] = useState<Record<string, number>>({});
@@ -202,18 +205,23 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between max-w-md mx-auto border-x border-slate-200">
       {/* Header */}
-      <header className="bg-white border-b px-4 py-3 flex items-center space-x-3 sticky top-0 z-10">
-        <Link
-          href={`/s/${seller.slug}`}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 -ml-2 text-slate-600 hover:text-slate-900 rounded-lg transition"
-          aria-label="Back to store"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <div>
-          <h1 className="text-lg font-bold text-slate-900">Checkout</h1>
-          <p className="text-xs text-slate-500">{seller.smsName || seller.businessName}</p>
+      <header className="bg-white border-b px-4 py-3 flex items-center justify-between sticky top-0 z-10 gap-2">
+        <div className="flex items-center space-x-2 min-w-0">
+          <Link
+            href={`/s/${seller.slug}`}
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 -ml-2 text-slate-600 hover:text-slate-900 rounded-lg transition"
+            aria-label="Back to store"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-lg font-bold text-slate-900 truncate">
+              {isAmharic ? "ትዕዛዝ ማጠናቀቂያ" : "Checkout"}
+            </h1>
+            <p className="text-xs text-slate-500 truncate">{seller.smsName || seller.businessName}</p>
+          </div>
         </div>
+        <LanguageToggle />
       </header>
 
       <main className="p-4 space-y-6 flex-1">
@@ -222,7 +230,9 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
           <div className="bg-rose-50 border border-rose-200 rounded-xl p-3.5 flex items-start space-x-3 text-rose-800 text-xs">
             <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
             <div className="flex-1">
-              <span className="font-semibold block mb-0.5">Could not submit checkout</span>
+              <span className="font-semibold block mb-0.5">
+                {isAmharic ? "ትዕዛዙን ማስገባት አልተቻለም" : "Could not submit checkout"}
+              </span>
               <span>{errorMessage}</span>
             </div>
           </div>
@@ -234,16 +244,16 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
             <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto">
               <ShoppingBag className="w-6 h-6" />
             </div>
-            <h2 className="text-base font-semibold text-slate-900">Your cart is empty</h2>
+            <h2 className="text-base font-semibold text-slate-900">{t.storefront.cartEmpty}</h2>
             <p className="text-xs text-slate-500">
-              Please choose at least one product before proceeding to checkout.
+              {t.storefront.cartEmptyDesc}
             </p>
             <div className="pt-2">
               <Link
                 href={`/s/${seller.slug}`}
                 className="inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2.5 rounded-xl text-xs transition"
               >
-                Browse Products
+                {t.storefront.startShopping}
               </Link>
             </div>
           </div>
@@ -252,7 +262,7 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
             {/* Order Summary */}
             <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
               <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2.5">
-                Order Summary
+                {t.checkout.orderSummary}
               </h2>
               <div className="space-y-2 text-sm">
                 {cartItems.map((item) => (
@@ -262,15 +272,17 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
                       {item.name}
                     </span>
                     <span className="font-medium text-slate-700">
-                      {toBirr(item.totalSantim)} ETB
+                      {toBirr(item.totalSantim)} {t.common.currency}
                     </span>
                   </div>
                 ))}
               </div>
               <div className="border-t my-3 border-slate-100"></div>
               <div className="flex justify-between items-center font-bold text-base text-slate-900">
-                <span>Total Amount</span>
-                <span className="text-emerald-600 text-lg">{totalBirr} ETB</span>
+                <span>{t.checkout.orderTotal}</span>
+                <span className="text-emerald-600 text-lg">
+                  {totalBirr} {t.common.currency}
+                </span>
               </div>
             </div>
 
@@ -278,12 +290,12 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
             <form id="checkout-form" onSubmit={handleSubmit} className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Buyer Contact Details
+                  {isAmharic ? "የደንበኛ መረጃ" : "Buyer Contact Details"}
                 </h2>
                 {isRecognizedBuyer && (
                   <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">
                     <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                    <span>Verified Buyer</span>
+                    <span>{isAmharic ? "የተረጋገጠ ደንበኛ" : "Verified Buyer"}</span>
                   </span>
                 )}
               </div>
@@ -291,13 +303,17 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
               {isRecognizedBuyer && (
                 <div className="flex items-center space-x-2 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl">
                   <Zap className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Welcome back! Instant checkout is enabled on this device (No SMS OTP required).</span>
+                  <span>
+                    {isAmharic
+                      ? "እንኳን ደህና መጡ! በዚህ መሳሪያ ላይ ፈጣን ክፍያ ነቅቷል (የኤስኤምኤስ ኮድ አያስፈልግም)።"
+                      : "Welcome back! Instant checkout is enabled on this device (No SMS OTP required)."}
+                  </span>
                 </div>
               )}
 
               <div>
                 <label htmlFor="name" className="block text-xs font-medium text-slate-700 mb-1">
-                  Your Full Name <span className="text-rose-500">*</span>
+                  {t.checkout.customerNameLabel} <span className="text-rose-500">*</span>
                 </label>
                 <input
                   id="name"
@@ -310,7 +326,7 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
                       setFieldErrors((prev) => ({ ...prev, name: undefined }));
                     }
                   }}
-                  placeholder="e.g. Abebe Bikila"
+                  placeholder={t.checkout.customerNamePlaceholder}
                   className={`w-full px-3.5 py-2.5 rounded-xl border text-sm min-h-[44px] transition focus:outline-none focus:ring-2 ${
                     fieldErrors.name
                       ? "border-rose-300 focus:ring-rose-500 bg-rose-50/20"
@@ -326,7 +342,7 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label htmlFor="phone" className="block text-xs font-medium text-slate-700">
-                    Mobile Phone Number <span className="text-rose-500">*</span>
+                    {t.checkout.phoneLabel} <span className="text-rose-500">*</span>
                   </label>
                   <span className="text-[10px] font-medium text-slate-400">
                     Ethio Telecom (09) • Safaricom (07)
@@ -343,7 +359,7 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
                       setFieldErrors((prev) => ({ ...prev, phone: undefined }));
                     }
                   }}
-                  placeholder="09... or 07..."
+                  placeholder={t.checkout.phonePlaceholder}
                   className={`w-full px-3.5 py-2.5 rounded-xl border text-sm min-h-[44px] transition focus:outline-none focus:ring-2 ${
                     fieldErrors.phone
                       ? "border-rose-300 focus:ring-rose-500 bg-rose-50/20"
@@ -356,11 +372,15 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
                 ) : isRecognizedBuyer ? (
                   <p className="text-[11px] text-emerald-700 mt-1 flex items-center space-x-1">
                     <CheckCircle2 className="w-3 h-3 text-emerald-600 inline shrink-0" />
-                    <span>Device recognized. Your order will be placed instantly.</span>
+                    <span>
+                      {isAmharic
+                        ? "መሳሪያዎ ታውቋል። ትዕዛዝዎ ወዲያውኑ ይረጋገጣል።"
+                        : "Device recognized. Your order will be placed instantly."}
+                    </span>
                   </p>
                 ) : (
                   <p className="text-[11px] text-slate-500 mt-1">
-                    A 6-digit SMS verification code will be sent to this number to confirm your order.
+                    {t.checkout.phoneHelper}
                   </p>
                 )}
               </div>
@@ -378,7 +398,9 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
                     disabled={isSubmitting}
                   />
                   <span className="leading-relaxed">
-                    Send me SMS updates about this order (Accepted, Ready, and Handover code).
+                    {isAmharic
+                      ? "ስለዚህ ትዕዛዝ የኤስኤምኤስ ማሳወቂያዎች ይላኩልኝ (የተቀበለ፣ ዝግጁ የሆነ፣ እና የመረከቢያ ኮድ)"
+                      : "Send me SMS updates about this order (Accepted, Ready, and Handover code)."}
                   </span>
                 </label>
               </div>
@@ -386,7 +408,11 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
 
             <div className="flex items-center space-x-2 text-xs text-slate-500 bg-slate-100 p-3 rounded-xl">
               <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>No account required. Payment in cash upon delivery or pickup.</span>
+              <span>
+                {isAmharic
+                  ? "መለያ መክፈት አያስፈልግም። እቃውን ሲረከቡ በጥሬ ገንዘብ ይክፈሉ።"
+                  : "No account required. Payment in cash upon delivery or pickup."}
+              </span>
             </div>
           </>
         )}
@@ -408,15 +434,23 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
             {isSubmitting ? (
               <span className="flex items-center space-x-2">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>{isRecognizedBuyer ? "Placing Order..." : "Sending Verification Code..."}</span>
+                <span>
+                  {isAmharic
+                    ? "እየተላከ ነው..."
+                    : isRecognizedBuyer
+                    ? "Placing Order..."
+                    : "Sending Verification Code..."}
+                </span>
               </span>
             ) : isRecognizedBuyer ? (
               <span className="flex items-center space-x-1.5">
                 <Zap className="w-4 h-4 text-emerald-200 fill-emerald-200" />
-                <span>Place Order (Instant Checkout)</span>
+                <span>
+                  {isAmharic ? "ትዕዛዝ አረጋግጥ (ፈጣን ክፍያ)" : "Place Order (Instant Checkout)"}
+                </span>
               </span>
             ) : (
-              <span>Send Verification Code (SMS)</span>
+              <span>{isAmharic ? "የማረጋገጫ ኮድ ላክ (SMS)" : "Send Verification Code (SMS)"}</span>
             )}
           </button>
         </footer>

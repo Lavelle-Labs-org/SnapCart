@@ -1,0 +1,118 @@
+export type Locale = "en" | "am";
+
+export interface TranslationSchema {
+  common: {
+    save: string;
+    cancel: string;
+    delete: string;
+    edit: string;
+    back: string;
+    close: string;
+    loading: string;
+    error: string;
+    success: string;
+    search: string;
+    all: string;
+    status: string;
+    actions: string;
+    currency: string;
+    active: string;
+    inactive: string;
+    viewDetails: string;
+    copy: string;
+    copied: string;
+    poweredBy: string;
+  };
+  storefront: {
+    searchPlaceholder: string;
+    allProducts: string;
+    noProductsFound: string;
+    addToCart: string;
+    addedToCart: string;
+    outOfStock: string;
+    available: string;
+    viewCart: string;
+    cartTitle: string;
+    cartEmpty: string;
+    cartEmptyDesc: string;
+    startShopping: string;
+    clearCart: string;
+    subtotal: string;
+    total: string;
+    checkoutButton: string;
+    itemsCount: (count: number) => string;
+  };
+  checkout: {
+    modalTitle: string;
+    customerNameLabel: string;
+    customerNamePlaceholder: string;
+    phoneLabel: string;
+    phonePlaceholder: string;
+    phoneHelper: string;
+    addressLabel: string;
+    addressPlaceholder: string;
+    addressHelper: string;
+    submitOrder: string;
+    placingOrder: string;
+    orderSummary: string;
+    orderTotal: string;
+    termsNotice: string;
+  };
+  otp: {
+    modalTitle: string;
+    modalDesc: (phone: string) => string;
+    inputLabel: string;
+    verifyButton: string;
+    verifying: string;
+    resendButton: string;
+    resendCooldown: (seconds: number) => string;
+    changePhone: string;
+  };
+  orderDone: {
+    title: string;
+    subtitle: (orderNumber: string) => string;
+    pickupCodeLabel: string;
+    pickupCodeInstruction: string;
+    orderStatusLabel: string;
+    statusNew: string;
+    statusAccepted: string;
+    statusReady: string;
+    statusCompleted: string;
+    statusRejected: string;
+    itemsOrdered: string;
+    smsNotice: string;
+    backToStore: string;
+  };
+  action: {
+    pageTitle: (storeName: string) => string;
+    orderNumber: (num: string) => string;
+    customerDetails: string;
+    deliveryLocation: string;
+    orderItems: string;
+    orderTotal: string;
+    acceptButton: string;
+    readyButton: string;
+    completeButton: string;
+    rejectButton: string;
+    pickupCodeModalTitle: string;
+    pickupCodeModalDesc: string;
+    pickupCodeInputPlaceholder: string;
+    confirmPickupButton: string;
+    orderCompletedSuccess: string;
+    orderAcceptedSuccess: string;
+    orderReadySuccess: string;
+    orderRejectedSuccess: string;
+    terminalStateNotice: (status: string) => string;
+  };
+  dashboard: {
+    navOverview: string;
+    navOrders: string;
+    navProducts: string;
+    navMessages: string;
+    navBilling: string;
+    navSettings: string;
+    logout: string;
+    switchStore: string;
+    sellerDashboard: string;
+  };
+}

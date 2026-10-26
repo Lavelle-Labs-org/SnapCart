@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { CheckCircle2, Home, MessageSquare, Store } from "lucide-react";
 import { prisma } from "../../../../lib/prisma";
+import { LanguageToggle } from "../../../../components/language-toggle";
 
 interface DonePageProps {
   params: Promise<{ slug: string }>;
@@ -88,57 +89,80 @@ export default async function DonePage({ params, searchParams }: DonePageProps) 
       ? queryConsent === "true" || queryConsent === "1"
       : true;
 
+  // 5. Determine locale from cookies if available
+  let isAmharic = false;
+  try {
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    isAmharic = cookieStore.get("obs_locale")?.value === "am";
+  } catch {
+    // Outside request context
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between max-w-md mx-auto border-x border-slate-200 p-6 text-center">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-between max-w-md mx-auto border-x border-slate-200 dark:border-slate-800 p-6 text-center transition-colors duration-200">
+      <div className="w-full flex justify-end pb-2">
+        <LanguageToggle />
+      </div>
+
       <div className="flex-1 flex flex-col justify-center items-center space-y-4">
-        <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center shadow-sm">
+        <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center shadow-xs">
           <CheckCircle2 className="w-10 h-10" />
         </div>
 
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-slate-900">Order Placed!</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            {isAmharic ? "ትዕዛዝዎ ተመዝግቧል!" : "Order Placed!"}
+          </h1>
           {shopName && (
-            <p className="text-sm font-medium text-slate-500">{`at ${shopName}`}</p>
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{`at ${shopName}`}</p>
           )}
         </div>
 
         <div
           data-testid="order-number"
-          className="inline-block bg-white border border-slate-200 shadow-xs px-5 py-2 rounded-full text-base font-bold text-slate-900 tracking-wide tabular-nums"
+          className="inline-block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs px-5 py-2 rounded-full text-base font-bold text-slate-900 dark:text-slate-100 tracking-wide tabular-nums"
         >
           {`Order #${displayOrderNumber}`}
         </div>
 
         {hasConsented ? (
           <>
-            <p className="text-sm text-slate-600 max-w-xs leading-relaxed">
-              The seller has been notified via SMS. You will receive text updates
-              when your order is accepted and ready for pickup.
+            <p className="text-sm text-slate-600 dark:text-slate-300 max-w-xs leading-relaxed">
+              {isAmharic
+                ? "ሻጩ በኤስኤምኤስ ተነግሮታል። ትዕዛዝዎ ተቀባይነት ሲያገኝና ለመረከብ ዝግጁ ሲሆን የጽሑፍ መልዕክት ይደርስዎታል።"
+                : "The seller has been notified via SMS. You will receive text updates when your order is accepted and ready for pickup."}
             </p>
 
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-xs text-emerald-800 text-left flex items-start space-x-3 w-full mt-4">
-              <MessageSquare className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+            <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 text-xs text-emerald-800 dark:text-emerald-200 text-left flex items-start space-x-3 w-full mt-4">
+              <MessageSquare className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
               <div>
-                <span className="font-semibold block">Pickup Code via SMS:</span>
-                When the seller marks this order ready, you will receive a 4-digit
-                code to present at handover.
+                <span className="font-semibold block">
+                  {isAmharic ? "የመቀበያ ኮድ በኤስኤምኤስ:" : "Pickup Code via SMS:"}
+                </span>
+                {isAmharic
+                  ? "ሻጩ ትዕዛዙ ዝግጁ መሆኑን ሲያመለክት፣ በርክክብ ወቅት የሚያሳዩት ባለ 4 ዲጂት ኮድ ይደርስዎታል።"
+                  : "When the seller marks this order ready, you will receive a 4-digit code to present at handover."}
               </div>
             </div>
           </>
         ) : (
           <>
-            <p className="text-sm text-slate-600 max-w-xs leading-relaxed">
-              The seller has been notified. You opted out of SMS updates, so text
-              notifications are turned off.
+            <p className="text-sm text-slate-600 dark:text-slate-300 max-w-xs leading-relaxed">
+              {isAmharic
+                ? "ሻጩ ተነግሮታል። ከኤስኤምኤስ ማሳወቂያዎች ስለወጡ የጽሑፍ መልዕክቶች አይላኩም።"
+                : "The seller has been notified. You opted out of SMS updates, so text notifications are turned off."}
             </p>
 
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800 text-left flex items-start space-x-3 w-full mt-4">
-              <Store className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-4 text-xs text-amber-800 dark:text-amber-200 text-left flex items-start space-x-3 w-full mt-4">
+              <Store className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
               <div>
-                <span className="font-semibold block">Check with Seller:</span>
-                Since you opted out of SMS updates, please check with the seller
-                directly or present your order number at the counter for status
-                and pickup.
+                <span className="font-semibold block">
+                  {isAmharic ? "ከሻጩ ጋር ያረጋግጡ:" : "Check with Seller:"}
+                </span>
+                {isAmharic
+                  ? "ከኤስኤምኤስ ማሳወቂያ ስለወጡ፣ እባክዎ በቀጥታ ከሻጩ ጋር ያረጋግጡ ወይም የትዕዛዝ ቁጥርዎን በመደብሩ ያሳዩ።"
+                  : "Since you opted out of SMS updates, please check with the seller directly or present your order number at the counter for status and pickup."}
               </div>
             </div>
           </>
@@ -151,7 +175,7 @@ export default async function DonePage({ params, searchParams }: DonePageProps) 
           className="w-full flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-3 rounded-xl transition shadow-xs min-h-[48px]"
         >
           <Home className="w-4 h-4" />
-          <span>Back to Storefront</span>
+          <span>{isAmharic ? "ወደ መደብሩ ተመለስ" : "Back to Storefront"}</span>
         </Link>
       </div>
     </div>

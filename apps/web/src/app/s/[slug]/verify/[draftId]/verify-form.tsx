@@ -12,6 +12,8 @@ import {
   Loader2,
   ShieldCheck,
 } from "lucide-react";
+import { useTranslation } from "../../../../../lib/i18n";
+import { LanguageToggle } from "../../../../../components/language-toggle";
 
 interface VerifyOtpFormProps {
   slug: string;
@@ -28,6 +30,7 @@ export function VerifyOtpForm({
 }: VerifyOtpFormProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const { t, isAmharic } = useTranslation();
 
   // Compute initial cooldown based on lastSentAt timestamp
   const calculateInitialCooldown = () => {
@@ -215,15 +218,20 @@ export function VerifyOtpForm({
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between max-w-md mx-auto border-x border-slate-200">
       {/* Header */}
-      <header className="bg-white border-b px-4 py-3 flex items-center space-x-3 sticky top-0 z-10">
-        <Link
-          href={`/s/${slug}/checkout`}
-          className="p-2 -ml-2 text-slate-600 hover:text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          aria-label="Back to Checkout"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <h1 className="text-lg font-bold text-slate-900">Verify Phone Number</h1>
+      <header className="bg-white border-b px-4 py-3 flex items-center justify-between sticky top-0 z-10 gap-2">
+        <div className="flex items-center space-x-2">
+          <Link
+            href={`/s/${slug}/checkout`}
+            className="p-2 -ml-2 text-slate-600 hover:text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            aria-label="Back to Checkout"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <h1 className="text-base sm:text-lg font-bold text-slate-900">
+            {isAmharic ? "ስልክ ቁጥር ማረጋገጫ" : "Verify Phone Number"}
+          </h1>
+        </div>
+        <LanguageToggle />
       </header>
 
       {/* Main Verification Card */}
@@ -234,19 +242,33 @@ export function VerifyOtpForm({
         </div>
 
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Enter 6-Digit Code</h2>
+          <h2 className="text-xl font-bold text-slate-900">
+            {isAmharic ? "ባለ 6 ድጂት ኮድ ያስገቡ" : "Enter 6-Digit Code"}
+          </h2>
           <p className="text-sm text-slate-600 mt-2">
-            We sent an SMS verification code to{" "}
-            <span className="font-semibold text-slate-800">
-              {formatDisplayPhone(phone)}
-            </span>
+            {isAmharic ? (
+              <>
+                የኤስኤምኤስ ማረጋገጫ ኮድ ወደ{" "}
+                <span className="font-semibold text-slate-800">
+                  {formatDisplayPhone(phone)}
+                </span>{" "}
+                ልከናል
+              </>
+            ) : (
+              <>
+                We sent an SMS verification code to{" "}
+                <span className="font-semibold text-slate-800">
+                  {formatDisplayPhone(phone)}
+                </span>
+              </>
+            )}
           </p>
           <div className="mt-1">
             <Link
               href={`/s/${slug}/checkout`}
               className="inline-flex items-center text-xs text-emerald-600 hover:text-emerald-700 underline font-medium min-h-[44px]"
             >
-              Wrong number? Edit checkout
+              {isAmharic ? "ስልክ ቁጥሩ ተሳስቷል? አስተካክል" : "Wrong number? Edit checkout"}
             </Link>
           </div>
         </div>
@@ -289,7 +311,9 @@ export function VerifyOtpForm({
             />
           </div>
           <p className="text-[11px] text-slate-400">
-            Enter the 6-digit numeric code from your text message
+            {isAmharic
+              ? "በኤስኤምኤስ የደረሰዎትን ባለ 6 ዲጂት ቁጥር ያስገቡ"
+              : "Enter the 6-digit numeric code from your text message"}
           </p>
         </div>
 
@@ -302,13 +326,24 @@ export function VerifyOtpForm({
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
               <span>
-                Resend code in{" "}
-                <span className="font-bold text-slate-900">{cooldown}s</span>
+                {isAmharic ? (
+                  <>
+                    ኮድ በድጋሚ ለመላክ{" "}
+                    <span className="font-bold text-slate-900">{cooldown} ሰከንድ</span>
+                  </>
+                ) : (
+                  <>
+                    Resend code in{" "}
+                    <span className="font-bold text-slate-900">{cooldown}s</span>
+                  </>
+                )}
               </span>
             </div>
           ) : (
             <div className="space-y-1">
-              <p className="text-xs text-slate-500">Didn&apos;t receive the code?</p>
+              <p className="text-xs text-slate-500">
+                {isAmharic ? "ኮዱ አልደረሰዎትም?" : "Didn't receive the code?"}
+              </p>
               <button
                 type="button"
                 onClick={handleResend}
@@ -318,12 +353,12 @@ export function VerifyOtpForm({
                 {isResending ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Resending code...</span>
+                    <span>{isAmharic ? "ኮድ እየተላከ ነው..." : "Resending code..."}</span>
                   </>
                 ) : (
                   <>
                     <RefreshCw className="w-3.5 h-3.5" />
-                    <span>Resend Code via SMS</span>
+                    <span>{isAmharic ? "ኮድ በድጋሚ በኤስኤምኤስ ላክ" : "Resend Code via SMS"}</span>
                   </>
                 )}
               </button>
@@ -334,7 +369,11 @@ export function VerifyOtpForm({
         {/* Informational security reassurance */}
         <div className="flex items-center justify-center space-x-2 text-xs text-slate-500 bg-slate-100/70 p-3 rounded-lg mt-auto">
           <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-          <span>Code expires in 5 minutes. No password required.</span>
+          <span>
+            {isAmharic
+              ? "ኮዱ የሚያገለግለው ለ 5 ደቂቃ ብቻ ነው። የይለፍ ቃል አያስፈልግም።"
+              : "Code expires in 5 minutes. No password required."}
+          </span>
         </div>
       </main>
 
@@ -349,10 +388,10 @@ export function VerifyOtpForm({
           {isSubmitting ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span>Verifying & Placing Order...</span>
+              <span>{isAmharic ? "እያረጋገጠ ነው..." : "Verifying & Placing Order..."}</span>
             </>
           ) : (
-            <span>Confirm & Place Order</span>
+            <span>{isAmharic ? "አረጋግጥና እዘዝ" : "Confirm & Place Order"}</span>
           )}
         </button>
       </footer>

@@ -6,6 +6,7 @@ import { extractSellerIdFromToken } from "./dashboard-helpers";
 import { DashboardShell } from "./dashboard-shell";
 
 import { ThemeToggle } from "../../components/theme-toggle";
+import { LanguageToggle } from "../../components/language-toggle";
 
 export default async function DashboardLayout({
   children,
@@ -132,6 +133,7 @@ export default async function DashboardLayout({
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>SMSHub Mode: Test</span>
           </span>
+          <LanguageToggle />
           <ThemeToggle />
         </div>
       </header>
