@@ -17,7 +17,13 @@ export async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
   // HTTP security headers (PR-015, Issue #134)
-  app.use(helmet());
+  app.use(helmet({ crossOriginResourcePolicy: false }));
+
+  // Static files for local image uploads fallback
+  const express = require("express");
+  const path = require("path");
+  const uploadsDir = path.resolve(process.cwd(), "public", "uploads");
+  app.use("/uploads", express.static(uploadsDir));
 
   // Global API routing prefix (excluding webhooks per SMSHub spec)
   app.setGlobalPrefix("api", {

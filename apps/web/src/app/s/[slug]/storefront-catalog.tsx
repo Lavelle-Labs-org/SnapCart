@@ -17,6 +17,8 @@ export interface StorefrontProductProp {
   name: string;
   priceSantim: number;
   available: boolean;
+  imageUrl?: string | null;
+  image_url?: string | null;
 }
 
 interface StorefrontCatalogProps {
@@ -130,11 +132,25 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
               return (
                 <div
                   key={product.id}
-                  className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between transition hover:border-slate-300"
+                  className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between transition hover:border-slate-300 gap-3"
                 >
-                  <div className="pr-3">
-                    <h3 className="font-semibold text-slate-900 text-sm leading-snug">{product.name}</h3>
-                    <p className="text-sm font-bold text-emerald-700 tabular-nums mt-1">{priceBirr} ETB</p>
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 flex-shrink-0 overflow-hidden relative flex items-center justify-center">
+                      {product.imageUrl || product.image_url ? (
+                        <img
+                          src={product.imageUrl || product.image_url || ""}
+                          alt={product.name}
+                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <ShoppingBag className="w-6 h-6 text-slate-300" />
+                      )}
+                    </div>
+                    <div className="min-w-0 pr-2">
+                      <h3 className="font-semibold text-slate-900 text-sm leading-snug truncate">{product.name}</h3>
+                      <p className="text-sm font-bold text-emerald-700 tabular-nums mt-1">{priceBirr} ETB</p>
+                    </div>
                   </div>
 
                   {/* Quantity Controls with >=44px touch targets */}

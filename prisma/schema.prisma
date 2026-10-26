@@ -58,6 +58,7 @@ model Product {
   name         String
   price_santim Int
   available    Boolean     @default(true)
+  image_url    String?
   created_at   DateTime    @default(now())
   deleted_at   DateTime?
 

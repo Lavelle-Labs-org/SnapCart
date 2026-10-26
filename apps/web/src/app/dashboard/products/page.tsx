@@ -67,6 +67,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             name: p.name,
             price_santim: p.price_santim ?? p.priceSantim,
             available: p.available,
+            imageUrl: p.imageUrl ?? p.image_url,
           }));
         }
       }
@@ -80,6 +81,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     name: p.name,
     priceSantim: p.price_santim,
     available: Boolean(p.available),
+    ...(p.image_url || p.imageUrl ? { imageUrl: p.image_url || p.imageUrl } : {}),
   }));
 
   return <ProductManager initialProducts={initialProducts} />;

@@ -57,6 +57,8 @@ export class StorefrontController {
         name: p.name,
         priceSantim: p.price_santim,
         available: p.available,
+        imageUrl: p.image_url ?? null,
+        image_url: p.image_url ?? null,
         createdAt: p.created_at ? new Date(p.created_at).toISOString() : new Date().toISOString(),
       })),
     };

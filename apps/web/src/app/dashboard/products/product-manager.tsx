@@ -11,6 +11,9 @@ import {
   AlertCircle,
   ShoppingBag,
   Loader2,
+  Camera,
+  UploadCloud,
+  ImageIcon,
 } from "lucide-react";
 import { toBirr, formatBirr } from "@order-by-sms/contracts";
 
@@ -19,6 +22,7 @@ export interface ProductItem {
   name: string;
   priceSantim: number;
   available: boolean;
+  imageUrl?: string | null;
 }
 
 export interface ProductManagerProps {
@@ -82,6 +86,7 @@ export async function createProductApi(
     name: String(item.name || ""),
     priceSantim: Number(item.priceSantim ?? item.price_santim ?? 0),
     available: Boolean(item.available),
+    ...(item.imageUrl || item.image_url ? { imageUrl: item.imageUrl || item.image_url } : {}),
   };
 }
 
@@ -120,6 +125,7 @@ export async function toggleAvailabilityApi(
     name: String(item.name || ""),
     priceSantim: Number(item.priceSantim ?? item.price_santim ?? 0),
     available: Boolean(item.available),
+    ...(item.imageUrl || item.image_url ? { imageUrl: item.imageUrl || item.image_url } : {}),
   };
 }
 
@@ -158,6 +164,84 @@ export async function updateProductApi(
     name: String(item.name || ""),
     priceSantim: Number(item.priceSantim ?? item.price_santim ?? 0),
     available: Boolean(item.available),
+    ...(item.imageUrl || item.image_url ? { imageUrl: item.imageUrl || item.image_url } : {}),
+  };
+}
+
+/**
+ * API submission helper: POST /api/products/:id/image (upload photo)
+ */
+export async function uploadProductImageApi(
+  productId: string,
+  file: File,
+  fetchFn: typeof fetch = fetch
+): Promise<ProductItem> {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const res = await fetchFn(`/api/products/${encodeURIComponent(productId)}/image`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    let msg = `Failed to upload image (${res.status})`;
+    try {
+      const err = await res.json();
+      msg = err.message || err.error?.message || err.error || msg;
+    } catch {
+      // Ignore json parse error
+    }
+    throw new Error(msg);
+  }
+
+  const result = await res.json();
+  const item =
+    result && typeof result === "object" && "data" in result && result.data
+      ? result.data
+      : result;
+  return {
+    id: String(item.id || ""),
+    name: String(item.name || ""),
+    priceSantim: Number(item.priceSantim ?? item.price_santim ?? 0),
+    available: Boolean(item.available),
+    imageUrl: item.imageUrl ?? item.image_url ?? null,
+  };
+}
+
+/**
+ * API submission helper: DELETE /api/products/:id/image (remove photo)
+ */
+export async function deleteProductImageApi(
+  productId: string,
+  fetchFn: typeof fetch = fetch
+): Promise<ProductItem> {
+  const res = await fetchFn(`/api/products/${encodeURIComponent(productId)}/image`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) {
+    let msg = `Failed to remove image (${res.status})`;
+    try {
+      const err = await res.json();
+      msg = err.message || err.error?.message || err.error || msg;
+    } catch {
+      // Ignore json parse error
+    }
+    throw new Error(msg);
+  }
+
+  const result = await res.json();
+  const item =
+    result && typeof result === "object" && "data" in result && result.data
+      ? result.data
+      : result;
+  return {
+    id: String(item.id || ""),
+    name: String(item.name || ""),
+    priceSantim: Number(item.priceSantim ?? item.price_santim ?? 0),
+    available: Boolean(item.available),
+    imageUrl: null,
   };
 }
 
@@ -197,6 +281,9 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
   const [formName, setFormName] = useState("");
   const [formPriceBirr, setFormPriceBirr] = useState("");
   const [formAvailable, setFormAvailable] = useState(true);
+  const [formImageFile, setFormImageFile] = useState<File | null>(null);
+  const [formImagePreview, setFormImagePreview] = useState<string | null>(null);
+  const [formRemoveImage, setFormRemoveImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
@@ -205,6 +292,9 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
     setFormName("");
     setFormPriceBirr("");
     setFormAvailable(true);
+    setFormImageFile(null);
+    setFormImagePreview(null);
+    setFormRemoveImage(false);
     setFormError(null);
     setIsAddOpen(true);
   };
@@ -222,6 +312,9 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
       )
     );
     setFormAvailable(p.available);
+    setFormImageFile(null);
+    setFormImagePreview(p.imageUrl || null);
+    setFormRemoveImage(false);
     setFormError(null);
   };
 
@@ -229,6 +322,9 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
     setIsAddOpen(false);
     setEditingProduct(null);
     setDeletingProduct(null);
+    setFormImageFile(null);
+    setFormImagePreview(null);
+    setFormRemoveImage(false);
     setFormError(null);
   };
 
@@ -259,11 +355,19 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
     setFormError(null);
 
     try {
-      const created = await createProductApi({
+      let created = await createProductApi({
         name: formName.trim(),
         priceBirr: Number(formPriceBirr),
         available: formAvailable,
       });
+
+      if (formImageFile) {
+        try {
+          created = await uploadProductImageApi(created.id, formImageFile);
+        } catch (imgErr: any) {
+          console.warn("Product created but photo upload failed:", imgErr);
+        }
+      }
 
       setProducts((prev) => [...prev, created]);
       closeModals();
@@ -289,11 +393,17 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
     setFormError(null);
 
     try {
-      const updated = await updateProductApi(editingProduct.id, {
+      let updated = await updateProductApi(editingProduct.id, {
         name: formName.trim(),
         priceBirr: Number(formPriceBirr),
         available: formAvailable,
       });
+
+      if (formImageFile) {
+        updated = await uploadProductImageApi(editingProduct.id, formImageFile);
+      } else if (formRemoveImage && editingProduct.imageUrl) {
+        updated = await deleteProductImageApi(editingProduct.id);
+      }
 
       setProducts((prev) =>
         prev.map((p) => (p.id === updated.id ? updated : p))
@@ -391,10 +501,19 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
 
               return (
                 <div key={`mobile-${p.id}`} className="p-4 space-y-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 text-base">{p.name}</h4>
-                      <p className="text-base font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{priceFormatted}</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                        {p.imageUrl ? (
+                          <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
+                        ) : (
+                          <ShoppingBag className="w-5 h-5 text-slate-300 dark:text-slate-600" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="font-semibold text-slate-900 dark:text-slate-100 text-base truncate">{p.name}</h4>
+                        <p className="text-base font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{priceFormatted}</p>
+                      </div>
                     </div>
                     <button
                       type="button"
@@ -460,7 +579,18 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
 
                   return (
                     <tr key={p.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition">
-                      <td className="px-4 py-3.5 font-medium text-slate-900 dark:text-slate-100">{p.name}</td>
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                            {p.imageUrl ? (
+                              <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
+                            ) : (
+                              <ShoppingBag className="w-4 h-4 text-slate-300 dark:text-slate-600" />
+                            )}
+                          </div>
+                          <span className="font-medium text-slate-900 dark:text-slate-100">{p.name}</span>
+                        </div>
+                      </td>
                       <td className="px-4 py-3.5 font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">
                         {priceFormatted}
                       </td>
@@ -590,6 +720,66 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                 </div>
               </div>
 
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Product Photo (Optional)
+                </label>
+                <div className="flex items-center gap-3">
+                  <div className="w-16 h-16 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
+                    {formImagePreview ? (
+                      <img
+                        src={formImagePreview}
+                        alt="Product preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <ImageIcon className="w-6 h-6 text-slate-300 dark:text-slate-600" />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <label
+                      htmlFor="add-product-photo"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg cursor-pointer transition"
+                    >
+                      <UploadCloud className="w-3.5 h-3.5" />
+                      <span>{formImagePreview ? "Change Photo" : "Upload Photo"}</span>
+                    </label>
+                    <input
+                      id="add-product-photo"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/avif"
+                      className="sr-only"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setFormImageFile(file);
+                          setFormImagePreview(URL.createObjectURL(file));
+                          setFormRemoveImage(false);
+                        }
+                      }}
+                    />
+                    {formImagePreview && (
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormImageFile(null);
+                            setFormImagePreview(null);
+                            setFormRemoveImage(true);
+                          }}
+                          className="text-[11px] text-rose-500 hover:text-rose-700 dark:text-rose-400 font-medium transition"
+                        >
+                          Remove photo
+                        </button>
+                      </div>
+                    )}
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                      JPEG, PNG, WebP or AVIF up to 5MB
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex items-center gap-2 pt-1">
                 <input
                   id="add-product-available"
@@ -702,6 +892,66 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                   <span className="absolute right-3.5 top-2.5 text-xs text-slate-400 dark:text-slate-500 font-semibold">
                     ETB
                   </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Product Photo (Optional)
+                </label>
+                <div className="flex items-center gap-3">
+                  <div className="w-16 h-16 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
+                    {formImagePreview ? (
+                      <img
+                        src={formImagePreview}
+                        alt="Product preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <ImageIcon className="w-6 h-6 text-slate-300 dark:text-slate-600" />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <label
+                      htmlFor="edit-product-photo"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg cursor-pointer transition"
+                    >
+                      <UploadCloud className="w-3.5 h-3.5" />
+                      <span>{formImagePreview ? "Change Photo" : "Upload Photo"}</span>
+                    </label>
+                    <input
+                      id="edit-product-photo"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/avif"
+                      className="sr-only"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setFormImageFile(file);
+                          setFormImagePreview(URL.createObjectURL(file));
+                          setFormRemoveImage(false);
+                        }
+                      }}
+                    />
+                    {formImagePreview && (
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormImageFile(null);
+                            setFormImagePreview(null);
+                            setFormRemoveImage(true);
+                          }}
+                          className="text-[11px] text-rose-500 hover:text-rose-700 dark:text-rose-400 font-medium transition"
+                        >
+                          Remove photo
+                        </button>
+                      </div>
+                    )}
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                      JPEG, PNG, WebP or AVIF up to 5MB
+                    </p>
+                  </div>
                 </div>
               </div>
 

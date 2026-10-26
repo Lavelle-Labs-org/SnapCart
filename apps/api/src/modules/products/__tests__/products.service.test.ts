@@ -5,6 +5,7 @@ import { ProductsService } from "../products.service";
 describe("ProductsService (BE-006)", () => {
   let service: ProductsService;
   let prismaMock: any;
+  let storageMock: any;
 
   beforeEach(() => {
     prismaMock = {
@@ -16,7 +17,15 @@ describe("ProductsService (BE-006)", () => {
       },
     };
 
-    service = new ProductsService(prismaMock);
+    storageMock = {
+      uploadProductImage: vi.fn().mockResolvedValue({
+        imageUrl: "https://pub-r2.test.dev/products/seller-123/prod-1.jpg",
+        storageKey: "products/seller-123/prod-1.jpg",
+      }),
+      deleteProductImage: vi.fn().mockResolvedValue(undefined),
+    };
+
+    service = new ProductsService(prismaMock, storageMock);
   });
 
   describe("getProductsBySeller", () => {
@@ -216,7 +225,7 @@ describe("ProductsService (BE-006)", () => {
       const res = await service.deleteProduct("seller-123", "prod-1");
       expect(prismaMock.product.update).toHaveBeenCalledWith({
         where: { id: "prod-1" },
-        data: { deleted_at: expect.any(Date) },
+        data: { deleted_at: expect.any(Date), image_url: null },
       });
       expect(res).toEqual({ deleted: true, id: "prod-1" });
     });
@@ -250,6 +259,81 @@ describe("ProductsService (BE-006)", () => {
       ).rejects.toMatchObject({
         status: HttpStatus.NOT_FOUND,
       });
+    });
+  });
+
+  describe("uploadProductImage & deleteProductImage", () => {
+    const existingProduct = {
+      id: "prod-1",
+      seller_id: "seller-123",
+      name: "Injera Combo",
+      price_santim: 35000,
+      available: true,
+      image_url: "https://pub-r2.test.dev/products/seller-123/old.jpg",
+      created_at: new Date("2026-10-18T10:00:00.000Z"),
+      deleted_at: null,
+    };
+
+    it("uploads new image, deletes old image from storage, and updates product record", async () => {
+      prismaMock.product.findUnique.mockResolvedValue(existingProduct);
+      prismaMock.product.update.mockResolvedValue({
+        ...existingProduct,
+        image_url: "https://pub-r2.test.dev/products/seller-123/prod-1.jpg",
+      });
+
+      const buffer = Buffer.from([0xff, 0xd8, 0xff, 0xe0]);
+      const res = await service.uploadProductImage("seller-123", "prod-1", buffer, "new.jpg");
+
+      expect(storageMock.uploadProductImage).toHaveBeenCalledWith({
+        buffer,
+        originalName: "new.jpg",
+        sellerId: "seller-123",
+        productId: "prod-1",
+      });
+      expect(storageMock.deleteProductImage).toHaveBeenCalledWith("https://pub-r2.test.dev/products/seller-123/old.jpg");
+      expect(prismaMock.product.update).toHaveBeenCalledWith({
+        where: { id: "prod-1" },
+        data: { image_url: "https://pub-r2.test.dev/products/seller-123/prod-1.jpg" },
+      });
+      expect(res.imageUrl).toBe("https://pub-r2.test.dev/products/seller-123/prod-1.jpg");
+    });
+
+    it("throws 403 Forbidden if another seller tries to upload image to product (IDOR)", async () => {
+      prismaMock.product.findUnique.mockResolvedValue(existingProduct);
+
+      await expect(
+        service.uploadProductImage("intruder-seller", "prod-1", Buffer.from("test"), "hacked.jpg")
+      ).rejects.toMatchObject({
+        status: HttpStatus.FORBIDDEN,
+      });
+      expect(storageMock.uploadProductImage).not.toHaveBeenCalled();
+    });
+
+    it("throws 404 Not Found if product does not exist", async () => {
+      prismaMock.product.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.uploadProductImage("seller-123", "non-existent", Buffer.from("test"), "test.jpg")
+      ).rejects.toMatchObject({
+        status: HttpStatus.NOT_FOUND,
+      });
+    });
+
+    it("deletes product image and calls storage deletion", async () => {
+      prismaMock.product.findUnique.mockResolvedValue(existingProduct);
+      prismaMock.product.update.mockResolvedValue({
+        ...existingProduct,
+        image_url: null,
+      });
+
+      const res = await service.deleteProductImage("seller-123", "prod-1");
+
+      expect(storageMock.deleteProductImage).toHaveBeenCalledWith("https://pub-r2.test.dev/products/seller-123/old.jpg");
+      expect(prismaMock.product.update).toHaveBeenCalledWith({
+        where: { id: "prod-1" },
+        data: { image_url: null },
+      });
+      expect(res.imageUrl).toBeNull();
     });
   });
 });

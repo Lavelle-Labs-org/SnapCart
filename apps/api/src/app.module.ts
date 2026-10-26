@@ -9,6 +9,7 @@ import { WebhooksModule } from "./modules/webhooks/webhooks.module";
 import { OrdersModule } from "./modules/orders/orders.module";
 import { MessagesModule } from "./modules/messages/messages.module";
 import { BillingModule } from "./modules/billing/billing.module";
+import { StorageModule } from "./modules/storage/storage.module";
 import { PrismaModule } from "./prisma/prisma.module";
 
 import { APP_PIPE } from "@nestjs/core";
@@ -20,6 +21,7 @@ import { ZodValidationPipe } from "./common/pipes/zod-validation.pipe";
     CryptoModule,
     SMSHubModule,
     AuthModule,
+    StorageModule,
     ProductsModule,
     CheckoutModule,
     OrdersModule,
