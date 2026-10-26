@@ -19,6 +19,7 @@ import {
   detectEncoding,
   SMS_TEMPLATES,
 } from "@order-by-sms/contracts";
+import { useTranslation } from "../../../lib/i18n";
 
 export interface SellerSettingsData {
   id: string;
@@ -177,6 +178,7 @@ export default function SettingsClient({
   fetchFn = typeof fetch !== "undefined" ? fetch : (async () => ({} as any)),
   baseUrl,
 }: SettingsClientProps) {
+  const { t, isAmharic } = useTranslation();
   const [businessName, setBusinessName] = useState(initialSeller.businessName || "");
   const [smsName, setSmsName] = useState(initialSeller.smsName || "");
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateKey>("buyerAccepted");
@@ -287,12 +289,14 @@ export default function SettingsClient({
         <div className="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400 mb-1">
           <Store className="w-5 h-5" />
           <span className="text-xs font-semibold uppercase tracking-wider">
-            Storefront & SMS Configuration
+            {isAmharic ? "የመደብር እና የኤስኤምኤስ ቅንብሮች" : "Storefront & SMS Configuration"}
           </span>
         </div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Shop Settings</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+          {isAmharic ? t.settings.title : "Shop Settings"}
+        </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Manage your customer-facing shop identity, storefront shareable link, and SMS notification branding.
+          {isAmharic ? t.settings.subtitle : "Manage your customer-facing shop identity, storefront shareable link, and SMS notification branding."}
         </p>
       </div>
 
@@ -301,15 +305,15 @@ export default function SettingsClient({
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
             <Smartphone className="w-4 h-4 text-emerald-600" />
-            <span>Storefront Link</span>
+            <span>{isAmharic ? t.settings.storefrontLinkTitle : "Storefront Link"}</span>
           </h2>
           <span className="text-xs bg-emerald-50 text-emerald-700 font-medium px-2.5 py-1 rounded-full border border-emerald-200">
-            Active Catalog
+            {isAmharic ? "ንቁ ካታሎግ" : "Active Catalog"}
           </span>
         </div>
 
         <p className="text-xs text-slate-500 leading-relaxed">
-          Share this direct link in your Telegram channel, Instagram bio, or TikTok profile for customers to browse and order without an app download.
+          {isAmharic ? t.settings.storefrontLinkDesc : "Share this direct link in your Telegram channel, Instagram bio, or TikTok profile for customers to browse and order without an app download."}
         </p>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -335,12 +339,12 @@ export default function SettingsClient({
               {isCopied ? (
                 <>
                   <Check className="w-4 h-4" />
-                  <span>Copied!</span>
+                  <span>{isAmharic ? t.settings.copiedBtn : "Copied!"}</span>
                 </>
               ) : (
                 <>
                   <Copy className="w-4 h-4" />
-                  <span>Copy Link</span>
+                  <span>{isAmharic ? t.settings.copyLinkBtn : "Copy Link"}</span>
                 </>
               )}
             </button>
@@ -369,10 +373,10 @@ export default function SettingsClient({
           >
             <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
               <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
-                Shop & SMS Branding
+                {isAmharic ? t.settings.brandingTitle : "Shop & SMS Branding"}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Saved values appear at the beginning of all outgoing SMS alerts.
+                {isAmharic ? t.settings.brandingSubtitle : "Saved values appear at the beginning of all outgoing SMS alerts."}
               </p>
             </div>
 
@@ -382,7 +386,7 @@ export default function SettingsClient({
                 htmlFor="business-name-input"
                 className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5"
               >
-                Business Name
+                {isAmharic ? t.settings.businessNameLabel : "Business Name"}
               </label>
               <input
                 id="business-name-input"
@@ -393,7 +397,7 @@ export default function SettingsClient({
                   setBusinessName(e.target.value);
                   setSaveStatus("idle");
                 }}
-                placeholder="e.g. Habesha Cafe & Bakery"
+                placeholder={isAmharic ? "ምሳሌ፡ ሀበሻ ካፌ እና ዳቦ ቤት" : "e.g. Habesha Cafe & Bakery"}
                 className={`w-full px-3.5 py-2.5 rounded-xl border text-sm min-h-[44px] transition focus:outline-none focus:ring-2 ${
                   !isBusinessNameValid && businessName.length > 0
                     ? "border-rose-300 focus:ring-rose-400 bg-rose-50/20 text-rose-900 dark:text-rose-200"
@@ -401,7 +405,7 @@ export default function SettingsClient({
                 }`}
               />
               <div className="flex justify-between items-center text-[11px] text-slate-400 mt-1 px-1">
-                <span>Full name shown on web storefront</span>
+                <span>{isAmharic ? t.settings.businessNameHelp : "Full name shown on web storefront"}</span>
                 <span>{businessName.length} / 100</span>
               </div>
             </div>
@@ -413,7 +417,7 @@ export default function SettingsClient({
                   htmlFor="sms-name-input"
                   className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
                 >
-                  SMS Sender Name
+                  {isAmharic ? t.settings.smsNameLabel : "SMS Sender Name"}
                 </label>
                 <span
                   id="sms-name-char-count"
@@ -438,7 +442,7 @@ export default function SettingsClient({
                   setSmsName(e.target.value);
                   setSaveStatus("idle");
                 }}
-                placeholder="e.g. Habesha Cafe"
+                placeholder={isAmharic ? "ምሳሌ፡ ሀበሻ ካፌ" : "e.g. Habesha Cafe"}
                 className={`w-full px-3.5 py-2.5 rounded-xl border text-sm min-h-[44px] transition focus:outline-none focus:ring-2 ${
                   smsName.length > 20
                     ? "border-rose-400 focus:ring-rose-400 bg-rose-50/30 text-rose-900 dark:text-rose-200"
@@ -449,7 +453,7 @@ export default function SettingsClient({
               />
 
               <div className="text-[11px] text-slate-500 mt-1 px-1">
-                Max 20 characters. Precedes every SMS message (e.g. &quot;Habesha Cafe: ...&quot;).
+                {isAmharic ? t.settings.smsNameHelp : "Max 20 characters. Precedes every SMS message (e.g. \"Habesha Cafe: ...\")."}
               </div>
 
               {/* Non-GSM Warning Banner */}
@@ -506,12 +510,12 @@ export default function SettingsClient({
               {isSaving ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Saving Changes...</span>
+                  <span>{isAmharic ? t.settings.savingBtn : "Saving Changes..."}</span>
                 </>
               ) : (
                 <>
                   <Check className="w-4 h-4" />
-                  <span>Save Settings</span>
+                  <span>{isAmharic ? t.settings.saveBtn : "Save Settings"}</span>
                 </>
               )}
             </button>
@@ -524,7 +528,7 @@ export default function SettingsClient({
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
                 <MessageSquare className="w-4 h-4 text-emerald-600" />
-                <span>Live SMS Template Previewer</span>
+                <span>{isAmharic ? t.settings.previewTitle : "Live SMS Template Previewer"}</span>
               </h2>
               <span className="text-[11px] font-mono text-slate-400 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
                 Section 3 Spec
@@ -532,7 +536,7 @@ export default function SettingsClient({
             </div>
 
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Select a message event to preview how your shop name looks and verify character limits before customers receive it:
+              {isAmharic ? t.settings.previewSubtitle : "Select a message event to preview how your shop name looks and verify character limits before customers receive it:"}
             </p>
 
             {/* Template Selector Tabs */}

@@ -36,41 +36,41 @@ function formatDateTime(dateInput: Date | string): string {
   });
 }
 
-function getStatusBadge(state: string) {
+function getStatusBadge(state: string, isAmharic = false) {
   switch (state) {
     case "new":
       return (
         <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-1.5">
           <Clock className="w-3.5 h-3.5" />
-          New
+          {isAmharic ? "አዲስ" : "New"}
         </span>
       );
     case "accepted":
       return (
         <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-1.5">
           <CheckCircle className="w-3.5 h-3.5" />
-          Accepted
+          {isAmharic ? "ተቀባይነት አግኝቷል" : "Accepted"}
         </span>
       );
     case "ready":
       return (
         <span className="px-3 py-1 bg-teal-50 text-teal-800 border border-teal-200 rounded-full text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-1.5">
           <PackageCheck className="w-3.5 h-3.5" />
-          Ready for Pickup
+          {isAmharic ? "ለመረከብ ዝግጁ" : "Ready for Pickup"}
         </span>
       );
     case "completed":
       return (
         <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-1.5">
           <CheckCircle className="w-3.5 h-3.5" />
-          Completed
+          {isAmharic ? "ተጠናቋል" : "Completed"}
         </span>
       );
     case "rejected":
       return (
         <span className="px-3 py-1 bg-rose-100 text-rose-800 rounded-full text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-1.5">
           <AlertCircle className="w-3.5 h-3.5" />
-          Rejected
+          {isAmharic ? "ውድቅ ተደርጓል" : "Rejected"}
         </span>
       );
     default:
@@ -92,11 +92,14 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
 
   let sellerId: string | null = null;
   let token: string | undefined;
+  let isAmharic = false;
 
   try {
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();
     token = cookieStore.get("seller_session")?.value;
+    const localeCookie = cookieStore.get("obs_locale")?.value;
+    isAmharic = localeCookie === "am";
     if (token) {
       sellerId = await extractSellerIdFromToken(token);
     }
@@ -200,10 +203,10 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
   const maskedPhone = maskPhoneNumber(order.buyer_phone || "");
 
   const steps = [
-    { key: "new", label: "Placed" },
-    { key: "accepted", label: "Accepted" },
-    { key: "ready", label: "Ready" },
-    { key: "completed", label: "Completed" },
+    { key: "new", label: isAmharic ? "የቀረበ" : "Placed" },
+    { key: "accepted", label: isAmharic ? "የተቀበለ" : "Accepted" },
+    { key: "ready", label: isAmharic ? "ዝግጁ" : "Ready" },
+    { key: "completed", label: isAmharic ? "የተጠናቀቀ" : "Completed" },
   ];
 
   const stateOrder = ["new", "accepted", "ready", "completed"];
@@ -218,10 +221,10 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           className="hover:text-slate-900 dark:hover:text-slate-200 transition flex items-center gap-1"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Orders</span>
+          <span>{isAmharic ? "ትዕዛዞች" : "Orders"}</span>
         </Link>
         <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600" />
-        <span className="font-semibold text-slate-800 dark:text-slate-200">{`Order #${order.number}`}</span>
+        <span className="font-semibold text-slate-800 dark:text-slate-200">{isAmharic ? `ትዕዛዝ #${order.number}` : `Order #${order.number}`}</span>
       </nav>
 
       {/* Main Order Header */}
@@ -229,9 +232,9 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-              {`Order #${order.number}`}
+              {isAmharic ? `ትዕዛዝ #${order.number}` : `Order #${order.number}`}
             </h1>
-            {getStatusBadge(order.state)}
+            {getStatusBadge(order.state, isAmharic)}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">
             {`ID: ${order.id}`}
@@ -240,7 +243,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
 
         <div className="flex items-center gap-4">
           <div className="text-right">
-            <span className="text-xs text-slate-500 dark:text-slate-400 block">Total Amount</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 block">{isAmharic ? "ጠቅላላ ዋጋ" : "Total Amount"}</span>
             <span className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
               {totalFormatted}
             </span>
@@ -251,14 +254,14 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
       {/* Lifecycle Progress Bar */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
         <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-4">
-          Order Lifecycle Status
+          {isAmharic ? "የትዕዛዝ ሁኔታ ደረጃ" : "Order Lifecycle Status"}
         </h2>
 
         {order.state === "rejected" ? (
           <div className="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-lg flex items-center gap-3 text-rose-800 dark:text-rose-300">
             <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-600 dark:text-rose-400" />
             <div className="text-sm">
-              <span className="font-semibold">Order Rejected</span> — This order was declined and will not proceed to fulfillment.
+              <span className="font-semibold">{isAmharic ? "ትዕዛዝ ውድቅ ተደርጓል" : "Order Rejected"}</span> — {isAmharic ? "ይህ ትዕዛዝ ውድቅ ተደርጓል እና አይሟላም።" : "This order was declined and will not proceed to fulfillment."}
             </div>
           </div>
         ) : (
@@ -303,7 +306,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 flex items-center justify-between">
               <h2 className="font-semibold text-slate-800 dark:text-slate-200 text-sm">
-                {`Order Items (${order.order_items?.length || 0})`}
+                {isAmharic ? `የታዘዙ ዕቃዎች (${order.order_items?.length || 0})` : `Order Items (${order.order_items?.length || 0})`}
               </h2>
             </div>
 
@@ -334,7 +337,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
             </div>
 
             <div className="p-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between font-bold text-base text-slate-900 dark:text-slate-100">
-              <span>Grand Total</span>
+              <span>{isAmharic ? "አጠቃላይ ድምር" : "Grand Total"}</span>
               <span>{totalFormatted}</span>
             </div>
           </div>
@@ -343,7 +346,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
             <div className="flex items-center space-x-2 text-slate-900 dark:text-slate-100 font-semibold text-sm">
               <History className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <h2>State Transition Audit History</h2>
+              <h2>{isAmharic ? "የሁኔታ ሽግግር ታሪክ" : "State Transition Audit History"}</h2>
             </div>
 
             {order.order_events && order.order_events.length > 0 ? (
@@ -369,7 +372,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
               </div>
             ) : (
               <p className="text-xs text-slate-500 dark:text-slate-400 italic">
-                No transition events recorded yet.
+                {isAmharic ? "እስካሁን ምንም የሽግግር ኩነቶች አልተመዘገቡም።" : "No transition events recorded yet."}
               </p>
             )}
           </div>
@@ -378,7 +381,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
             <div className="flex items-center space-x-2 text-slate-900 dark:text-slate-100 font-semibold text-sm">
               <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <h2>SMS Notifications Audit Log</h2>
+              <h2>{isAmharic ? "የኤስኤምኤስ ማሳወቂያዎች መዝገብ" : "SMS Notifications Audit Log"}</h2>
             </div>
 
             {order.messages && order.messages.length > 0 ? (
@@ -386,10 +389,10 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                 <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
                   <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 uppercase font-semibold">
                     <tr>
-                      <th className="py-2 px-3">Event</th>
-                      <th className="py-2 px-3">Recipient</th>
-                      <th className="py-2 px-3">Status</th>
-                      <th className="py-2 px-3">Timestamp</th>
+                      <th className="py-2 px-3">{isAmharic ? "ኩነት" : "Event"}</th>
+                      <th className="py-2 px-3">{isAmharic ? "ተቀባይ" : "Recipient"}</th>
+                      <th className="py-2 px-3">{isAmharic ? "ሁኔታ" : "Status"}</th>
+                      <th className="py-2 px-3">{isAmharic ? "ሰዓት" : "Timestamp"}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -426,7 +429,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
               </div>
             ) : (
               <p className="text-xs text-slate-500 dark:text-slate-400 italic">
-                No SMS audit log records recorded for this order yet.
+                {isAmharic ? "ለዚህ ትዕዛዝ እስካሁን ምንም የኤስኤምኤስ መዝገብ አልተመዘገበም።" : "No SMS audit log records recorded for this order yet."}
               </p>
             )}
           </div>
@@ -443,14 +446,14 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           {/* Customer Details */}
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
             <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-              Customer Information
+              {isAmharic ? "የደንበኛ መረጃ" : "Customer Information"}
             </h2>
 
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-sm">
                 <User className="w-4 h-4 text-slate-400 dark:text-slate-500 flex-shrink-0" />
                 <span className="font-medium text-slate-900 dark:text-slate-100">
-                  {order.buyer_name || "Guest Customer"}
+                  {order.buyer_name || (isAmharic ? "እንግዳ ደንበኛ" : "Guest Customer")}
                 </span>
               </div>
 
@@ -467,7 +470,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
               <div className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <ShieldCheck className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                 <span>
-                  {order.sms_consent ? "SMS Consent Granted" : "No SMS Consent"}
+                  {order.sms_consent ? (isAmharic ? "የኤስኤምኤስ ስምምነት ተሰጥቷል" : "SMS Consent Granted") : (isAmharic ? "የኤስኤምኤስ ስምምነት የለም" : "No SMS Consent")}
                 </span>
               </div>
             </div>

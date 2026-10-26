@@ -16,6 +16,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { maskPhoneNumber as contractsMaskPhone } from "@order-by-sms/contracts";
+import { useTranslation } from "../../../lib/i18n";
 
 export interface MessageItem {
   id: string;
@@ -201,6 +202,7 @@ export default function MessagesClient({
   isSendingPaused = false,
   isLowBalance = false,
 }: MessagesClientProps) {
+  const { t, isAmharic } = useTranslation();
   const [messages, setMessages] = useState<MessageItem[]>(initialMessages);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [resendingId, setResendingId] = useState<string | null>(null);
@@ -284,9 +286,11 @@ export default function MessagesClient({
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">SMS Message Audit Log</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            {isAmharic ? t.messages.title : "SMS Message Audit Log"}
+          </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Real delivery statuses, credit deduction, and message IDs from SMSHub.
+            {isAmharic ? t.messages.subtitle : "Real delivery statuses, credit deduction, and message IDs from SMSHub."}
           </p>
         </div>
         <div className="flex items-center space-x-3">
@@ -297,7 +301,7 @@ export default function MessagesClient({
             className="flex items-center space-x-1.5 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 text-slate-600 dark:text-slate-300 ${isRefreshing ? "animate-spin" : ""}`} />
-            <span>{isRefreshing ? "Refreshing..." : "Refresh"}</span>
+            <span>{isRefreshing ? (isAmharic ? t.messages.refreshing : "Refreshing...") : (isAmharic ? t.messages.refreshBtn : "Refresh")}</span>
           </button>
         </div>
       </div>
@@ -333,11 +337,10 @@ export default function MessagesClient({
       {actionNotice && (
         <div
           role="status"
-          className={`p-3.5 rounded-lg text-sm font-medium border flex items-center justify-between ${
-            actionNotice.type === "success"
+          className={`p-3.5 rounded-lg text-sm font-medium border flex items-center justify-between ${actionNotice.type === "success"
               ? "bg-emerald-50 text-emerald-800 border-emerald-200"
               : "bg-rose-50 text-rose-800 border-rose-200"
-          }`}
+            }`}
         >
           <span>{actionNotice.message}</span>
           <button
@@ -353,21 +356,20 @@ export default function MessagesClient({
       {/* Status Filter Tabs */}
       <div className="flex items-center space-x-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto text-sm">
         {[
-          { key: "all", label: "All Messages" },
-          { key: "sent", label: "Sent" },
-          { key: "failed", label: "Failed" },
-          { key: "skipped", label: "Skipped" },
-          { key: "unknown", label: "Unknown" },
+          { key: "all", label: isAmharic ? t.messages.filterAll : "All Messages" },
+          { key: "sent", label: isAmharic ? t.messages.filterSent : "Sent" },
+          { key: "failed", label: isAmharic ? t.messages.filterFailed : "Failed" },
+          { key: "skipped", label: isAmharic ? t.messages.filterSkipped : "Skipped" },
+          { key: "unknown", label: isAmharic ? t.messages.filterUnknown : "Unknown" },
         ].map((tab) => (
           <button
             key={tab.key}
             type="button"
             onClick={() => setStatusFilter(tab.key)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-              statusFilter === tab.key
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${statusFilter === tab.key
                 ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100"
-            }`}
+              }`}
           >
             {tab.label}
           </button>
@@ -381,7 +383,7 @@ export default function MessagesClient({
           {filteredMessages.length === 0 ? (
             <div className="p-8 text-center text-slate-400 dark:text-slate-500 text-sm">
               <Mail className="w-8 h-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
-              No SMS messages match the selected filter.
+              {isAmharic ? t.messages.emptyText : "No SMS messages match the selected filter."}
             </div>
           ) : (
             filteredMessages.map((msg) => {
@@ -440,7 +442,7 @@ export default function MessagesClient({
                         className="w-full inline-flex items-center justify-center space-x-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 py-2.5 px-3 rounded-lg transition disabled:opacity-50 min-h-[44px]"
                       >
                         <Send className="w-3.5 h-3.5" />
-                        <span>{isThisResending ? "Resending..." : "Resend Message"}</span>
+                        <span>{isThisResending ? (isAmharic ? t.messages.resending : "Resending...") : (isAmharic ? t.messages.resendBtn : "Resend Message")}</span>
                       </button>
                     </div>
                   )}
@@ -455,14 +457,14 @@ export default function MessagesClient({
           <table className="w-full text-left text-sm text-slate-700 dark:text-slate-200">
             <thead className="bg-slate-50 dark:bg-slate-800/80 text-xs uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
               <tr>
-                <th className="px-4 py-3">Time</th>
-                <th className="px-4 py-3">Recipient</th>
-                <th className="px-4 py-3">Event</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Network</th>
-                <th className="px-4 py-3">Credits</th>
-                <th className="px-4 py-3">SMSHub ID</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+                <th className="px-4 py-3">{isAmharic ? t.messages.colTime : "Time"}</th>
+                <th className="px-4 py-3">{isAmharic ? t.messages.colRecipient : "Recipient"}</th>
+                <th className="px-4 py-3">{isAmharic ? t.messages.colEvent : "Event"}</th>
+                <th className="px-4 py-3">{isAmharic ? t.messages.colStatus : "Status"}</th>
+                <th className="px-4 py-3">{isAmharic ? t.messages.colNetwork : "Network"}</th>
+                <th className="px-4 py-3">{isAmharic ? t.messages.colCredits : "Credits"}</th>
+                <th className="px-4 py-3">{isAmharic ? t.messages.colSmshubId : "SMSHub ID"}</th>
+                <th className="px-4 py-3 text-right">{isAmharic ? t.messages.colActions : "Actions"}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -470,7 +472,7 @@ export default function MessagesClient({
                 <tr>
                   <td colSpan={8} className="px-4 py-12 text-center text-slate-400 dark:text-slate-500 text-sm">
                     <Mail className="w-8 h-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
-                    No SMS messages match the selected filter.
+                    {isAmharic ? t.messages.emptyText : "No SMS messages match the selected filter."}
                   </td>
                 </tr>
               ) : (
@@ -545,7 +547,7 @@ export default function MessagesClient({
                             className="inline-flex items-center space-x-1 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 px-2.5 py-1 rounded-md transition disabled:opacity-50"
                           >
                             <Send className="w-3 h-3" />
-                            <span>{isThisResending ? "Resending..." : "Resend"}</span>
+                            <span>{isThisResending ? (isAmharic ? t.messages.resending : "Resending...") : (isAmharic ? t.messages.resendBtn : "Resend")}</span>
                           </button>
                         )}
                       </td>

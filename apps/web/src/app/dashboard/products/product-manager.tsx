@@ -520,17 +520,15 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                       type="button"
                       disabled={isToggling}
                       onClick={() => handleToggleAvailability(p)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition min-h-[36px] ${
-                        p.available
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition min-h-[36px] ${p.available
                           ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/60"
                           : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
-                      } disabled:opacity-50`}
+                        } disabled:opacity-50`}
                       title="Click to toggle storefront availability"
                     >
                       <span
-                        className={`w-2 h-2 rounded-full ${
-                          p.available ? "bg-emerald-500" : "bg-slate-400"
-                        }`}
+                        className={`w-2 h-2 rounded-full ${p.available ? "bg-emerald-500" : "bg-slate-400"
+                          }`}
                       />
                       <span>{p.available ? "Available" : "Hidden"}</span>
                     </button>
@@ -601,17 +599,15 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                           type="button"
                           disabled={isToggling}
                           onClick={() => handleToggleAvailability(p)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition ${
-                            p.available
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition ${p.available
                               ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/60"
                               : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
-                          } disabled:opacity-50`}
+                            } disabled:opacity-50`}
                           title="Click to toggle storefront availability"
                         >
                           <span
-                            className={`w-2 h-2 rounded-full ${
-                              p.available ? "bg-emerald-500" : "bg-slate-400"
-                            }`}
+                            className={`w-2 h-2 rounded-full ${p.available ? "bg-emerald-500" : "bg-slate-400"
+                              }`}
                           />
                           <span>{p.available ? "Available" : "Hidden"}</span>
                         </button>

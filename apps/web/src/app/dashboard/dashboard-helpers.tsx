@@ -69,41 +69,41 @@ export function formatOrderTime(dateInput: Date | string): string {
 /**
  * Renders state badge with distinct color and semantic status indicator.
  */
-export function getStatusBadge(state: string) {
+export function getStatusBadge(state: string, isAmharic = false) {
   switch (state) {
     case "new":
       return (
         <span className="px-2.5 py-1 bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 dark:border dark:border-amber-900/60 rounded-full text-xs font-semibold inline-flex items-center gap-1">
           <Clock className="w-3 h-3" />
-          <span>New</span>
+          <span>{isAmharic ? "አዲስ" : "New"}</span>
         </span>
       );
     case "accepted":
       return (
         <span className="px-2.5 py-1 bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 dark:border dark:border-blue-900/60 rounded-full text-xs font-semibold inline-flex items-center gap-1">
           <CheckCircle className="w-3 h-3" />
-          <span>Accepted</span>
+          <span>{isAmharic ? "ተቀባይነት አግኝቷል" : "Accepted"}</span>
         </span>
       );
     case "ready":
       return (
         <span className="px-2.5 py-1 bg-teal-50 text-teal-800 border border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800 rounded-full text-xs font-semibold inline-flex items-center gap-1">
           <PackageCheck className="w-3 h-3" />
-          <span>Ready</span>
+          <span>{isAmharic ? "ዝግጁ" : "Ready"}</span>
         </span>
       );
     case "completed":
       return (
         <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border dark:border-emerald-900/60 rounded-full text-xs font-semibold inline-flex items-center gap-1">
           <CheckCircle className="w-3 h-3" />
-          <span>Completed</span>
+          <span>{isAmharic ? "ተጠናቋል" : "Completed"}</span>
         </span>
       );
     case "rejected":
       return (
         <span className="px-2.5 py-1 bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 dark:border dark:border-rose-900/60 rounded-full text-xs font-semibold inline-flex items-center gap-1">
           <XCircle className="w-3 h-3" />
-          <span>Rejected</span>
+          <span>{isAmharic ? "አልተቀበለም" : "Rejected"}</span>
         </span>
       );
     default:

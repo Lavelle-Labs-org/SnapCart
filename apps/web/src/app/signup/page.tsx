@@ -3,6 +3,7 @@ import Link from "next/link";
 import { MessageSquare, ArrowLeft } from "lucide-react";
 import { SignupForm } from "./signup-form";
 import { ThemeToggle } from "../../components/theme-toggle";
+import { LanguageToggle } from "../../components/language-toggle";
 
 export const metadata = {
   title: "Create Seller Account | Order-by-SMS",
@@ -27,6 +28,7 @@ export default function SignupPage() {
           </Link>
 
           <div className="flex items-center space-x-2 sm:space-x-3">
+            <LanguageToggle />
             <ThemeToggle />
             <Link
               href="/"

@@ -75,8 +75,8 @@ export function BillingClient() {
       if (!res.ok || !checkoutUrl) {
         throw new Error(
           data.message ||
-            data.error?.message ||
-            "Failed to initialize Chapa checkout session"
+          data.error?.message ||
+          "Failed to initialize Chapa checkout session"
         );
       }
 
@@ -120,13 +120,12 @@ export function BillingClient() {
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">
             <span>Remaining Credits</span>
             <span
-              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                (balance?.smsCredits ?? 0) > 3
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${(balance?.smsCredits ?? 0) > 3
                   ? "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300"
                   : (balance?.smsCredits ?? 0) > 0
-                  ? "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300"
-                  : "bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300"
-              }`}
+                    ? "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300"
+                    : "bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300"
+                }`}
             >
               {(balance?.smsCredits ?? 0) > 0 ? "Active" : "Trial Expired"}
             </span>
@@ -143,8 +142,8 @@ export function BillingClient() {
             {(balance?.smsCredits ?? 0) <= 0
               ? "Your credits are exhausted. Buyer orders will still succeed, but customer SMS updates are paused."
               : (balance?.smsCredits ?? 0) <= 3
-              ? "Running low! Recharge soon to avoid SMS interruptions."
-              : "Enough credits for standard store operation."}
+                ? "Running low! Recharge soon to avoid SMS interruptions."
+                : "Enough credits for standard store operation."}
           </p>
         </div>
 
@@ -210,20 +209,18 @@ export function BillingClient() {
             return (
               <div
                 key={pkg.id}
-                className={`relative flex flex-col justify-between p-6 rounded-3xl transition-all duration-200 ${
-                  isFeatured
+                className={`relative flex flex-col justify-between p-6 rounded-3xl transition-all duration-200 ${isFeatured
                     ? "bg-slate-900 text-white dark:bg-slate-950 border-2 border-emerald-500 shadow-xl shadow-emerald-500/10 md:-translate-y-1.5"
                     : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 shadow-xs"
-                }`}
+                  }`}
               >
                 {pkg.badge && (
                   <div className="absolute -top-3.5 right-6">
                     <span
-                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm ${
-                        isFeatured
+                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm ${isFeatured
                           ? "bg-emerald-500 text-white"
                           : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
-                      }`}
+                        }`}
                     >
                       <Sparkles className="w-3 h-3" />
                       <span>{pkg.badge}</span>
@@ -234,11 +231,10 @@ export function BillingClient() {
                 <div>
                   <h3 className="text-lg font-bold">{pkg.name}</h3>
                   <p
-                    className={`text-xs mt-1 min-h-[32px] ${
-                      isFeatured
+                    className={`text-xs mt-1 min-h-[32px] ${isFeatured
                         ? "text-slate-300"
                         : "text-slate-500 dark:text-slate-400"
-                    }`}
+                      }`}
                   >
                     {pkg.description}
                   </p>
@@ -285,11 +281,10 @@ export function BillingClient() {
                   <button
                     onClick={() => handleBuyPackage(pkg)}
                     disabled={isBusy || loading}
-                    className={`w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
-                      isFeatured
+                    className={`w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${isFeatured
                         ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20 disabled:opacity-50"
                         : "bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:opacity-50"
-                    }`}
+                      }`}
                   >
                     {isBusy ? (
                       <>
@@ -371,13 +366,12 @@ export function BillingClient() {
                       </td>
                       <td className="px-4 py-3.5">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
-                            t.status === "completed"
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${t.status === "completed"
                               ? "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300"
                               : t.status === "pending"
-                              ? "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300"
-                              : "bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300"
-                          }`}
+                                ? "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300"
+                                : "bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300"
+                            }`}
                         >
                           {t.status}
                         </span>

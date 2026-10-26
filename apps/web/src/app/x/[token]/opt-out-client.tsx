@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { BellOff, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { OptOutResponse } from "@order-by-sms/contracts";
+import { useTranslation } from "../../../lib/i18n";
+import { LanguageToggle } from "../../../components/language-toggle";
 
 export interface OptOutPreviewData {
   orderNumber?: number;
@@ -68,6 +70,7 @@ export async function submitOptOut(
 }
 
 export function OptOutClient({ token, initialData }: OptOutClientProps) {
+  const { t, isAmharic } = useTranslation();
   const [status, setStatus] = useState<OptOutStatus>(
     getOptOutInitialState(initialData)
   );
@@ -103,33 +106,44 @@ export function OptOutClient({ token, initialData }: OptOutClientProps) {
   // Render Success / Already Suppressed State
   if (status === "success" || status === "already_suppressed") {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center max-w-md mx-auto border-x border-slate-200 p-6 text-center">
-        <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4 shadow-sm">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center items-center max-w-md mx-auto border-x border-slate-200 dark:border-slate-800 p-6 text-center transition-colors duration-200">
+        <div className="w-full flex justify-end pb-2">
+          <LanguageToggle />
+        </div>
+
+        <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mb-4 shadow-xs">
           <CheckCircle2 className="w-8 h-8" />
         </div>
 
-        <h1 className="text-xl font-bold text-slate-900">
-          {status === "already_suppressed"
+        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+          {isAmharic
+            ? status === "already_suppressed"
+              ? t.optOut.alreadyTitle
+              : t.optOut.successTitle
+            : status === "already_suppressed"
             ? "SMS Updates Already Stopped"
             : "Text Updates Stopped"}
         </h1>
 
-        <p className="text-sm text-slate-600 mt-2 max-w-xs leading-relaxed">
-          {getConfirmationMessage(status)}
+        <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 max-w-xs leading-relaxed">
+          {isAmharic
+            ? status === "already_suppressed"
+              ? t.optOut.alreadyDesc
+              : t.optOut.successDesc
+            : getConfirmationMessage(status)}
         </p>
 
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-xs text-emerald-800 text-left w-full mt-6 shadow-sm">
-          <p className="font-semibold mb-1">What happens next?</p>
+        <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 text-xs text-emerald-800 dark:text-emerald-200 text-left w-full mt-6 shadow-xs">
+          <p className="font-semibold mb-1">{isAmharic ? "ቀጣይ እርምጃ ምንድን ነው?" : "What happens next?"}</p>
           <p>
-            Your order is active with the seller
-            {initialData?.shopName ? ` (${initialData.shopName})` : ""}. Please
-            check with the shop counter directly or refer to your order number
-            for pickup.
+            {isAmharic
+              ? `ትዕዛዝዎ ከሻጩ ጋር ${initialData?.shopName ? ` (${initialData.shopName})` : ""} ንቁ ነው። እባክዎ በቀጥታ በመደብሩ ያረጋግጡ ወይም የትዕዛዝ ቁጥርዎን ያሳዩ።`
+              : `Your order is active with the seller ${initialData?.shopName ? ` (${initialData.shopName})` : ""}. Please check with the shop counter directly or refer to your order number for pickup.`}
           </p>
         </div>
 
-        <p className="text-xs text-slate-400 mt-6">
-          Safe & Private: Your notification preferences have been updated.
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-6">
+          {isAmharic ? "አስተማማኝና ሚስጥራዊ፡ የማሳወቂያ ምርጫዎ ተመዝግቧል።" : "Safe & Private: Your notification preferences have been updated."}
         </p>
       </div>
     );
@@ -137,27 +151,34 @@ export function OptOutClient({ token, initialData }: OptOutClientProps) {
 
   // Render Idle / Error / Submitting State
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center max-w-md mx-auto border-x border-slate-200 p-6 text-center">
-      <div className="w-16 h-16 bg-slate-200 text-slate-700 rounded-full flex items-center justify-center mb-4 shadow-sm">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center items-center max-w-md mx-auto border-x border-slate-200 dark:border-slate-800 p-6 text-center transition-colors duration-200">
+      <div className="w-full flex justify-end pb-2">
+        <LanguageToggle />
+      </div>
+
+      <div className="w-16 h-16 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full flex items-center justify-center mb-4 shadow-xs">
         <BellOff className="w-8 h-8" />
       </div>
 
-      <h1 className="text-xl font-bold text-slate-900">Stop Order SMS Updates</h1>
+      <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+        {isAmharic ? t.optOut.title : "Stop Order SMS Updates"}
+      </h1>
 
       {initialData?.orderNumber && (
-        <div className="inline-block bg-slate-100 px-3 py-1 rounded-full text-xs font-semibold text-slate-600 mt-2">
+        <div className="inline-block bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full text-xs font-semibold text-slate-600 dark:text-slate-300 mt-2">
           {`Order #${initialData.orderNumber}`}
           {initialData.shopName ? ` • ${initialData.shopName}` : ""}
         </div>
       )}
 
-      <p className="text-sm text-slate-600 mt-2 max-w-xs leading-relaxed">
-        If you no longer wish to receive text updates for this order, click below
-        to opt out.
+      <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 max-w-xs leading-relaxed">
+        {isAmharic
+          ? t.optOut.desc
+          : "If you no longer wish to receive text updates for this order, click below to opt out."}
       </p>
 
       {errorMessage && (
-        <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl p-3 w-full mt-4 flex items-start space-x-2 text-left">
+        <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs rounded-xl p-3 w-full mt-4 flex items-start space-x-2 text-left">
           <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-rose-500" />
           <span>{errorMessage}</span>
         </div>
@@ -172,17 +193,18 @@ export function OptOutClient({ token, initialData }: OptOutClientProps) {
           {status === "submitting" ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Stopping text updates...</span>
+              <span>{isAmharic ? t.optOut.stopping : "Stopping text updates..."}</span>
             </>
           ) : (
-            <span>Confirm Stop Text Updates</span>
+            <span>{isAmharic ? t.optOut.stopBtn : "Confirm Stop Text Updates"}</span>
           )}
         </button>
       </form>
 
-      <p className="text-xs text-slate-400 mt-4 leading-relaxed">
-        Your order will still be processed. You can check status directly with the
-        seller.
+      <p className="text-xs text-slate-400 dark:text-slate-500 mt-4 leading-relaxed">
+        {isAmharic
+          ? "ትዕዛዝዎ እንደተለመደው ይዘጋጃል። ሁኔታውን በቀጥታ ከሻጩ ጋር ማረጋገጥ ይችላሉ።"
+          : "Your order will still be processed. You can check status directly with the seller."}
       </p>
     </div>
   );
