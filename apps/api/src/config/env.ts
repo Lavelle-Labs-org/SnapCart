@@ -130,6 +130,16 @@ export const envSchema = z
     CHAPA_WEBHOOK_SECRET: z.string().optional().default("mock-chapa-webhook-secret"),
     CHAPA_BASE_URL: z.string().url().optional().default("https://api.chapa.co/v1"),
     FREE_TRIAL_SMS_CREDITS: z.coerce.number().int().nonnegative().default(10),
+
+    // Cloudflare R2 Product Image Storage (Optional - falls back to local disk if omitted)
+    R2_ACCOUNT_ID: z.string().optional(),
+    R2_ACCESS_KEY_ID: z.string().optional(),
+    R2_SECRET_ACCESS_KEY: z.string().optional(),
+    R2_BUCKET_NAME: z.string().optional().default("order-by-sms"),
+    R2_PUBLIC_DOMAIN: z.string().optional(),
+    R2_MAX_FILE_SIZE_BYTES: z.coerce.number().int().positive().default(5242880),
+    RATE_LIMIT_IMAGE_UPLOADS_MAX: z.coerce.number().int().positive().default(30),
+    RATE_LIMIT_IMAGE_UPLOADS_WINDOW_SECONDS: z.coerce.number().int().positive().default(3600),
   })
   .superRefine((data, ctx) => {
     const isProd = data.NODE_ENV === "production" || process.env.NODE_ENV === "production";
