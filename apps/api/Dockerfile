@@ -14,6 +14,7 @@ RUN npm ci
 
 COPY packages/contracts ./packages/contracts
 COPY apps/api ./apps/api
+COPY scripts ./scripts
 COPY tsconfig.json ./
 
 RUN npm run prisma:generate
