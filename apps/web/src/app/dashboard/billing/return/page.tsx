@@ -33,15 +33,18 @@ function BillingReturnContent() {
         const res = await fetch(`/api/billing/verify/${encodeURIComponent(txRef)}`);
         const data = await res.json();
 
-        if (res.ok && data.status === "completed") {
+        const payload = data.data || data;
+
+        if (res.ok && payload.status === "completed") {
           setSuccess(true);
-          setNewBalance(data.newBalance);
+          setNewBalance(payload.newBalance);
         } else {
           // If still pending, wait 1.5s and try once more before showing status
           setTimeout(async () => {
             try {
               const retryRes = await fetch(`/api/billing/verify/${encodeURIComponent(txRef)}`);
-              const retryData = await retryRes.json();
+              const retryRaw = await retryRes.json();
+              const retryData = retryRaw.data || retryRaw;
               if (retryRes.ok && retryData.status === "completed") {
                 setSuccess(true);
                 setNewBalance(retryData.newBalance);
