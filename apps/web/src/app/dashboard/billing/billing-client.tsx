@@ -66,12 +66,17 @@ export function BillingClient() {
       });
 
       const data = await res.json();
-      if (!res.ok || !data.checkoutUrl) {
-        throw new Error(data.message || "Failed to initialize Chapa checkout session");
+      const checkoutUrl = data.checkoutUrl || data.data?.checkoutUrl;
+      if (!res.ok || !checkoutUrl) {
+        throw new Error(
+          data.message ||
+            data.error?.message ||
+            "Failed to initialize Chapa checkout session"
+        );
       }
 
       // Redirect seller to Chapa hosted payment page
-      window.location.href = data.checkoutUrl;
+      window.location.href = checkoutUrl;
     } catch (err: any) {
       setErrorMessage(err.message || "Payment initialization failed. Please try again.");
       setPurchasingId(null);

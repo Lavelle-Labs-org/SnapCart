@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Inject,
   NotFoundException,
   BadRequestException,
   Logger,
@@ -20,7 +21,9 @@ export class BillingService {
   private readonly logger = new Logger(BillingService.name);
 
   constructor(
+    @Inject(PrismaService)
     private readonly prisma: PrismaService,
+    @Inject(ChapaService)
     private readonly chapaService: ChapaService
   ) {}
 
@@ -136,8 +139,8 @@ export class BillingService {
       txRef,
       callbackUrl,
       returnUrl: customReturnUrl || defaultReturnUrl,
-      title: "Order-by-SMS Top-Up",
-      description: `${pkg.name} (${pkg.credits} SMS Credits)`,
+      title: "Order-by-SMS",
+      description: `${pkg.name} - ${pkg.credits} SMS Credits`.replace(/[^\w\s.-]/g, ""),
     });
 
     if (chapaRes.status !== "success" || !chapaRes.checkoutUrl) {
