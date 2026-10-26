@@ -16,6 +16,8 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { useTranslation } from "../../lib/i18n";
+import { LanguageToggle } from "../../components/language-toggle";
 
 export interface DashboardShellProps {
   seller?: {
@@ -29,48 +31,49 @@ export interface DashboardShellProps {
   children: React.ReactNode;
 }
 
-const NAV_ITEMS = [
-  {
-    href: "/dashboard",
-    label: "Orders",
-    icon: ListOrdered,
-    exact: true,
-  },
-  {
-    href: "/dashboard/messages",
-    label: "SMS Message Log",
-    icon: Mail,
-    exact: false,
-  },
-  {
-    href: "/dashboard/products",
-    label: "Products",
-    icon: ShoppingBag,
-    exact: false,
-  },
-  {
-    href: "/dashboard/billing",
-    label: "Billing & Credits",
-    icon: Zap,
-    exact: false,
-  },
-  {
-    href: "/dashboard/settings",
-    label: "Settings & Link",
-    icon: Settings,
-    exact: false,
-  },
-];
-
 export function DashboardShell({
   seller,
   displayName,
   displaySubtitle,
   children,
 }: DashboardShellProps) {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const navItems = [
+    {
+      href: "/dashboard",
+      label: t.dashboard.navOrders,
+      icon: ListOrdered,
+      exact: true,
+    },
+    {
+      href: "/dashboard/messages",
+      label: t.dashboard.navMessages,
+      icon: Mail,
+      exact: false,
+    },
+    {
+      href: "/dashboard/products",
+      label: t.dashboard.navProducts,
+      icon: ShoppingBag,
+      exact: false,
+    },
+    {
+      href: "/dashboard/billing",
+      label: t.dashboard.navBilling,
+      icon: Zap,
+      exact: false,
+    },
+    {
+      href: "/dashboard/settings",
+      label: t.dashboard.navSettings,
+      icon: Settings,
+      exact: false,
+    },
+  ];
 
   // Restore collapsed state from localStorage on client mount
   useEffect(() => {
@@ -155,7 +158,7 @@ export function DashboardShell({
 
           {/* Drawer Links */}
           <nav className="p-3 space-y-1">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const active = isItemActive(item.href, item.exact);
               const Icon = item.icon;
               return (
@@ -185,7 +188,7 @@ export function DashboardShell({
             className="flex items-center space-x-3 px-3.5 py-3 rounded-xl text-sm text-slate-600 dark:text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition min-h-touch"
           >
             <LogOut className="w-5 h-5 flex-shrink-0" />
-            <span>Sign Out</span>
+            <span>{t.dashboard.logout}</span>
           </Link>
         </div>
       </aside>
@@ -234,7 +237,7 @@ export function DashboardShell({
 
           {/* Desktop Nav Items */}
           <nav className="p-3 space-y-1">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const active = isItemActive(item.href, item.exact);
               const Icon = item.icon;
               return (
@@ -283,14 +286,14 @@ export function DashboardShell({
 
           <Link
             href="/login"
-            title={isCollapsed ? "Sign Out" : undefined}
-            aria-label="Sign Out"
+            title={isCollapsed ? t.dashboard.logout : undefined}
+            aria-label={t.dashboard.logout}
             className={`flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition focus-visible:ring-2 focus-visible:ring-emerald-500 ${
               isCollapsed ? "justify-center p-3" : "space-x-3 px-3.5 py-2.5"
             }`}
           >
             <LogOut className="w-4 h-4 flex-shrink-0" />
-            {!isCollapsed && <span>Sign Out</span>}
+            {!isCollapsed && <span>{t.dashboard.logout}</span>}
           </Link>
         </div>
       </aside>
@@ -317,7 +320,8 @@ export function DashboardShell({
               </span>
             </div>
           </div>
-          <div>
+          <div className="flex items-center space-x-2">
+            <LanguageToggle />
             {seller?.slug && (
               <a
                 href={`/s/${seller.slug}`}
@@ -325,7 +329,7 @@ export function DashboardShell({
                 rel="noopener noreferrer"
                 className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:text-emerald-800 transition px-2.5 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100"
               >
-                Storefront
+                {t.dashboard.switchStore}
               </a>
             )}
           </div>

@@ -15,6 +15,8 @@ import {
   Clock,
   ShieldCheck,
 } from "lucide-react";
+import { useTranslation } from "../../../lib/i18n";
+import { LanguageToggle } from "../../../components/language-toggle";
 
 export interface OrderItemData {
   id: string;
@@ -41,6 +43,7 @@ interface SellerActionClientProps {
 }
 
 export function SellerActionClient({ token, order }: SellerActionClientProps) {
+  const { t, isAmharic } = useTranslation();
   const [currentState, setCurrentState] = useState(order.state);
   const [pickupCode, setPickupCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -147,31 +150,31 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
       case "new":
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 uppercase">
-            New Order
+            {isAmharic ? "አዲስ ትዕዛዝ" : "New Order"}
           </span>
         );
       case "accepted":
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 uppercase">
-            Preparing
+            {isAmharic ? "በመዘጋጀት ላይ" : "Preparing"}
           </span>
         );
       case "ready":
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-800 border border-teal-200 uppercase">
-            Ready for Pickup
+            {isAmharic ? "ለመረከብ ዝግጁ" : "Ready for Pickup"}
           </span>
         );
       case "completed":
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 uppercase">
-            Completed
+            {isAmharic ? "ተጠናቋል" : "Completed"}
           </span>
         );
       case "rejected":
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 uppercase">
-            Rejected
+            {isAmharic ? "ተሰርዟል" : "Rejected"}
           </span>
         );
     }
@@ -180,14 +183,19 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between max-w-md mx-auto border-x border-slate-200">
       {/* Header */}
-      <header className="bg-white border-b px-4 py-3 flex items-center justify-between sticky top-0 z-10">
-        <div>
-          <span className="text-xs uppercase tracking-wider text-slate-500 font-semibold block">
-            {order.shopName || "Seller Action"}
+      <header className="bg-white border-b px-4 py-3 flex items-center justify-between sticky top-0 z-10 gap-2">
+        <div className="min-w-0 flex-1">
+          <span className="text-xs uppercase tracking-wider text-slate-500 font-semibold block truncate">
+            {order.shopName || (isAmharic ? "የነጋዴ መቆጣጠሪያ" : "Seller Action")}
           </span>
-          <h1 className="text-lg font-bold text-slate-900">Order #{order.number}</h1>
+          <h1 className="text-base sm:text-lg font-bold text-slate-900 truncate">
+            {isAmharic ? `ትዕዛዝ #${order.number}` : `Order #${order.number}`}
+          </h1>
         </div>
-        <div>{renderBadge()}</div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <LanguageToggle />
+          {renderBadge()}
+        </div>
       </header>
 
       {/* Main Order Surface */}
@@ -217,7 +225,9 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
         {/* Customer Contact Card */}
         <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-xs text-slate-500 font-medium">Customer</p>
+            <p className="text-xs text-slate-500 font-medium">
+              {isAmharic ? "ደንበኛ" : "Customer"}
+            </p>
             <p className="font-bold text-slate-900 text-base">{order.buyerName}</p>
             <p className="text-xs text-slate-600 font-mono mt-0.5">{order.buyerPhone}</p>
           </div>
@@ -227,14 +237,14 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
             aria-label={`Call customer at ${order.buyerPhone}`}
           >
             <Phone className="w-4 h-4" />
-            <span>Call</span>
+            <span>{isAmharic ? "ደውል" : "Call"}</span>
           </a>
         </div>
 
         {/* Item Breakdown */}
         <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3 shadow-sm">
           <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Ordered Items ({order.items.length})
+            {isAmharic ? `የታዘዙ እቃዎች (${order.items.length})` : `Ordered Items (${order.items.length})`}
           </h2>
           <div className="divide-y divide-slate-100 text-sm">
             {order.items.map((item) => (
@@ -244,15 +254,19 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
                   <span className="text-slate-800">{item.name}</span>
                 </div>
                 <span className="font-semibold text-slate-700 tabular-nums">
-                  {item.quantity * item.priceBirr} ETB
+                  {item.quantity * item.priceBirr} {t.common.currency}
                 </span>
               </div>
             ))}
           </div>
 
           <div className="border-t pt-3 flex justify-between items-center text-slate-900">
-            <span className="font-semibold text-sm">Total Payable (Cash)</span>
-            <span className="text-emerald-600 font-bold text-xl tabular-nums">{order.totalBirr} ETB</span>
+            <span className="font-semibold text-sm">
+              {isAmharic ? "ጠቅላላ የሚከፈል (ጥሬ ገንዘብ)" : "Total Payable (Cash)"}
+            </span>
+            <span className="text-emerald-600 font-bold text-xl tabular-nums">
+              {order.totalBirr} {t.common.currency}
+            </span>
           </div>
         </div>
 
@@ -261,7 +275,11 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
           <div className="bg-slate-100 border border-slate-200 rounded-xl p-3 text-xs text-slate-600 flex items-start space-x-2">
             <Clock className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
             <span>
-              Tap <strong>Accept</strong> to confirm this order. The customer will receive an SMS confirmation.
+              {isAmharic ? (
+                <>ትዕዛዙን ለማረጋገጥ <strong>ተቀበል</strong> የሚለውን ይጫኑ፤ ለደንበኛው ማረጋገጫ በኤስኤምኤስ ይላካል።</>
+              ) : (
+                <>Tap <strong>Accept</strong> to confirm this order. The customer will receive an SMS confirmation.</>
+              )}
             </span>
           </div>
         )}
@@ -270,7 +288,11 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
           <div className="bg-slate-100 border border-slate-200 rounded-xl p-3 text-xs text-slate-700 flex items-start space-x-2">
             <BellRing className="w-4 h-4 text-slate-600 flex-shrink-0 mt-0.5" />
             <span>
-              When preparation is finished, tap <strong>Mark Ready</strong> to text the customer their 4-digit pickup code.
+              {isAmharic ? (
+                <>እቃው ተዘጋጅቶ ሲያልቅ ባለ 4 ድጂት ሚስጥር የመቀበያ ኮድ ለደንበኛው በኤስኤምኤስ ለመላክ <strong>ዝግጁ ሆኗል</strong> የሚለውን ይጫኑ።</>
+              ) : (
+                <>When preparation is finished, tap <strong>Mark Ready</strong> to text the customer their 4-digit pickup code.</>
+              )}
             </span>
           </div>
         )}
@@ -279,7 +301,9 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
           <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 flex items-start space-x-2">
             <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
             <span>
-              Ask customer for their 4-digit code from SMS to complete handover.
+              {isAmharic
+                ? "ርክክቡን ለማረጋገጥ ደንበኛውን በኤስኤምኤስ የደረሰውን ባለ 4 ዲጂት ሚስጥር ኮድ ይጠይቁ።"
+                : "Ask customer for their 4-digit code from SMS to complete handover."}
             </span>
           </div>
         )}
@@ -290,16 +314,20 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
             <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-7 h-7" />
             </div>
-            <h3 className="font-bold text-emerald-900 text-lg">Order Handover Complete</h3>
+            <h3 className="font-bold text-emerald-900 text-lg">
+              {isAmharic ? "ርክክቡ በተሳካ ሁኔታ ተጠናቋል" : "Order Handover Complete"}
+            </h3>
             <p className="text-xs text-emerald-700 max-w-xs mx-auto">
-              Handover verified with valid pickup code. This order is closed and payment is collected.
+              {isAmharic
+                ? "ትክክለኛ የመቀበያ ኮድ ተረጋግጦ ርክክቡ ተፈጽሟል። ትዕዛዙ ተዘግቷል።"
+                : "Handover verified with valid pickup code. This order is closed and payment is collected."}
             </p>
             <div className="pt-2">
               <Link
                 href="/dashboard"
                 className="inline-block bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-xs"
               >
-                Go to Orders Dashboard
+                {isAmharic ? "ወደ ትዕዛዞች ገጽ ሂድ" : "Go to Orders Dashboard"}
               </Link>
             </div>
           </div>
@@ -311,16 +339,20 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
             <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto">
               <XCircle className="w-7 h-7" />
             </div>
-            <h3 className="font-bold text-rose-900 text-lg">Order Rejected</h3>
+            <h3 className="font-bold text-rose-900 text-lg">
+              {isAmharic ? "ትዕዛዙ ተሰርዟል" : "Order Rejected"}
+            </h3>
             <p className="text-xs text-rose-700 max-w-xs mx-auto">
-              The order was cancelled and an SMS notification was sent to the customer.
+              {isAmharic
+                ? "ትዕዛዙ አልተቀበለም፤ ለደንበኛው የኤስኤምኤስ ማሳወቂያ ተልኳል።"
+                : "The order was cancelled and an SMS notification was sent to the customer."}
             </p>
             <div className="pt-2">
               <Link
                 href="/dashboard"
                 className="inline-block bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-xs"
               >
-                Go to Orders Dashboard
+                {isAmharic ? "ወደ ትዕዛዞች ገጽ ሂድ" : "Go to Orders Dashboard"}
               </Link>
             </div>
           </div>
@@ -329,9 +361,13 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
         {/* Reject Confirmation Card */}
         {showRejectConfirm && (
           <div className="bg-rose-50 border border-rose-300 rounded-xl p-4 space-y-3">
-            <h3 className="font-bold text-rose-900 text-sm">Reject Order #{order.number}?</h3>
+            <h3 className="font-bold text-rose-900 text-sm">
+              {isAmharic ? `ትዕዛዝ #${order.number} ይሰረዝ?` : `Reject Order #${order.number}?`}
+            </h3>
             <p className="text-xs text-rose-700">
-              The customer will receive an SMS notifying them that their order could not be fulfilled.
+              {isAmharic
+                ? "ትዕዛዙ እንደማይስተናገድ ለደንበኛው የኤስኤምኤስ መልዕክት ይላካል።"
+                : "The customer will receive an SMS notifying them that their order could not be fulfilled."}
             </p>
             <div className="grid grid-cols-2 gap-2 pt-1">
               <button
@@ -340,7 +376,7 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
                 disabled={isSubmitting}
                 className="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold py-2.5 px-3 rounded-lg text-xs transition min-h-[44px]"
               >
-                Back
+                {t.common.cancel}
               </button>
               <button
                 type="button"
@@ -351,7 +387,7 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
                 {isSubmitting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <span>Yes, Reject</span>
+                  <span>{isAmharic ? "አዎ፣ ሰርዝ" : "Yes, Reject"}</span>
                 )}
               </button>
             </div>
@@ -371,7 +407,7 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
                 className="col-span-1 bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 font-semibold py-3.5 rounded-xl transition flex items-center justify-center space-x-1 disabled:opacity-50 min-h-[44px]"
               >
                 <X className="w-4 h-4" />
-                <span>Reject</span>
+                <span>{isAmharic ? "ሰርዝ" : "Reject"}</span>
               </button>
               <button
                 type="button"
@@ -382,12 +418,12 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Accepting...</span>
+                    <span>{isAmharic ? "እየተቀበለ ነው..." : "Accepting..."}</span>
                   </>
                 ) : (
                   <>
                     <Check className="w-5 h-5" />
-                    <span>Accept Order</span>
+                    <span>{isAmharic ? "ትዕዛዝ ተቀበል" : "Accept Order"}</span>
                   </>
                 )}
               </button>
@@ -404,12 +440,12 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Marking Ready...</span>
+                  <span>{isAmharic ? "ዝግጁ እየተደረገ ነው..." : "Marking Ready..."}</span>
                 </>
               ) : (
                 <>
                   <BellRing className="w-5 h-5" />
-                  <span>Mark Ready & Send Code</span>
+                  <span>{isAmharic ? "ዝግጁ መሆኑንና ኮዱን ላክ" : "Mark Ready & Send Code"}</span>
                 </>
               )}
             </button>
@@ -423,7 +459,7 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
                   inputMode="numeric"
                   pattern="[0-9]*"
                   maxLength={4}
-                  placeholder="Enter 4-Digit Pickup Code"
+                  placeholder={isAmharic ? "ባለ 4 ድጂት የመቀበያ ኮድ ያስገቡ" : "Enter 4-Digit Pickup Code"}
                   value={pickupCode}
                   onChange={(e) => {
                     const cleaned = e.target.value.replace(/\D/g, "").slice(0, 4);
@@ -435,7 +471,9 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
                   aria-label="4-digit pickup code"
                 />
                 <p className="text-[11px] text-slate-500 text-center mt-1">
-                  Customer must provide 4 digits from their SMS
+                  {isAmharic
+                    ? "ደንበኛው በኤስኤምኤስ የደረሰውን ባለ 4 ዲጂት ቁጥር ማቅረብ አለበት"
+                    : "Customer must provide 4 digits from their SMS"}
                 </p>
               </div>
 
@@ -448,12 +486,12 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Verifying Code...</span>
+                    <span>{isAmharic ? "ኮዱ እየተረጋገጠ ነው..." : "Verifying Code..."}</span>
                   </>
                 ) : (
                   <>
                     <PackageCheck className="w-5 h-5" />
-                    <span>Complete Handover</span>
+                    <span>{isAmharic ? "ርክክብ አጠናቅ" : "Complete Handover"}</span>
                   </>
                 )}
               </button>
