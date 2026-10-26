@@ -1,4 +1,6 @@
 import "reflect-metadata";
+import * as path from "node:path";
+import express from "express";
 import { NestFactory } from "@nestjs/core";
 import { Logger } from "@nestjs/common";
 import helmet from "helmet";
@@ -20,8 +22,6 @@ export async function bootstrap() {
   app.use(helmet({ crossOriginResourcePolicy: false }));
 
   // Static files for local image uploads fallback
-  const express = require("express");
-  const path = require("path");
   const uploadsDir = path.resolve(process.cwd(), "public", "uploads");
   app.use("/uploads", express.static(uploadsDir));
 

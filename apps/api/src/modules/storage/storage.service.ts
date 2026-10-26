@@ -24,7 +24,7 @@ export interface UploadImageResult {
   storageKey: string;
 }
 
-const ALLOWED_MIME_TYPES = new Set([
+export const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",

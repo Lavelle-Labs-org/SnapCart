@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { StorageService, validateImageMagicBytes } from "../storage.service";
 import * as fs from "node:fs";
 import * as path from "node:path";

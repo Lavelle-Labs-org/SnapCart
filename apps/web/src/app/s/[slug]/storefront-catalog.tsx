@@ -137,6 +137,7 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 flex-shrink-0 overflow-hidden relative flex items-center justify-center">
                       {product.imageUrl || product.image_url ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
                         <img
                           src={product.imageUrl || product.image_url || ""}
                           alt={product.name}
