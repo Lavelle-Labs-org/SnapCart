@@ -34,6 +34,10 @@ const nextConfig = {
         destination: `${apiUrl}/api/:path*`,
       },
       {
+        source: "/uploads/:path*",
+        destination: `${apiUrl}/uploads/:path*`,
+      },
+      {
         source: "/webhooks/:path*",
         destination: `${apiUrl}/webhooks/:path*`,
       },

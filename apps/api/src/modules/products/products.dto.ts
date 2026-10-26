@@ -130,6 +130,8 @@ export function toProductDto(p: any): ProductDto {
     priceSantim: p.price_santim,
     price_santim: p.price_santim,
     available: Boolean(p.available),
+    imageUrl: p.image_url ?? null,
+    image_url: p.image_url ?? null,
     createdAt: createdAtIso,
     created_at: createdAtIso,
     deletedAt: deletedAtIso,

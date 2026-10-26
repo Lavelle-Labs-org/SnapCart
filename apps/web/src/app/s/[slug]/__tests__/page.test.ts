@@ -51,6 +51,7 @@ describe("StorefrontPage (FE-001 - /s/[slug])", () => {
       id: "prod-1",
       name: "Special Macchiato",
       price_santim: 4500,
+      image_url: null,
       available: true,
       deleted_at: null,
     },
@@ -58,6 +59,7 @@ describe("StorefrontPage (FE-001 - /s/[slug])", () => {
       id: "prod-2",
       name: "Traditional Doro Wat",
       price_santim: 35000,
+      image_url: "https://example.com/doro.jpg",
       available: true,
       deleted_at: null,
     },
@@ -106,6 +108,7 @@ describe("StorefrontPage (FE-001 - /s/[slug])", () => {
         id: true,
         name: true,
         price_santim: true,
+        image_url: true,
         available: true,
       },
     });

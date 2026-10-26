@@ -35,6 +35,9 @@ describe("Rate Limiting E2E (PR-005, Issue #124)", () => {
   };
 
   beforeAll(async () => {
+    delete process.env.RATE_LIMIT_IP_MAX;
+    delete process.env.RATE_LIMIT_PHONE_MAX;
+    delete process.env.RATE_LIMIT_OTP_COOLDOWN_SECONDS;
     process.env.SMSHUB_API_KEY = "test_api_key_rate_limit_e2e";
     process.env.SESSION_SECRET = "mock_session_secret_at_least_32_characters_long";
     process.env.PICKUP_CODE_SECRET = "mock_pickup_code_secret_32_characters_long";

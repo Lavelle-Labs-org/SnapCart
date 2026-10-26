@@ -31,6 +31,8 @@ export interface ProductDto {
   priceSantim: number;
   price_santim?: number;
   available: boolean;
+  imageUrl?: string | null;
+  image_url?: string | null;
   createdAt: string;
   created_at?: string;
   deletedAt?: string | null;

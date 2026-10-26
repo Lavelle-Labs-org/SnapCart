@@ -51,6 +51,7 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
         name: true,
         price_santim: true,
         available: true,
+        image_url: true,
       },
     });
   } catch (err: any) {
@@ -90,6 +91,7 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
             name: p.name,
             priceSantim: p.priceSantim ?? p.price_santim,
             available: p.available,
+            imageUrl: p.imageUrl ?? p.image_url ?? null,
           }))}
         />
       );
@@ -109,11 +111,12 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
         smsName: seller.sms_name,
         slug: seller.slug,
       }}
-      products={products.map((p) => ({
+      products={products.map((p: any) => ({
         id: p.id,
         name: p.name,
         priceSantim: p.price_santim,
         available: p.available,
+        imageUrl: p.image_url ?? p.imageUrl ?? null,
       }))}
     />
   );
