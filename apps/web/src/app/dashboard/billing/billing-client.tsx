@@ -37,11 +37,16 @@ export function BillingClient() {
 
       if (balRes.ok) {
         const balData = await balRes.json();
-        setBalance(balData);
+        setBalance(balData.data || balData);
       }
       if (txRes.ok) {
         const txData = await txRes.json();
-        setTransactions(txData);
+        const txList = Array.isArray(txData)
+          ? txData
+          : Array.isArray(txData?.data)
+            ? txData.data
+            : [];
+        setTransactions(txList);
       }
     } catch {
       setErrorMessage("Could not load billing information. Please refresh.");
@@ -346,7 +351,7 @@ export function BillingClient() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
-                  {transactions.map((t) => (
+                  {(Array.isArray(transactions) ? transactions : []).map((t) => (
                     <tr key={t.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
                       <td className="px-4 py-3.5 whitespace-nowrap text-slate-500 dark:text-slate-400 font-mono text-[11px]">
                         {new Date(t.createdAt).toLocaleDateString()} {new Date(t.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
