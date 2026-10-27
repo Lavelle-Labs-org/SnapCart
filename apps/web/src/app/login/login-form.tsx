@@ -128,10 +128,10 @@ export function LoginForm() {
   return (
     <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm transition-colors duration-200">
       <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-        {isAmharic ? t.auth.loginTitle : "Seller Sign In"}
+        {t.auth.loginTitle}
       </h1>
       <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-        {isAmharic ? t.auth.loginSubtitle : "Access your orders, message audit logs, and settings."}
+        {t.auth.loginSubtitle}
       </p>
 
       {/* Error Banner */}

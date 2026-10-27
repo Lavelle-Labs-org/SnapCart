@@ -55,7 +55,7 @@ describe("NestJS Health API E2E (GET /api/health)", () => {
     expect(res.body.success).toBe(true);
     expect(res.body.data).toBeDefined();
     expect(res.body.data.status).toBe("ok");
-    expect(res.body.data.app).toBe("order-by-sms-api");
+    expect(res.body.data.app).toBe("snapcart-api");
     expect(res.body.data.database).toBe("connected");
     expect(typeof res.body.data.timestamp).toBe("string");
     expect(typeof res.body.data.uptime).toBe("number");

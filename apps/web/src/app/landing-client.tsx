@@ -220,7 +220,7 @@ export default function LandingClient() {
           {/* Trust Network Badge */}
           <div className="inline-flex items-center space-x-2 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-semibold px-3.5 py-1.5 rounded-full mb-6 shadow-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{isAmharic ? t.landing.heroBadge : "Built for Ethiopian Micro-Merchants • Ethio Telecom & Safaricom via SMSHub.et"}</span>
+            <span>{t.landing.badge}</span>
           </div>
 
           {/* Hero Headline */}

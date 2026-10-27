@@ -578,7 +578,7 @@ export class SMSOrchestratorService {
         });
 
       case "seller_phone_code":
-        return `Your ${opts.shopName ?? "Order-by-SMS"} verification code is ${opts.code ?? "000000"}`;
+        return `Your ${opts.shopName ?? "Snapcart"} verification code is ${opts.code ?? "000000"}`;
 
       case "buyer_phone_code":
         return `Your verification code for ${opts.shopName ?? "your order"} is ${opts.code ?? "000000"}`;

@@ -1,5 +1,5 @@
 /**
- * Order-by-SMS Frontend API Client
+ * Snapcart Frontend API Client
  * Consumes standard API response envelopes and DTOs from @order-by-sms/contracts.
  * Handles same-site session cookies, typed error mapping, and proxy rewrites.
  */

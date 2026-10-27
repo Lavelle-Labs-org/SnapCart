@@ -7,8 +7,8 @@ import { LanguageToggle } from "../../components/language-toggle";
 import { SnapcartLogo } from "../../components/snapcart-logo";
 
 export const metadata = {
-  title: "Create Seller Account | Snapcart",
-  description: "Set up your storefront and handle customer orders by SMS.",
+  title: "Launch Your Store | Snapcart — Order in a snap",
+  description: "Start taking orders in a snap with your own branded storefront and SMS notifications.",
 };
 
 export default function SignupPage() {
@@ -46,7 +46,7 @@ export default function SignupPage() {
 
       {/* Footer */}
       <footer className="py-4 text-center text-xs text-slate-400 dark:text-slate-500">
-        <span>Snapcart &bull; Seller Portal</span>
+        <span>Snapcart &bull; Order in a snap.</span>
       </footer>
     </div>
   );

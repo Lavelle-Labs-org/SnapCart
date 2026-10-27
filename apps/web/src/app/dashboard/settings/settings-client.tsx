@@ -730,8 +730,8 @@ export default function SettingsClient({
                 <MessageSquare className="w-4 h-4 text-emerald-600" />
                 <span>{isAmharic ? t.settings.previewTitle : "Live SMS Template Previewer"}</span>
               </h2>
-              <span className="text-[11px] font-mono text-slate-400 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
-                Section 3 Spec
+              <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                Snapcart Engine
               </span>
             </div>
 

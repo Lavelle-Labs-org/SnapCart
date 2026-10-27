@@ -35,13 +35,15 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
   const [isMounted, setIsMounted] = useState(false);
   const { t, isAmharic } = useTranslation();
 
-  const storageKey = `order_by_sms_cart_${seller.slug}`;
+  const storageKey = `snapcart_cart_${seller.slug}`;
 
   // Hydrate cart from localStorage on mount
   useEffect(() => {
     setIsMounted(true);
     try {
-      const stored = localStorage.getItem(storageKey);
+      const stored =
+        localStorage.getItem(storageKey) ||
+        localStorage.getItem(`order_by_sms_cart_${seller.slug}`);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (typeof parsed === "object" && parsed !== null) {
@@ -51,7 +53,7 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
     } catch {
       // Ignore localStorage errors
     }
-  }, [storageKey]);
+  }, [storageKey, seller.slug]);
 
   // Persist cart updates to localStorage
   const updateQuantity = (productId: string, delta: number) => {
@@ -218,6 +220,12 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
             })}
           </div>
         )}
+
+        <div className="text-center pt-6 pb-2 text-xs text-slate-400 dark:text-slate-500">
+          <p className="font-medium">
+            Powered by <span className="font-semibold text-slate-600 dark:text-slate-300">Snapcart</span> • <em>{isAmharic ? "በቅጽበት ይዘዙ" : "Order in a snap."}</em>
+          </p>
+        </div>
       </main>
 
       {/* Sticky Bottom Checkout Footer */}

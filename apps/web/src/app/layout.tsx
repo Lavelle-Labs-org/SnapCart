@@ -20,7 +20,7 @@ const notoSansEthiopic = Noto_Sans_Ethiopic({
 
 export const metadata: Metadata = {
   title: "Snapcart | Order in a Snap",
-  description: "Snapcart - Order in a snap. Ethiopian micro-commerce and lightweight SMS ordering for merchants and buyers.",
+  description: "Snapcart — Order in a snap. Lightning-fast, SMS-powered commerce and micro-merchants in Ethiopia.",
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },

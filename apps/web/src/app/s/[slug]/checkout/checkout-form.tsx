@@ -32,7 +32,7 @@ interface CheckoutFormProps {
 export function CheckoutForm({ seller, products }: CheckoutFormProps) {
   const router = useRouter();
   const { t, isAmharic } = useTranslation();
-  const storageKey = `order_by_sms_cart_${seller.slug}`;
+  const storageKey = `snapcart_cart_${seller.slug}`;
 
   const [cart, setCart] = useState<Record<string, number>>({});
   const [isMounted, setIsMounted] = useState(false);
@@ -70,7 +70,9 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
   useEffect(() => {
     setIsMounted(true);
     try {
-      const stored = localStorage.getItem(storageKey);
+      const stored =
+        localStorage.getItem(storageKey) ||
+        localStorage.getItem(`order_by_sms_cart_${seller.slug}`);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (typeof parsed === "object" && parsed !== null) {
@@ -80,7 +82,7 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
     } catch {
       // Ignore localStorage errors
     }
-  }, [storageKey]);
+  }, [storageKey, seller.slug]);
 
   // Derive cart items
   const activeCartEntries = Object.entries(cart).filter(([_, qty]) => qty > 0);
@@ -172,9 +174,10 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
         try {
           if (typeof window !== "undefined") {
             localStorage.removeItem(storageKey);
+            localStorage.removeItem(`order_by_sms_cart_${seller.slug}`);
           }
-        } catch (storageErr) {
-          console.warn("Could not clear localStorage cart:", storageErr);
+        } catch {
+          // Ignore localStorage clear errors
         }
 
         const orderId = responseData.orderId || responseData.order?.id || "";
@@ -423,8 +426,8 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
               <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span>
                 {isAmharic
-                  ? "መለያ መክፈት አያስፈልግም። እቃውን ሲረከቡ በጥሬ ገንዘብ ይክፈሉ።"
-                  : "No account required. Payment in cash upon delivery or pickup."}
+                  ? "በSnapcart በቅጽበት ይዘዙ • መለያ መክፈት አያስፈልግም • በርክክብ ወቅት በጥሬ ገንዘብ ይክፈሉ።"
+                  : "Order in a snap with Snapcart • No account required • Cash on pickup or delivery."}
               </span>
             </div>
           </>

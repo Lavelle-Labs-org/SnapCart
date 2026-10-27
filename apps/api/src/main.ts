@@ -54,7 +54,7 @@ export async function bootstrap() {
 
   const port = env.PORT || 4000;
   await app.listen(port);
-  logger.log(`🚀 Order-by-SMS NestJS API running on: http://localhost:${port}/api`);
+  logger.log(`🚀 Snapcart NestJS API running on: http://localhost:${port}/api`);
   return app;
 }
 

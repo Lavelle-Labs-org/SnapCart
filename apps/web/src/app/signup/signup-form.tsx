@@ -247,9 +247,7 @@ export function SignupForm() {
       });
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
         // If phone already registered, OTP is still active in SMSHub
-        console.warn("Resend notification:", data?.message);
       }
 
       setCooldown(60);
@@ -272,22 +270,12 @@ export function SignupForm() {
       </div>
 
       <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-        {isAmharic
-          ? step === 1
-            ? t.auth.signupTitle
-            : t.auth.otpTitle
-          : step === 1
-          ? "Create Seller Account"
-          : "Verify Alert Phone Number"}
+        {step === 1 ? t.auth.signupTitle : t.auth.otpTitle}
       </h1>
       <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-        {isAmharic
-          ? step === 1
-            ? t.auth.signupSubtitle
-            : t.auth.otpSubtitle(registeredPhone || phone)
-          : step === 1
-          ? "Set up your storefront and handle customer orders by SMS."
-          : `We texted a 6-digit verification code to ${registeredPhone || phone}.`}
+        {step === 1
+          ? t.auth.signupSubtitle
+          : t.auth.otpSubtitle(registeredPhone || phone)}
       </p>
 
       {/* Shared Feedback Alert */}

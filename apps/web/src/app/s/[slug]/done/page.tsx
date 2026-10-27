@@ -114,7 +114,7 @@ export default async function DonePage({ params, searchParams }: DonePageProps) 
 
         <div className="space-y-1">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-            {isAmharic ? "ትዕዛዝዎ ተመዝግቧል!" : "Order Placed!"}
+            {isAmharic ? "ትዕዛዝዎ በቅጽበት ተመዝግቧል!" : "Order Placed in a Snap!"}
           </h1>
           {shopName && (
             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{`at ${shopName}`}</p>
@@ -171,7 +171,7 @@ export default async function DonePage({ params, searchParams }: DonePageProps) 
         )}
       </div>
 
-      <div className="pt-6">
+      <div className="pt-6 space-y-3">
         <Link
           href={`/s/${slug}`}
           className="w-full flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-3 rounded-xl transition shadow-xs min-h-[48px]"
@@ -179,6 +179,9 @@ export default async function DonePage({ params, searchParams }: DonePageProps) 
           <Home className="w-4 h-4" />
           <span>{isAmharic ? "ወደ መደብሩ ተመለስ" : "Back to Storefront"}</span>
         </Link>
+        <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium tracking-wide">
+          {isAmharic ? "በSnapcart የተጎላበተ • በቅጽበት ይዘዙ" : "Powered by Snapcart • Order in a snap."}
+        </p>
       </div>
     </div>
   );

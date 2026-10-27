@@ -125,10 +125,11 @@ export function VerifyOtpForm({
       // Clear client cart from localStorage
       try {
         if (typeof window !== "undefined") {
+          localStorage.removeItem(`snapcart_cart_${slug}`);
           localStorage.removeItem(`order_by_sms_cart_${slug}`);
         }
-      } catch (storageErr) {
-        console.warn("Could not clear localStorage cart:", storageErr);
+      } catch {
+        // Ignore localStorage clear errors
       }
 
       const orderNumber = data.orderNumber ?? data.data?.orderNumber ?? "";
@@ -252,18 +253,19 @@ export function VerifyOtpForm({
           <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">
             {isAmharic ? (
               <>
-                የኤስኤምኤስ ማረጋገጫ ኮድ ወደ{" "}
+                የትዕዛዝ ማረጋገጫ ኮድ ወደ{" "}
                 <span className="font-semibold text-slate-800 dark:text-slate-100">
                   {formatDisplayPhone(phone)}
                 </span>{" "}
-                ልከናል
+                በኤስኤምኤስ ልከናል
               </>
             ) : (
               <>
-                We sent an SMS verification code to{" "}
+                We texted a 6-digit confirmation code to{" "}
                 <span className="font-semibold text-slate-800 dark:text-slate-100">
                   {formatDisplayPhone(phone)}
                 </span>
+                . Enter it below to confirm your order in a snap.
               </>
             )}
           </p>
@@ -375,8 +377,8 @@ export function VerifyOtpForm({
           <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
           <span>
             {isAmharic
-              ? "ኮዱ የሚያገለግለው ለ 5 ደቂቃ ብቻ ነው። የይለፍ ቃል አያስፈልግም።"
-              : "Code expires in 5 minutes. No password required."}
+              ? "በSnapcart የተረጋገጠ • ኮዱ የሚያገለግለው ለ 5 ደቂቃ ብቻ ነው። የይለፍ ቃል አያስፈልግም።"
+              : "Snapcart verified • Code expires in 5 minutes • No password needed"}
           </span>
         </div>
       </main>
@@ -395,7 +397,7 @@ export function VerifyOtpForm({
               <span>{isAmharic ? "እያረጋገጠ ነው..." : "Verifying & Placing Order..."}</span>
             </>
           ) : (
-            <span>{isAmharic ? "አረጋግጥና እዘዝ" : "Confirm & Place Order"}</span>
+            <span>{isAmharic ? "አረጋግጥና እዘዝ" : "Confirm & Seal Order"}</span>
           )}
         </button>
       </footer>
