@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  MessageSquare,
   ArrowRight,
   AlertCircle,
   Loader2,
@@ -12,7 +11,6 @@ import {
 } from "lucide-react";
 import { normalizeEthiopianPhone } from "@order-by-sms/contracts";
 import { useTranslation } from "../../lib/i18n";
-import { SnapcartLogo } from "../../components/snapcart-logo";
 
 export interface LoginValidationErrors {
   phone?: string;
@@ -129,11 +127,6 @@ export function LoginForm() {
 
   return (
     <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm transition-colors duration-200">
-      {/* Brand Header */}
-      <div className="mb-6">
-        <SnapcartLogo variant="horizontal" size="sm" />
-      </div>
-
       <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
         {isAmharic ? t.auth.loginTitle : "Seller Sign In"}
       </h1>

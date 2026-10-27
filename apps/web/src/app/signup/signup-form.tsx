@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  MessageSquare,
   ArrowRight,
   CheckCircle2,
   AlertCircle,
@@ -15,7 +14,6 @@ import {
 } from "lucide-react";
 import { normalizeEthiopianPhone } from "@order-by-sms/contracts";
 import { useTranslation } from "../../lib/i18n";
-import { SnapcartLogo } from "../../components/snapcart-logo";
 
 export interface SignupValidationErrors {
   business_name?: string;
@@ -266,13 +264,8 @@ export function SignupForm() {
 
   return (
     <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm transition-colors duration-200">
-      {/* Brand Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <SnapcartLogo variant="horizontal" size="sm" />
-        </div>
-
-        {/* Step Indicator Badge */}
+      {/* Step Indicator Badge */}
+      <div className="flex items-center justify-between mb-4">
         <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
           Step {step} of 2
         </span>
