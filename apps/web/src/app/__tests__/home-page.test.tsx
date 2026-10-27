@@ -14,7 +14,7 @@ describe("Landing Page Refinement (Home / LandingClient)", () => {
 
   it("renders navigation header with brand, navigation links, and theme toggle", () => {
     const html = renderToString(<LandingClient />);
-    expect(html).toContain("Order-by-SMS");
+    expect(html).toContain("Snapcart");
     expect(html).toContain('href="#how-it-works"');
     expect(html).toContain('href="#features"');
     expect(html).toContain('href="/s/habesha-cafe"');
@@ -53,7 +53,7 @@ describe("Landing Page Refinement (Home / LandingClient)", () => {
 
   it("renders How It Works section with 3 clear sequential steps", () => {
     const html = renderToString(<LandingClient />);
-    expect(html).toContain("How Order-by-SMS Works");
+    expect(html).toContain("How Snapcart Works");
     expect(html).toContain("Share Your Storefront Link");
     expect(html).toContain("Customers Order &amp; Verify OTP");
     expect(html).toContain("Fulfill via 1-Tap SMS Links");
@@ -94,7 +94,7 @@ describe("Landing Page Refinement (Home / LandingClient)", () => {
     expect(html).toContain("Trust &amp; Privacy");
     expect(html).toContain('href="/x/demo"');
     expect(html).toContain("Ethio Telecom &amp; Safaricom networks");
-    expect(html).toContain("© 2026 Order-by-SMS. All rights reserved.");
+    expect(html).toContain("© 2026 Snapcart. All rights reserved.");
   });
 
   it("satisfies mobile touch target requirements of min-h-[44px] on interactive controls", () => {
@@ -134,7 +134,7 @@ describe("Landing Page Refinement (Home / LandingClient)", () => {
     expect(html).toContain("የSMSHub መልዕክት");
 
     // How It Works
-    expect(html).toContain("ኦርደር-ባይ-ኤስኤምኤስ እንዴት ይሰራል?");
+    expect(html).toContain("ስናፕካርት እንዴት ይሰራል?");
     expect(html).toContain("የመደብርዎን ሊንክ ያጋሩ");
     expect(html).toContain("ደንበኞች ያዛሉ፤ በኦቲፒ ያረጋግጣሉ");
     expect(html).toContain("በ1-ጠቅታ የኤስኤምኤስ ሊንክ ትዕዛዝ ያጠናቁ");
@@ -155,7 +155,7 @@ describe("Landing Page Refinement (Home / LandingClient)", () => {
     expect(html).toContain("ምርት");
     expect(html).toContain("ነጋዴዎች");
     expect(html).toContain("ደህንነትና ግላዊነት");
-    expect(html).toContain("© 2026 ኦርደር-ባይ-ኤስኤምኤስ። መብቱ በህግ የተጠበቀ ነው።");
+    expect(html).toContain("© 2026 ስናፕካርት። መብቱ በህግ የተጠበቀ ነው።");
   });
 });
 

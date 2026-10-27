@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "../components/theme-toggle";
 import { LanguageToggle } from "../components/language-toggle";
+import { SnapcartLogo } from "../components/snapcart-logo";
 import { useTranslation } from "../lib/i18n";
 
 interface FaqItem {
@@ -45,7 +46,7 @@ const FAQS: FaqItem[] = [
   {
     question: "Which mobile phone networks in Ethiopia are supported?",
     answer:
-      "Order-by-SMS integrates directly with SMSHub.et, providing high-reliability carrier delivery across both Ethio Telecom (09... and 07...) and Safaricom Ethiopia (07...) numbers with automated status callbacks.",
+      "Snapcart integrates directly with SMSHub.et, providing high-reliability carrier delivery across both Ethio Telecom (09... and 07...) and Safaricom Ethiopia (07...) numbers with automated status callbacks.",
   },
   {
     question: "How does the 4-digit pickup code verification work?",
@@ -83,14 +84,9 @@ export default function LandingClient() {
           <Link
             href="/"
             className="flex items-center space-x-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-lg p-1"
-            aria-label="Order-by-SMS Home"
+            aria-label="Snapcart Home"
           >
-            <div className="bg-emerald-600 text-white p-2 rounded-xl shadow-xs group-hover:bg-emerald-700 transition">
-              <MessageSquare className="w-5 h-5" />
-            </div>
-            <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-slate-100">
-              Order-by-SMS
-            </span>
+            <SnapcartLogo variant="horizontal" size="sm" />
           </Link>
 
           {/* Desktop Navigation Links */}
@@ -481,7 +477,7 @@ export default function LandingClient() {
                 <span>{isAmharic ? t.landing.howItWorksBadge : "Simple 3-Step Flow"}</span>
               </div>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-                {isAmharic ? t.landing.howItWorksTitle : "How Order-by-SMS Works"}
+                {isAmharic ? t.landing.howItWorksTitle : "How Snapcart Works"}
               </h2>
               <p className="mt-3 text-base text-slate-600 dark:text-slate-400">
                 {isAmharic ? t.landing.howItWorksSubtitle : "From sharing a menu link to verifying pickup, run your business without downloading apps or checking dashboards all day."}
@@ -668,7 +664,7 @@ export default function LandingClient() {
                 {isAmharic ? t.landing.faqTitle : "Everything You Need to Know"}
               </h2>
               <p className="mt-3 text-base text-slate-600 dark:text-slate-400">
-                {isAmharic ? t.landing.faqSubtitle : "Straightforward answers on how Order-by-SMS operates for merchants and buyers across Ethiopia."}
+                {isAmharic ? t.landing.faqSubtitle : "Straightforward answers on how Snapcart operates for merchants and buyers across Ethiopia."}
               </p>
             </div>
 
@@ -752,14 +748,9 @@ export default function LandingClient() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-slate-200 dark:border-slate-800">
             {/* Column 1: Brand Info */}
             <div className="md:col-span-1 space-y-3">
-              <div className="flex items-center space-x-2">
-                <div className="bg-emerald-600 text-white p-1.5 rounded-lg">
-                  <MessageSquare className="w-4 h-4" />
-                </div>
-                <span className="font-bold text-base text-slate-900 dark:text-slate-100 tracking-tight">
-                  Order-by-SMS
-                </span>
-              </div>
+              <Link href="/" className="inline-block" aria-label="Snapcart Home">
+                <SnapcartLogo variant="horizontal" size="sm" />
+              </Link>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                 {isAmharic ? t.landing.footerBrandDesc : "Lightweight SMS ordering infrastructure built for Ethiopian micro-merchants on Ethio Telecom & Safaricom networks."}
               </p>
@@ -842,7 +833,7 @@ export default function LandingClient() {
 
           {/* Bottom Copyright */}
           <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
-            <p>{isAmharic ? t.landing.footerCopyright : "© 2026 Order-by-SMS. All rights reserved."}</p>
+            <p>{isAmharic ? t.landing.footerCopyright : "© 2026 Snapcart. All rights reserved."}</p>
             <p>{isAmharic ? t.landing.footerDesignedFor : "Designed for local micro-commerce in Addis Ababa, Ethiopia."}</p>
           </div>
         </div>

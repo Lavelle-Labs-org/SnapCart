@@ -4,9 +4,10 @@ import { MessageSquare, ArrowLeft } from "lucide-react";
 import { LoginForm } from "./login-form";
 import { ThemeToggle } from "../../components/theme-toggle";
 import { LanguageToggle } from "../../components/language-toggle";
+import { SnapcartLogo } from "../../components/snapcart-logo";
 
 export const metadata = {
-  title: "Seller Sign In | Order-by-SMS",
+  title: "Seller Sign In | Snapcart",
   description: "Access your orders, message audit logs, and settings.",
 };
 
@@ -19,12 +20,9 @@ export default function LoginPage() {
           <Link
             href="/"
             className="flex items-center space-x-2 text-slate-900 dark:text-slate-100 hover:opacity-90 transition"
-            aria-label="Order-by-SMS Home"
+            aria-label="Snapcart Home"
           >
-            <div className="bg-emerald-600 text-white p-2 rounded-xl shadow-xs">
-              <MessageSquare className="w-5 h-5" />
-            </div>
-            <span className="font-bold text-xl tracking-tight">Order-by-SMS</span>
+            <SnapcartLogo variant="horizontal" size="sm" />
           </Link>
 
           <div className="flex items-center space-x-2 sm:space-x-3">
@@ -48,7 +46,7 @@ export default function LoginPage() {
 
       {/* Footer */}
       <footer className="py-4 text-center text-xs text-slate-400 dark:text-slate-500">
-        <span>Order-by-SMS &bull; Seller Portal</span>
+        <span>Snapcart &bull; Seller Portal</span>
       </footer>
     </div>
   );

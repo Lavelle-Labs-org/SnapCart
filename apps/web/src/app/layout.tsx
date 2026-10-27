@@ -19,8 +19,13 @@ const notoSansEthiopic = Noto_Sans_Ethiopic({
 });
 
 export const metadata: Metadata = {
-  title: "Order-by-SMS | Run Your Shop from Text Messages",
-  description: "A business you can run from text messages. No app to install, no dashboard to monitor.",
+  title: "Snapcart | Order in a Snap",
+  description: "Snapcart - Order in a snap. Ethiopian micro-commerce and lightweight SMS ordering for merchants and buyers.",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/snapcart-icon.png",
+    apple: "/snapcart-icon.png",
+  },
 };
 
 export default function RootLayout({
