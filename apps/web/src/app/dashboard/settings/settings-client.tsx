@@ -17,6 +17,8 @@ import {
   Trash2,
   Image as ImageIcon,
   KeyRound,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import {
   calculateSmsSegments,
@@ -204,6 +206,9 @@ export default function SettingsClient({
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordStatus, setPasswordStatus] = useState<"idle" | "success" | "error">("idle");
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
@@ -786,117 +791,198 @@ export default function SettingsClient({
               )}
             </button>
           </form>
-        </div>
 
-        {/* Security & Password Card */}
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-          <div className="border-b border-slate-100 dark:border-slate-800 pb-2.5">
-            <h2 className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <KeyRound className="w-4 h-4 text-emerald-600" />
-              <span>{isAmharic ? t.settings.securitySection : "Security & Password"}</span>
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              {isAmharic ? t.settings.securitySubtitle : "Update your seller dashboard account login password."}
-            </p>
-          </div>
-
-          <form onSubmit={handlePasswordSubmit} className="space-y-4" noValidate>
-            <div>
-              <label
-                htmlFor="current-password"
-                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
-              >
-                {isAmharic ? t.settings.currentPassword : "Current Password"}
-              </label>
-              <input
-                id="current-password"
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder={isAmharic ? t.settings.currentPasswordPlaceholder : "••••••••••"}
-                required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 min-h-[44px]"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="new-password"
-                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
-              >
-                {isAmharic ? t.settings.newPassword : "New Password"}
-              </label>
-              <input
-                id="new-password"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder={isAmharic ? t.settings.newPasswordPlaceholder : "••••••••••"}
-                required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 min-h-[44px]"
-              />
-              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
-                {isAmharic ? "ቢያንስ 10 ፊደላት ወይም ቁጥሮች መሆን አለበት" : "Must be at least 10 characters long"}
+          {/* Security & Password Card */}
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-2.5">
+              <h2 className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <KeyRound className="w-4 h-4 text-emerald-600" />
+                <span>{isAmharic ? t.settings.securitySection : "Security & Password"}</span>
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {isAmharic ? t.settings.securitySubtitle : "Update your seller dashboard account login password."}
               </p>
             </div>
 
-            <div>
-              <label
-                htmlFor="confirm-password"
-                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
-              >
-                {isAmharic ? t.settings.confirmNewPassword : "Confirm New Password"}
-              </label>
-              <input
-                id="confirm-password"
-                type="password"
-                value={confirmNewPassword}
-                onChange={(e) => setConfirmNewPassword(e.target.value)}
-                placeholder={isAmharic ? t.settings.confirmPasswordPlaceholder : "••••••••••"}
-                required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 min-h-[44px]"
-              />
-            </div>
-
-            {passwordStatus === "success" && (
-              <div
-                id="password-success-banner"
-                className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center space-x-2 text-xs text-emerald-800 dark:text-emerald-300"
-              >
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-                <span>{passwordMessage}</span>
+            <form onSubmit={handlePasswordSubmit} className="space-y-4" noValidate>
+              {/* Current Password Field */}
+              <div>
+                <label
+                  htmlFor="current-password"
+                  className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
+                >
+                  {isAmharic ? t.settings.currentPassword : "Current Password"}
+                </label>
+                <div className="relative">
+                  <input
+                    id="current-password"
+                    type={showCurrentPassword ? "text" : "password"}
+                    value={currentPassword}
+                    onChange={(e) => {
+                      setCurrentPassword(e.target.value);
+                      if (passwordStatus === "error") setPasswordStatus("idle");
+                    }}
+                    placeholder={isAmharic ? t.settings.currentPasswordPlaceholder : "••••••••••"}
+                    required
+                    className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 min-h-[44px]"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowCurrentPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1"
+                    aria-label={showCurrentPassword ? "Hide password" : "Show password"}
+                  >
+                    {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
-            )}
 
-            {passwordStatus === "error" && (
-              <div
-                id="password-error-banner"
-                className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl flex items-center space-x-2 text-xs text-rose-800 dark:text-rose-300"
-              >
-                <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 flex-shrink-0" />
-                <span>{passwordMessage}</span>
+              {/* New Password Field */}
+              <div>
+                <label
+                  htmlFor="new-password"
+                  className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
+                >
+                  {isAmharic ? t.settings.newPassword : "New Password"}
+                </label>
+                <div className="relative">
+                  <input
+                    id="new-password"
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => {
+                      setNewPassword(e.target.value);
+                      if (passwordStatus === "error") setPasswordStatus("idle");
+                    }}
+                    placeholder={isAmharic ? t.settings.newPasswordPlaceholder : "••••••••••"}
+                    required
+                    className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 min-h-[44px]"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowNewPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1"
+                    aria-label={showNewPassword ? "Hide password" : "Show password"}
+                  >
+                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p
+                  className={`text-[11px] mt-1 transition-colors ${
+                    newPassword.length > 0 && newPassword.length < 10
+                      ? "text-amber-600 dark:text-amber-400 font-medium"
+                      : newPassword.length >= 10
+                      ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                      : "text-slate-400 dark:text-slate-500"
+                  }`}
+                >
+                  {isAmharic
+                    ? newPassword.length >= 10
+                      ? "✓ የይለፍ ቃል ርዝመት ተሟልቷል"
+                      : "ቢያንስ 10 ፊደላት ወይም ቁጥሮች መሆን አለበት"
+                    : newPassword.length >= 10
+                    ? "✓ Minimum 10 characters satisfied"
+                    : "Must be at least 10 characters long"}
+                </p>
               </div>
-            )}
 
-            <button
-              id="change-password-btn"
-              type="submit"
-              disabled={isChangingPassword || !currentPassword || !newPassword || !confirmNewPassword}
-              className="w-full flex items-center justify-center space-x-2 px-5 py-3 rounded-xl font-medium text-sm transition min-h-[44px] shadow-sm bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 text-white disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed"
-            >
-              {isChangingPassword ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>{isAmharic ? t.settings.updatingPassword : "Updating..."}</span>
-                </>
-              ) : (
-                <>
-                  <KeyRound className="w-4 h-4" />
-                  <span>{isAmharic ? t.settings.updatePassword : "Change Password"}</span>
-                </>
+              {/* Confirm New Password Field */}
+              <div>
+                <label
+                  htmlFor="confirm-password"
+                  className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
+                >
+                  {isAmharic ? t.settings.confirmNewPassword : "Confirm New Password"}
+                </label>
+                <div className="relative">
+                  <input
+                    id="confirm-password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmNewPassword}
+                    onChange={(e) => {
+                      setConfirmNewPassword(e.target.value);
+                      if (passwordStatus === "error") setPasswordStatus("idle");
+                    }}
+                    placeholder={isAmharic ? t.settings.confirmPasswordPlaceholder : "••••••••••"}
+                    required
+                    className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 min-h-[44px]"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1"
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {confirmNewPassword.length > 0 && (
+                  <p
+                    className={`text-[11px] mt-1 font-medium ${
+                      confirmNewPassword === newPassword
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-rose-600 dark:text-rose-400"
+                    }`}
+                  >
+                    {confirmNewPassword === newPassword
+                      ? isAmharic
+                        ? "✓ የይለፍ ቃሎች ተዛምደዋል"
+                        : "✓ Passwords match"
+                      : isAmharic
+                      ? t.settings.passwordMismatch
+                      : "Passwords do not match"}
+                  </p>
+                )}
+              </div>
+
+              {passwordStatus === "success" && (
+                <div
+                  id="password-success-banner"
+                  className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center space-x-2 text-xs text-emerald-800 dark:text-emerald-300"
+                >
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                  <span>{passwordMessage}</span>
+                </div>
               )}
-            </button>
-          </form>
+
+              {passwordStatus === "error" && (
+                <div
+                  id="password-error-banner"
+                  className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl flex items-center space-x-2 text-xs text-rose-800 dark:text-rose-300"
+                >
+                  <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 flex-shrink-0" />
+                  <span>{passwordMessage}</span>
+                </div>
+              )}
+
+              <button
+                id="change-password-btn"
+                type="submit"
+                disabled={
+                  isChangingPassword ||
+                  !currentPassword ||
+                  newPassword.length < 10 ||
+                  newPassword !== confirmNewPassword
+                }
+                className="w-full flex items-center justify-center space-x-2 px-5 py-3 rounded-xl font-medium text-sm transition min-h-[44px] shadow-sm bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 text-white disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed"
+              >
+                {isChangingPassword ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>{isAmharic ? t.settings.updatingPassword : "Updating..."}</span>
+                  </>
+                ) : (
+                  <>
+                    <KeyRound className="w-4 h-4" />
+                    <span>{isAmharic ? t.settings.updatePassword : "Change Password"}</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
         </div>
 
         {/* Live Preview Column */}
