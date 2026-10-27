@@ -76,26 +76,35 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (typeof parsed === "object" && parsed !== null) {
-          setCart(parsed);
+          const validProductIds = new Set(products.map((p) => p.id));
+          const cleanedCart: Record<string, number> = {};
+          for (const [pId, qty] of Object.entries(parsed)) {
+            if (typeof qty === "number" && qty > 0 && validProductIds.has(pId)) {
+              cleanedCart[pId] = qty;
+            }
+          }
+          setCart(cleanedCart);
+          return;
         }
       }
     } catch {
       // Ignore localStorage errors
     }
-  }, [storageKey, seller.slug]);
+  }, [storageKey, seller.slug, products]);
 
-  // Derive cart items
-  const activeCartEntries = Object.entries(cart).filter(([_, qty]) => qty > 0);
-  const cartItems = activeCartEntries.map(([productId, quantity]) => {
-    const product = products.find((p) => p.id === productId);
-    return {
-      productId,
-      quantity,
-      name: product ? product.name : "Product",
-      unitPriceSantim: product ? product.priceSantim : 0,
-      totalSantim: product ? product.priceSantim * quantity : 0,
-    };
-  });
+  // Derive cart items - only for valid catalog products with qty > 0
+  const cartItems = Object.entries(cart)
+    .filter(([productId, qty]) => typeof qty === "number" && qty > 0 && products.some((p) => p.id === productId))
+    .map(([productId, quantity]) => {
+      const product = products.find((p) => p.id === productId)!;
+      return {
+        productId,
+        quantity,
+        name: product.name,
+        unitPriceSantim: product.priceSantim,
+        totalSantim: product.priceSantim * quantity,
+      };
+    });
 
   const totalSantim = cartItems.reduce((sum, item) => sum + item.totalSantim, 0);
   const totalBirr = toBirr(totalSantim);
@@ -132,6 +141,19 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
     setIsSubmitting(true);
 
     try {
+      // Standalone demo store checkout: zero server / DB calls
+      if (seller.slug === "habesha-cafe" || seller.slug === "demo") {
+        try {
+          if (typeof window !== "undefined") {
+            localStorage.removeItem(storageKey);
+            localStorage.removeItem(`order_by_sms_cart_${seller.slug}`);
+          }
+        } catch {}
+        const consentParam = smsConsent ? "&consent=true" : "&consent=false";
+        router.push(`/s/${seller.slug}/done?orderId=demo-ord-1001&orderNumber=1001&demo=true${consentParam}`);
+        return;
+      }
+
       const payload = {
         slug: seller.slug,
         buyerName: name.trim(),

@@ -92,7 +92,7 @@ describe("Landing Page Refinement (Home / LandingClient)", () => {
     expect(html).toContain("Product");
     expect(html).toContain("Sellers");
     expect(html).toContain("Trust &amp; Privacy");
-    expect(html).toContain('href="/x/demo"');
+    expect(html).not.toContain('href="/x/demo"');
     expect(html).toContain("Ethio Telecom &amp; Safaricom networks");
     expect(html).toContain("© 2026 Snapcart. All rights reserved.");
   });

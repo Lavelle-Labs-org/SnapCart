@@ -47,13 +47,32 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
       if (stored) {
         const parsed = JSON.parse(stored);
         if (typeof parsed === "object" && parsed !== null) {
-          setCart(parsed);
+          const validProductIds = new Set(products.map((p) => p.id));
+          const cleanedCart: Record<string, number> = {};
+          let hasOrphans = false;
+
+          for (const [pId, qty] of Object.entries(parsed)) {
+            if (typeof qty === "number" && qty > 0 && validProductIds.has(pId)) {
+              cleanedCart[pId] = qty;
+            } else {
+              hasOrphans = true;
+            }
+          }
+
+          setCart(cleanedCart);
+
+          if (hasOrphans) {
+            try {
+              localStorage.setItem(storageKey, JSON.stringify(cleanedCart));
+            } catch {}
+          }
+          return;
         }
       }
     } catch {
       // Ignore localStorage errors
     }
-  }, [storageKey, seller.slug]);
+  }, [storageKey, seller.slug, products]);
 
   // Persist cart updates to localStorage
   const updateQuantity = (productId: string, delta: number) => {
@@ -77,11 +96,14 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
     });
   };
 
-  // Calculate totals
-  const totalItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+  // Calculate totals strictly for valid existing catalog products
+  const validProductMap = new Map(products.map((p) => [p.id, p]));
+  const totalItems = Object.entries(cart).reduce((sum, [pId, qty]) => {
+    return validProductMap.has(pId) && typeof qty === "number" && qty > 0 ? sum + qty : sum;
+  }, 0);
   const totalSantim = Object.entries(cart).reduce((sum, [pId, qty]) => {
-    const prod = products.find((p) => p.id === pId);
-    return sum + (prod ? prod.priceSantim * qty : 0);
+    const prod = validProductMap.get(pId);
+    return sum + (prod && typeof qty === "number" && qty > 0 ? prod.priceSantim * qty : 0);
   }, 0);
   const totalBirr = toBirr(totalSantim);
 

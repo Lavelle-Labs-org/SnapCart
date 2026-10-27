@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { CheckCircle2, Home, MessageSquare, Store } from "lucide-react";
 import { prisma } from "../../../../lib/prisma";
+import { isDemoStore } from "../../../../lib/demo-store";
 import { LanguageToggle } from "../../../../components/language-toggle";
 import { ThemeToggle } from "../../../../components/theme-toggle";
 
@@ -12,6 +13,7 @@ interface DonePageProps {
     orderNumber?: string;
     consent?: string;
     smsConsent?: string;
+    demo?: string;
   }>;
 }
 
@@ -22,14 +24,20 @@ export default async function DonePage({ params, searchParams }: DonePageProps) 
   const queryOrderNumber = resolvedSearchParams?.orderNumber;
   const queryConsent = resolvedSearchParams?.consent ?? resolvedSearchParams?.smsConsent;
 
-  // 1. Fetch order details if orderId is provided (without exposing PII)
+  // Pure demo store confirmation: zero database query needed
   let orderData: {
     number: number;
     smsConsent: boolean;
     shopName?: string;
   } | null = null;
 
-  if (queryOrderId) {
+  if (isDemoStore(slug) && (queryOrderId === "demo-ord-1001" || resolvedSearchParams?.demo === "true" || !queryOrderId)) {
+    orderData = {
+      number: queryOrderNumber ? parseInt(String(queryOrderNumber).replace(/^#/, ""), 10) || 1001 : 1001,
+      smsConsent: queryConsent === "true" || queryConsent === "1",
+      shopName: "Habesha Cafe & Bakery",
+    };
+  } else if (queryOrderId) {
     try {
       const order = await prisma.order.findUnique({
         where: { id: String(queryOrderId) },
@@ -59,7 +67,9 @@ export default async function DonePage({ params, searchParams }: DonePageProps) 
 
   // 2. Fetch seller details if shopName was not found via order
   let shopName = orderData?.shopName;
-  if (!shopName && slug) {
+  if (!shopName && isDemoStore(slug)) {
+    shopName = "Habesha Cafe & Bakery";
+  } else if (!shopName && slug) {
     try {
       const seller = await prisma.seller.findUnique({
         where: { slug },

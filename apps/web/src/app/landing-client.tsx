@@ -64,6 +64,7 @@ export default function LandingClient() {
   const { t, isAmharic } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+  const [mockCartCount, setMockCartCount] = useState(0);
 
   const faqs = isAmharic ? t.landing.faqs : FAQS;
 
@@ -309,10 +310,24 @@ export default function LandingClient() {
                             350.00 ETB
                           </span>
                         </div>
-                        <div className="flex items-center space-x-1.5 text-xs font-semibold">
-                          <span className="px-2.5 py-1 rounded-md bg-emerald-600 text-white">
-                            {isAmharic ? t.landing.mockupCartItem : "1 in cart"}
-                          </span>
+                        <div>
+                          {mockCartCount === 0 ? (
+                            <button
+                              type="button"
+                              onClick={() => setMockCartCount(1)}
+                              className="px-2.5 py-1 rounded-md border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 text-xs font-medium transition cursor-pointer"
+                            >
+                              {isAmharic ? t.landing.mockupAddBtn : "+ Add"}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setMockCartCount(0)}
+                              className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition cursor-pointer"
+                            >
+                              {isAmharic ? t.landing.mockupCartItem : "1 in cart"}
+                            </button>
+                          )}
                         </div>
                       </div>
 
@@ -330,7 +345,8 @@ export default function LandingClient() {
                         </div>
                         <button
                           type="button"
-                          className="px-2.5 py-1 rounded-md border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium"
+                          onClick={() => setMockCartCount((c) => (c === 0 ? 1 : 0))}
+                          className="px-2.5 py-1 rounded-md border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium cursor-pointer"
                         >
                           {isAmharic ? t.landing.mockupAddBtn : "+ Add"}
                         </button>
@@ -345,7 +361,7 @@ export default function LandingClient() {
                         {isAmharic ? t.landing.mockupSubtotal : "Order Subtotal:"}
                       </span>
                       <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">
-                        350.00 ETB
+                        {mockCartCount > 0 ? "350.00 ETB" : "0.00 ETB"}
                       </span>
                     </div>
                     <div className="flex gap-2">
@@ -799,11 +815,6 @@ export default function LandingClient() {
                 {isAmharic ? t.landing.footerColTrust : "Trust & Privacy"}
               </h4>
               <ul className="space-y-2 text-xs">
-                <li>
-                  <Link href="/x/demo" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition">
-                    {isAmharic ? t.landing.footerOptOut : "SMS Privacy & Opt-Out"}
-                  </Link>
-                </li>
                 <li className="text-slate-400 dark:text-slate-500">
                   {isAmharic ? t.landing.footerGateway : "SMS Gateway: SMSHub.et"}
                 </li>

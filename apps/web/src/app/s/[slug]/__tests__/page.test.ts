@@ -39,14 +39,14 @@ describe("StorefrontPage (FE-001 - /s/[slug])", () => {
   beforeAll(() => {
     process.env.DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/order_by_sms";
   });
-  const demoSeller = {
+  const dbSeller = {
     id: "seller-1",
-    business_name: "Habesha Cafe & Bakery",
-    sms_name: "Habesha Cafe",
-    slug: "habesha-cafe",
+    business_name: "Bole Bakery & Sweets",
+    sms_name: "Bole Bakery",
+    slug: "bole-bakery",
   };
 
-  const demoProducts = [
+  const dbProducts = [
     {
       id: "prod-1",
       name: "Special Macchiato",
@@ -69,6 +69,19 @@ describe("StorefrontPage (FE-001 - /s/[slug])", () => {
     vi.clearAllMocks();
   });
 
+  it("serves demo storefront directly without any database connection for habesha-cafe", async () => {
+    const jsx = await StorefrontPage({
+      params: Promise.resolve({ slug: "habesha-cafe" }),
+    });
+
+    expect(prismaMock.seller.findUnique).not.toHaveBeenCalled();
+    expect(prismaMock.product.findMany).not.toHaveBeenCalled();
+    expect(jsx).toBeDefined();
+    expect(jsx.props.seller.slug).toBe("habesha-cafe");
+    expect(jsx.props.seller.businessName).toBe("Habesha Cafe & Bakery");
+    expect(jsx.props.products.length).toBeGreaterThan(0);
+  });
+
   it("triggers notFound() when seller slug does not exist", async () => {
     prismaMock.seller.findUnique.mockResolvedValue(null);
 
@@ -80,15 +93,15 @@ describe("StorefrontPage (FE-001 - /s/[slug])", () => {
   });
 
   it("queries seller and only available products from database", async () => {
-    prismaMock.seller.findUnique.mockResolvedValue(demoSeller);
-    prismaMock.product.findMany.mockResolvedValue(demoProducts);
+    prismaMock.seller.findUnique.mockResolvedValue(dbSeller);
+    prismaMock.product.findMany.mockResolvedValue(dbProducts);
 
     const jsx = await StorefrontPage({
-      params: Promise.resolve({ slug: "habesha-cafe" }),
+      params: Promise.resolve({ slug: "bole-bakery" }),
     });
 
     expect(prismaMock.seller.findUnique).toHaveBeenCalledWith({
-      where: { slug: "habesha-cafe" },
+      where: { slug: "bole-bakery" },
       select: {
         id: true,
         business_name: true,
@@ -115,8 +128,8 @@ describe("StorefrontPage (FE-001 - /s/[slug])", () => {
     });
 
     expect(jsx).toBeDefined();
-    expect(jsx.props.seller.slug).toBe("habesha-cafe");
-    expect(jsx.props.seller.businessName).toBe("Habesha Cafe & Bakery");
+    expect(jsx.props.seller.slug).toBe("bole-bakery");
+    expect(jsx.props.seller.businessName).toBe("Bole Bakery & Sweets");
     expect(jsx.props.seller.logoUrl).toBeNull();
     expect(jsx.props.products).toHaveLength(2);
     expect(jsx.props.products[0].name).toBe("Special Macchiato");
@@ -126,11 +139,11 @@ describe("StorefrontPage (FE-001 - /s/[slug])", () => {
   });
 
   it("handles seller with 0 active products cleanly", async () => {
-    prismaMock.seller.findUnique.mockResolvedValue(demoSeller);
+    prismaMock.seller.findUnique.mockResolvedValue(dbSeller);
     prismaMock.product.findMany.mockResolvedValue([]);
 
     const jsx = await StorefrontPage({
-      params: Promise.resolve({ slug: "habesha-cafe" }),
+      params: Promise.resolve({ slug: "bole-bakery" }),
     });
 
     expect(jsx).toBeDefined();

@@ -2,6 +2,7 @@ import React from "react";
 import { notFound } from "next/navigation";
 import { prisma } from "../../../../lib/prisma";
 import { CheckoutForm } from "./checkout-form";
+import { isDemoStore, DEMO_SELLER, DEMO_PRODUCTS } from "../../../../lib/demo-store";
 
 interface CheckoutPageProps {
   params: Promise<{ slug: string }>;
@@ -12,6 +13,11 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
 
   if (!slug) {
     notFound();
+  }
+
+  // Standalone demo checkout: completely separated from database with zero connections
+  if (isDemoStore(slug)) {
+    return <CheckoutForm seller={DEMO_SELLER} products={DEMO_PRODUCTS} />;
   }
 
   let seller = null;
