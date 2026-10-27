@@ -23,10 +23,10 @@ export function SnapcartIcon({
   className?: string;
 }) {
   const dimMap = {
-    sm: { w: 32, h: 19 },
-    md: { w: 44, h: 26 },
-    lg: { w: 58, h: 34 },
-    xl: { w: 78, h: 46 },
+    sm: { w: 36, h: 21 },
+    md: { w: 50, h: 30 },
+    lg: { w: 66, h: 39 },
+    xl: { w: 86, h: 51 },
   };
   const { w, h } = dimMap[size] || dimMap.md;
 
