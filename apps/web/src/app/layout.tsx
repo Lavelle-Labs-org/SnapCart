@@ -22,7 +22,10 @@ export const metadata: Metadata = {
   title: "Snapcart | Order in a Snap",
   description: "Snapcart - Order in a snap. Ethiopian micro-commerce and lightweight SMS ordering for merchants and buyers.",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon.png", type: "image/png" },
+    ],
     shortcut: "/snapcart-icon.png",
     apple: "/snapcart-icon.png",
   },
