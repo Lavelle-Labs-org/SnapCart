@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  MessageSquare,
   ListOrdered,
   Mail,
   ShoppingBag,
@@ -135,7 +134,7 @@ export function DashboardShell({
           {/* Drawer Header */}
           <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <div className="flex items-center space-x-3 min-w-0">
-              <SnapcartIcon size="md" className="p-1 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs" />
+              <SnapcartIcon size="md" className="flex-shrink-0" />
               <div className="min-w-0 flex-1">
                 <span className="font-bold text-base block truncate text-slate-900 dark:text-slate-100" title={displayName}>
                   {displayName}
@@ -207,7 +206,7 @@ export function DashboardShell({
             }`}
           >
             <div className={`flex items-center space-x-3 min-w-0 ${isCollapsed ? "justify-center" : ""}`}>
-              <SnapcartIcon size="md" className="p-1 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs" />
+              <SnapcartIcon size="md" className="flex-shrink-0" />
               {!isCollapsed && (
                 <div className="min-w-0 flex-1">
                   <span className="font-bold text-sm block truncate text-slate-900 dark:text-slate-100" title={displayName}>
@@ -308,11 +307,9 @@ export function DashboardShell({
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="flex items-center space-x-2">
-              <div className="bg-emerald-600 text-white p-1.5 rounded-lg">
-                <MessageSquare className="w-4 h-4" />
-              </div>
-              <span className="font-bold text-sm tracking-tight truncate max-w-[140px] text-slate-900 dark:text-slate-100">
+            <div className="flex items-center space-x-2.5">
+              <SnapcartIcon size="sm" className="flex-shrink-0" />
+              <span className="font-bold text-sm tracking-tight truncate max-w-[150px] text-slate-900 dark:text-slate-100">
                 {displayName}
               </span>
             </div>

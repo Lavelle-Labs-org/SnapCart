@@ -23,10 +23,10 @@ export function SnapcartIcon({
   className?: string;
 }) {
   const dimMap = {
-    sm: { w: 28, h: 18 },
-    md: { w: 36, h: 23 },
-    lg: { w: 46, h: 29 },
-    xl: { w: 64, h: 40 },
+    sm: { w: 32, h: 19 },
+    md: { w: 44, h: 26 },
+    lg: { w: 58, h: 34 },
+    xl: { w: 78, h: 46 },
   };
   const { w, h } = dimMap[size] || dimMap.md;
 
@@ -66,17 +66,17 @@ export function SnapcartLogo({
 
   if (variant === "horizontal") {
     const textSizes = {
-      sm: "text-lg",
-      md: "text-xl",
-      lg: "text-2xl",
-      xl: "text-3xl",
+      sm: "text-lg font-bold",
+      md: "text-xl sm:text-2xl font-extrabold",
+      lg: "text-2xl sm:text-3xl font-extrabold",
+      xl: "text-3xl sm:text-4xl font-black",
     };
     const textSize = textSizes[size] || textSizes.md;
 
     return (
-      <div className={`inline-flex items-center gap-2.5 ${className}`}>
+      <div className={`inline-flex items-center gap-2.5 sm:gap-3 ${className}`}>
         <SnapcartIcon size={size} />
-        <span className={`font-bold tracking-tight ${textSize} leading-none select-none`}>
+        <span className={`tracking-tight ${textSize} leading-none select-none`}>
           <span className="text-[#00976f] dark:text-[#10b981]">Snap</span>
           <span className="text-[#18262f] dark:text-slate-100">cart</span>
         </span>

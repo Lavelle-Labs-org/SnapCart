@@ -86,7 +86,7 @@ export default function LandingClient() {
             className="flex items-center space-x-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-lg p-1"
             aria-label="Snapcart Home"
           >
-            <SnapcartLogo variant="horizontal" size="sm" />
+            <SnapcartLogo variant="horizontal" size="md" />
           </Link>
 
           {/* Desktop Navigation Links */}
@@ -749,7 +749,7 @@ export default function LandingClient() {
             {/* Column 1: Brand Info */}
             <div className="md:col-span-1 space-y-3">
               <Link href="/" className="inline-block" aria-label="Snapcart Home">
-                <SnapcartLogo variant="horizontal" size="sm" />
+                <SnapcartLogo variant="horizontal" size="md" />
               </Link>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                 {isAmharic ? t.landing.footerBrandDesc : "Lightweight SMS ordering infrastructure built for Ethiopian micro-merchants on Ethio Telecom & Safaricom networks."}
