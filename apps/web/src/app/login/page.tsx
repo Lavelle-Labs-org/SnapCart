@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { MessageSquare, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { LoginForm } from "./login-form";
 import { ThemeToggle } from "../../components/theme-toggle";
 import { LanguageToggle } from "../../components/language-toggle";
@@ -22,7 +22,7 @@ export default function LoginPage() {
             className="flex items-center space-x-2 text-slate-900 dark:text-slate-100 hover:opacity-90 transition"
             aria-label="Snapcart Home"
           >
-            <SnapcartLogo variant="horizontal" size="sm" />
+            <SnapcartLogo variant="horizontal" size="md" />
           </Link>
 
           <div className="flex items-center space-x-2 sm:space-x-3">
