@@ -86,6 +86,22 @@ export const updateSettingsSchema = z.object({
 
 export class UpdateSettingsDto extends createZodDto(updateSettingsSchema) {}
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: z.string().min(10, "New password must be at least 10 characters long"),
+    confirmNewPassword: z.string().optional(),
+  })
+  .refine(
+    (data) => !data.confirmNewPassword || data.newPassword === data.confirmNewPassword,
+    {
+      message: "New password and confirmation do not match",
+      path: ["confirmNewPassword"],
+    }
+  );
+
+export class ChangePasswordDto extends createZodDto(changePasswordSchema) {}
+
 export function serializeCookie(options: SessionCookieOptions): string {
   const parts = [
     `${options.name}=${encodeURIComponent(options.value)}`,

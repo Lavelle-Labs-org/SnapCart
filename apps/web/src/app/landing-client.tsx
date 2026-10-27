@@ -64,6 +64,7 @@ export default function LandingClient() {
   const { t, isAmharic } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+  const [mockCartCount, setMockCartCount] = useState(0);
 
   const faqs = isAmharic ? t.landing.faqs : FAQS;
 
@@ -103,15 +104,7 @@ export default function LandingClient() {
             >
               {isAmharic ? t.landing.featuresNav : "Features"}
             </a>
-            <Link
-              href="/s/habesha-cafe"
-              className="px-3 py-2 rounded-lg hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] inline-flex items-center gap-1.5"
-            >
-              <span>{isAmharic ? t.landing.demoStoreNav : "Demo Store"}</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
-                {isAmharic ? t.landing.liveBadge : "Live"}
-              </span>
-            </Link>
+
             <a
               href="#faq"
               className="px-3 py-2 rounded-lg hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] inline-flex items-center"
@@ -173,16 +166,7 @@ export default function LandingClient() {
               >
                 {isAmharic ? t.landing.featuresNav : "Features"}
               </a>
-              <Link
-                href="/s/habesha-cafe"
-                onClick={closeMobileMenu}
-                className="px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] flex items-center justify-between"
-              >
-                <span>{isAmharic ? t.landing.demoStoreNav : "Demo Store"}</span>
-                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
-                  {isAmharic ? t.landing.mobileLivePreview : "Live Preview"}
-                </span>
-              </Link>
+
               <a
                 href="#faq"
                 onClick={closeMobileMenu}
@@ -220,7 +204,7 @@ export default function LandingClient() {
           {/* Trust Network Badge */}
           <div className="inline-flex items-center space-x-2 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-semibold px-3.5 py-1.5 rounded-full mb-6 shadow-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{isAmharic ? t.landing.heroBadge : "Built for Ethiopian Micro-Merchants • Ethio Telecom & Safaricom via SMSHub.et"}</span>
+            <span>{t.landing.badge}</span>
           </div>
 
           {/* Hero Headline */}
@@ -326,10 +310,24 @@ export default function LandingClient() {
                             350.00 ETB
                           </span>
                         </div>
-                        <div className="flex items-center space-x-1.5 text-xs font-semibold">
-                          <span className="px-2.5 py-1 rounded-md bg-emerald-600 text-white">
-                            {isAmharic ? t.landing.mockupCartItem : "1 in cart"}
-                          </span>
+                        <div>
+                          {mockCartCount === 0 ? (
+                            <button
+                              type="button"
+                              onClick={() => setMockCartCount(1)}
+                              className="px-2.5 py-1 rounded-md border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 text-xs font-medium transition cursor-pointer"
+                            >
+                              {isAmharic ? t.landing.mockupAddBtn : "+ Add"}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setMockCartCount(0)}
+                              className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition cursor-pointer"
+                            >
+                              {isAmharic ? t.landing.mockupCartItem : "1 in cart"}
+                            </button>
+                          )}
                         </div>
                       </div>
 
@@ -347,7 +345,8 @@ export default function LandingClient() {
                         </div>
                         <button
                           type="button"
-                          className="px-2.5 py-1 rounded-md border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium"
+                          onClick={() => setMockCartCount((c) => (c === 0 ? 1 : 0))}
+                          className="px-2.5 py-1 rounded-md border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium cursor-pointer"
                         >
                           {isAmharic ? t.landing.mockupAddBtn : "+ Add"}
                         </button>
@@ -362,7 +361,7 @@ export default function LandingClient() {
                         {isAmharic ? t.landing.mockupSubtotal : "Order Subtotal:"}
                       </span>
                       <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">
-                        350.00 ETB
+                        {mockCartCount > 0 ? "350.00 ETB" : "0.00 ETB"}
                       </span>
                     </div>
                     <div className="flex gap-2">
@@ -816,11 +815,6 @@ export default function LandingClient() {
                 {isAmharic ? t.landing.footerColTrust : "Trust & Privacy"}
               </h4>
               <ul className="space-y-2 text-xs">
-                <li>
-                  <Link href="/x/demo" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition">
-                    {isAmharic ? t.landing.footerOptOut : "SMS Privacy & Opt-Out"}
-                  </Link>
-                </li>
                 <li className="text-slate-400 dark:text-slate-500">
                   {isAmharic ? t.landing.footerGateway : "SMS Gateway: SMSHub.et"}
                 </li>

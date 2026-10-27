@@ -35,23 +35,44 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
   const [isMounted, setIsMounted] = useState(false);
   const { t, isAmharic } = useTranslation();
 
-  const storageKey = `order_by_sms_cart_${seller.slug}`;
+  const storageKey = `snapcart_cart_${seller.slug}`;
 
   // Hydrate cart from localStorage on mount
   useEffect(() => {
     setIsMounted(true);
     try {
-      const stored = localStorage.getItem(storageKey);
+      const stored =
+        localStorage.getItem(storageKey) ||
+        localStorage.getItem(`order_by_sms_cart_${seller.slug}`);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (typeof parsed === "object" && parsed !== null) {
-          setCart(parsed);
+          const validProductIds = new Set(products.map((p) => p.id));
+          const cleanedCart: Record<string, number> = {};
+          let hasOrphans = false;
+
+          for (const [pId, qty] of Object.entries(parsed)) {
+            if (typeof qty === "number" && qty > 0 && validProductIds.has(pId)) {
+              cleanedCart[pId] = qty;
+            } else {
+              hasOrphans = true;
+            }
+          }
+
+          setCart(cleanedCart);
+
+          if (hasOrphans) {
+            try {
+              localStorage.setItem(storageKey, JSON.stringify(cleanedCart));
+            } catch {}
+          }
+          return;
         }
       }
     } catch {
       // Ignore localStorage errors
     }
-  }, [storageKey]);
+  }, [storageKey, seller.slug, products]);
 
   // Persist cart updates to localStorage
   const updateQuantity = (productId: string, delta: number) => {
@@ -75,11 +96,14 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
     });
   };
 
-  // Calculate totals
-  const totalItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+  // Calculate totals strictly for valid existing catalog products
+  const validProductMap = new Map(products.map((p) => [p.id, p]));
+  const totalItems = Object.entries(cart).reduce((sum, [pId, qty]) => {
+    return validProductMap.has(pId) && typeof qty === "number" && qty > 0 ? sum + qty : sum;
+  }, 0);
   const totalSantim = Object.entries(cart).reduce((sum, [pId, qty]) => {
-    const prod = products.find((p) => p.id === pId);
-    return sum + (prod ? prod.priceSantim * qty : 0);
+    const prod = validProductMap.get(pId);
+    return sum + (prod && typeof qty === "number" && qty > 0 ? prod.priceSantim * qty : 0);
   }, 0);
   const totalBirr = toBirr(totalSantim);
 
@@ -218,6 +242,12 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
             })}
           </div>
         )}
+
+        <div className="text-center pt-6 pb-2 text-xs text-slate-400 dark:text-slate-500">
+          <p className="font-medium">
+            Powered by <span className="font-semibold text-slate-600 dark:text-slate-300">Snapcart</span> • <em>{isAmharic ? "በቅጽበት ይዘዙ" : "Order in a snap."}</em>
+          </p>
+        </div>
       </main>
 
       {/* Sticky Bottom Checkout Footer */}

@@ -220,7 +220,7 @@ export function scanFiles(filePaths: string[], baseDir = process.cwd()): ScanRes
  * CLI Runner
  */
 export function runCli(): void {
-  console.log("=== Order-by-SMS: Secret Scanning & Repository Hygiene (INFRA-004) ===");
+  console.log("=== Snapcart: Secret Scanning & Repository Hygiene (INFRA-004) ===");
 
   const args = process.argv.slice(2);
   let result: ScanResult;

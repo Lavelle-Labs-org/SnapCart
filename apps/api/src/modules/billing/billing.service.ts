@@ -139,7 +139,7 @@ export class BillingService {
       txRef,
       callbackUrl,
       returnUrl: customReturnUrl || defaultReturnUrl,
-      title: "Order-by-SMS",
+      title: "Snapcart SMS Credits",
       description: `${pkg.name} - ${pkg.credits} SMS Credits`.replace(/[^\w\s.-]/g, ""),
     });
 

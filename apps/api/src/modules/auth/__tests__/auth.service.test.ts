@@ -466,4 +466,69 @@ describe("AuthService (apps/api - MIG-006)", () => {
       expect(result.seller.logoUrl).toBeNull();
     });
   });
+
+  describe("changePassword", () => {
+    it("successfully changes password when current password matches", async () => {
+      const oldHash = await hashPassword("correctOldPassword123");
+      prismaMock.seller.findUnique.mockResolvedValue({
+        id: "seller-123",
+        password_hash: oldHash,
+      });
+
+      prismaMock.seller.update.mockResolvedValue({
+        id: "seller-123",
+      });
+
+      const result = await authService.changePassword("seller-123", {
+        currentPassword: "correctOldPassword123",
+        newPassword: "newSuperSecretPassword456",
+        confirmNewPassword: "newSuperSecretPassword456",
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.message).toBe("Password updated successfully");
+      expect(prismaMock.seller.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "seller-123" },
+          data: expect.objectContaining({
+            password_hash: expect.any(String),
+          }),
+        })
+      );
+    });
+
+    it("rejects when current password is wrong", async () => {
+      const oldHash = await hashPassword("correctOldPassword123");
+      prismaMock.seller.findUnique.mockResolvedValue({
+        id: "seller-123",
+        password_hash: oldHash,
+      });
+
+      await expect(
+        authService.changePassword("seller-123", {
+          currentPassword: "wrongOldPassword123",
+          newPassword: "newSuperSecretPassword456",
+          confirmNewPassword: "newSuperSecretPassword456",
+        })
+      ).rejects.toThrow(
+        expect.objectContaining({
+          status: HttpStatus.BAD_REQUEST,
+        })
+      );
+    });
+
+    it("rejects when new password and confirm do not match", async () => {
+      await expect(
+        authService.changePassword("seller-123", {
+          currentPassword: "correctOldPassword123",
+          newPassword: "newSuperSecretPassword456",
+          confirmNewPassword: "differentPassword456",
+        })
+      ).rejects.toThrow(
+        expect.objectContaining({
+          status: HttpStatus.BAD_REQUEST,
+        })
+      );
+    });
+  });
 });

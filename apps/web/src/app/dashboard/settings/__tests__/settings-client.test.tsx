@@ -267,7 +267,8 @@ describe("SettingsClient Logic & Component (FE-013, Issue #36)", () => {
       const html = renderToString(<SettingsClient initialSeller={mockSeller} />);
       expect(html).toContain("id=\"upload-profile-picture-btn\"");
       expect(html).toContain("id=\"profile-picture-placeholder\"");
-      expect(html).toContain("Cloudflare R2");
+      expect(html).not.toContain("Cloudflare R2");
+      expect(html).toContain("Stored securely.");
     });
 
     it("renders profile picture image preview and remove button when logoUrl is provided", () => {
@@ -283,6 +284,22 @@ describe("SettingsClient Logic & Component (FE-013, Issue #36)", () => {
       expect(html).toContain("id=\"profile-picture-preview\"");
       expect(html).toContain("https://r2.orderbysms.et/profiles/seller-101/avatar.png");
       expect(html).toContain("id=\"remove-profile-picture-btn\"");
+    });
+
+    it("renders password change section and does not render GSM metrics or Snapcart Engine label", () => {
+      const { renderToString } = require("react-dom/server");
+      const html = renderToString(<SettingsClient initialSeller={mockSeller} />);
+
+      // Password change form
+      expect(html).toContain("id=\"current-password\"");
+      expect(html).toContain("id=\"new-password\"");
+      expect(html).toContain("id=\"confirm-password\"");
+      expect(html).toContain("id=\"change-password-btn\"");
+
+      // Removed unwanted text/metrics
+      expect(html).not.toContain("Snapcart Engine");
+      expect(html).not.toContain("id=\"sms-metrics-card\"");
+      expect(html).not.toContain("Estimated Segments");
     });
   });
 });

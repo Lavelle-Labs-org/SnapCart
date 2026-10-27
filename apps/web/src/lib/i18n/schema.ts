@@ -22,6 +22,7 @@ export interface TranslationSchema {
     copy: string;
     copied: string;
     poweredBy: string;
+    home: string;
   };
   storefront: {
     searchPlaceholder: string;
@@ -239,6 +240,24 @@ export interface TranslationSchema {
     invalidPhone: string;
     passwordRequired: string;
     passwordMismatch: string;
+    stepIndicator: (step: number, total: number) => string;
+    businessNameHelp: string;
+    smsNameHelp: string;
+    phoneHelp: string;
+    charsCount: (count: number) => string;
+    changeNumber: string;
+    enterCodeTitle: string;
+    enterCodeHelper: string;
+    verifySuccessRedirect: string;
+    resendSuccessNotice: string;
+    creatingAccount: string;
+    verifyPhoneAndCreate: string;
+    codeLengthError: string;
+    invalidCodeError: string;
+    verifyFailedError: string;
+    resendFailedError: string;
+    networkError: string;
+    accountCreateFailed: string;
   };
   optOut: {
     title: string;
@@ -440,10 +459,18 @@ export interface TranslationSchema {
     previewTitle: string;
     previewSubtitle: string;
     securitySection: string;
+    securitySubtitle: string;
     currentPassword: string;
+    currentPasswordPlaceholder: string;
     newPassword: string;
+    newPasswordPlaceholder: string;
     confirmNewPassword: string;
+    confirmPasswordPlaceholder: string;
     updatePassword: string;
+    updatingPassword: string;
+    passwordSuccess: string;
+    passwordMismatch: string;
+    passwordMinLength: string;
     linksSection: string;
     copyStoreLink: string;
     copyBioText: string;

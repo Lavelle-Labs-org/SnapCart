@@ -24,7 +24,7 @@ export class HealthService {
       await this.prisma.$queryRaw`SELECT 1`;
       return {
         status: "ok",
-        app: "order-by-sms-api",
+        app: "snapcart-api",
         environment: process.env.NODE_ENV || "development",
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
@@ -36,7 +36,7 @@ export class HealthService {
           status: "down",
           code: "SERVICE_UNAVAILABLE",
           message: "Database ping failed",
-          app: "order-by-sms-api",
+          app: "snapcart-api",
           environment: process.env.NODE_ENV || "development",
           timestamp: new Date().toISOString(),
           uptime: process.uptime(),

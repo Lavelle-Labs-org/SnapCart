@@ -2,6 +2,7 @@ import React from "react";
 import { notFound } from "next/navigation";
 import { prisma } from "../../../lib/prisma";
 import { StorefrontCatalog } from "./storefront-catalog";
+import { isDemoStore, DEMO_SELLER, DEMO_PRODUCTS } from "../../../lib/demo-store";
 
 interface StorefrontPageProps {
   params: Promise<{ slug: string }>;
@@ -12,6 +13,11 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
 
   if (!slug) {
     notFound();
+  }
+
+  // Standalone demo store: serve completely separated from database with zero connections
+  if (isDemoStore(slug)) {
+    return <StorefrontCatalog seller={DEMO_SELLER} products={DEMO_PRODUCTS} />;
   }
 
   // 1. Query seller by slug from database

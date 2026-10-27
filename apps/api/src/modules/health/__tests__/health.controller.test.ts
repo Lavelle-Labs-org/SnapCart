@@ -22,7 +22,7 @@ describe("HealthController & HealthService (PR-013, Issue #132)", () => {
 
     const result = await healthController.getHealth();
     expect(result.status).toBe("ok");
-    expect(result.app).toBe("order-by-sms-api");
+    expect(result.app).toBe("snapcart-api");
     expect(result.database).toBe("connected");
     expect(typeof result.timestamp).toBe("string");
     expect(typeof result.uptime).toBe("number");

@@ -48,22 +48,22 @@ export async function extractSellerIdFromToken(
 /**
  * Formats relative timestamp or date string for human readability in order queue.
  */
-export function formatOrderTime(dateInput: Date | string): string {
+export function formatOrderTime(dateInput: Date | string, isAmharic = false): string {
   const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
-  if (!date || isNaN(date.getTime())) return "Recently";
+  if (!date || isNaN(date.getTime())) return isAmharic ? "በቅርቡ" : "Recently";
 
   const diffMs = Date.now() - date.getTime();
   const diffMins = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffMins < 1) return "Just now";
-  if (diffMins === 1) return "1 min ago";
-  if (diffMins < 60) return `${diffMins} mins ago`;
-  if (diffHours === 1) return "1 hour ago";
-  if (diffHours < 24) return `${diffHours} hours ago`;
-  if (diffDays === 1) return "Yesterday";
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  if (diffMins < 1) return isAmharic ? "አሁን" : "Just now";
+  if (diffMins === 1) return isAmharic ? "ከ1 ደቂቃ በፊት" : "1 min ago";
+  if (diffMins < 60) return isAmharic ? `ከ${diffMins} ደቂቃ በፊት` : `${diffMins} mins ago`;
+  if (diffHours === 1) return isAmharic ? "ከ1 ሰዓት በፊት" : "1 hour ago";
+  if (diffHours < 24) return isAmharic ? `ከ${diffHours} ሰዓት በፊት` : `${diffHours} hours ago`;
+  if (diffDays === 1) return isAmharic ? "ትናንት" : "Yesterday";
+  return date.toLocaleDateString(isAmharic ? "am-ET" : "en-US", { month: "short", day: "numeric" });
 }
 
 /**

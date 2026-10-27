@@ -118,7 +118,13 @@ describe("Mobile Ergonomics & 44px Touch Targets Audit (FE-014, Issue #37, docs/
         __dirname,
         "../src/app/dashboard/page.tsx"
       );
-      const content = fs.readFileSync(dashboardFile, "utf-8");
+      const clientFile = path.resolve(
+        __dirname,
+        "../src/app/dashboard/orders-client.tsx"
+      );
+      const content = fs.existsSync(clientFile)
+        ? fs.readFileSync(dashboardFile, "utf-8") + fs.readFileSync(clientFile, "utf-8")
+        : fs.readFileSync(dashboardFile, "utf-8");
 
       expect(content).toContain("overflow-x-auto");
     });

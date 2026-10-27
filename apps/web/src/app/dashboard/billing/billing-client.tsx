@@ -91,24 +91,20 @@ export function BillingClient() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-12">
+    <div className="space-y-6">
       {/* Header */}
       <div>
-        <div className="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400 font-semibold text-sm tracking-wide uppercase">
-          <Zap className="w-4 h-4" />
-          <span>{isAmharic ? t.billing.title : "Billing & SMS Credits"}</span>
-        </div>
-        <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight mt-1">
-          {isAmharic ? t.billing.balanceTopUpTitle : "SMS Balance & Top-Up"}
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+          {isAmharic ? t.billing.title : "Billing & SMS Credits"}
         </h1>
-        <p className="text-slate-600 dark:text-slate-400 text-sm mt-1 max-w-2xl">
-          {isAmharic ? t.billing.balanceTopUpSubtitle : "Snapcart uses metered SMS credits to notify your customers of order status, pickup codes, and acceptance in real time via Ethio telecom."}
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          {isAmharic ? t.billing.balanceTopUpSubtitle : "Manage your SMS credit balance and recharge packages."}
         </p>
       </div>
 
       {errorMessage && (
-        <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-sm flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 text-rose-500" />
+        <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2.5">
+          <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-rose-500" />
           <div>
             <p className="font-semibold">{isAmharic ? t.billing.unableToProcess : "Unable to process request"}</p>
             <p>{errorMessage}</p>
@@ -117,12 +113,12 @@ export function BillingClient() {
       )}
 
       {/* Balance Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div className="relative overflow-hidden p-6 rounded-2xl bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800/80 border border-slate-200 dark:border-slate-800 shadow-xs">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">
             <span>{isAmharic ? t.billing.remainingCreditsCard : "Remaining Credits"}</span>
             <span
-              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${(balance?.smsCredits ?? 0) > 3
+              className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${(balance?.smsCredits ?? 0) > 3
                   ? "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300"
                   : (balance?.smsCredits ?? 0) > 0
                     ? "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300"
@@ -134,78 +130,78 @@ export function BillingClient() {
                 : (isAmharic ? t.billing.statusTrialExpired : "Trial Expired")}
             </span>
           </div>
-          <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-4xl md:text-5xl font-black text-slate-900 dark:text-slate-100">
+          <div className="mt-3 flex items-baseline gap-1.5">
+            <span className="text-2xl font-bold text-slate-900 dark:text-slate-100 tabular-nums">
               {loading ? "..." : balance?.smsCredits ?? 0}
             </span>
-            <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+            <span className="text-xs font-medium text-slate-400">
               SMS
             </span>
           </div>
           <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
             {(balance?.smsCredits ?? 0) <= 0
-              ? (isAmharic ? t.billing.creditsExhaustedDesc : "Your credits are exhausted. Buyer orders will still succeed, but customer SMS updates are paused.")
+              ? (isAmharic ? t.billing.creditsExhaustedDesc : "Credits exhausted. Recharge to restore SMS alerts.")
               : (balance?.smsCredits ?? 0) <= 3
-                ? (isAmharic ? t.billing.creditsLowDesc : "Running low! Recharge soon to avoid SMS interruptions.")
-                : (isAmharic ? t.billing.creditsHealthyDesc : "Enough credits for standard store operation.")}
+                ? (isAmharic ? t.billing.creditsLowDesc : "Recharge soon to avoid delivery pauses.")
+                : (isAmharic ? t.billing.creditsHealthyDesc : "Healthy balance for storefront operation.")}
           </p>
         </div>
 
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">
             <span>{isAmharic ? t.billing.totalDispatchedCard : "Total SMS Dispatched"}</span>
             <Receipt className="w-4 h-4 text-slate-400" />
           </div>
-          <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-4xl md:text-5xl font-black text-slate-900 dark:text-slate-100">
+          <div className="mt-3 flex items-baseline gap-1.5">
+            <span className="text-2xl font-bold text-slate-900 dark:text-slate-100 tabular-nums">
               {loading ? "..." : balance?.smsCreditsUsed ?? 0}
             </span>
-            <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+            <span className="text-xs font-medium text-slate-400">
               {isAmharic ? t.billing.sentLabel : "Sent"}
             </span>
           </div>
           <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-            {isAmharic ? t.billing.realSmsDeliveredDesc : "Real SMS messages delivered to buyers and sellers via SMSHub."}
+            {isAmharic ? t.billing.realSmsDeliveredDesc : "Real SMS messages delivered via SMSHub."}
           </p>
         </div>
 
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">
             <span>{isAmharic ? t.billing.supportedGatewaysCard : "Supported Gateways"}</span>
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
           </div>
-          <div className="mt-3 space-y-2">
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>{isAmharic ? t.billing.telebirrGateway : "Telebirr (Ethiopian Mobile Money)"}</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
-              <span className="w-2 h-2 rounded-full bg-sky-500" />
-              <span>{isAmharic ? t.billing.cbeBirrGateway : "CBE Birr & Commercial Bank"}</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
-              <span className="w-2 h-2 rounded-full bg-violet-500" />
-              <span>{isAmharic ? t.billing.cardsGateway : "Visa / Mastercard / Awash"}</span>
-            </div>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              Telebirr
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+              CBE Birr
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-200/60 dark:border-violet-800/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+              Cards
+            </span>
           </div>
-          <p className="mt-3 text-[11px] text-slate-400 dark:text-slate-500">
-            {isAmharic ? t.billing.securedByChapaDesc : "Secured by Chapa Payment Gateway. Instant credit activation upon confirmation."}
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            {isAmharic ? t.billing.securedByChapaDesc : "Instant credit activation secured by Chapa."}
           </p>
         </div>
       </div>
 
       {/* Pricing Bundle Cards */}
-      <div className="space-y-4">
+      <div className="space-y-3 pt-2">
         <div>
-          <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-slate-100">
+          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
             {isAmharic ? t.billing.selectBundleTitle : "Select an SMS Bundle"}
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             {isAmharic ? t.billing.selectBundleSubtitle : "Choose the package that fits your shop volume. Credits never expire."}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {BILLING_PACKAGES.map((pkg) => {
             const isFeatured = pkg.id === "growth_200";
             const isBusy = purchasingId === pkg.id;
@@ -213,33 +209,33 @@ export function BillingClient() {
             return (
               <div
                 key={pkg.id}
-                className={`relative flex flex-col justify-between p-6 rounded-3xl transition-all duration-200 ${isFeatured
-                    ? "bg-slate-900 text-white dark:bg-slate-950 border-2 border-emerald-500 shadow-xl shadow-emerald-500/10 md:-translate-y-1.5"
+                className={`relative flex flex-col justify-between p-5 rounded-2xl transition-all duration-200 ${isFeatured
+                    ? "bg-slate-900 text-white dark:bg-slate-950 border-2 border-emerald-500 shadow-md shadow-emerald-500/10"
                     : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 shadow-xs"
                   }`}
               >
                 {pkg.badge && (
-                  <div className="absolute -top-3.5 right-6">
+                  <div className="absolute -top-2.5 right-4">
                     <span
-                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm ${isFeatured
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-xs ${isFeatured
                           ? "bg-emerald-500 text-white"
                           : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
                         }`}
                     >
-                      <Sparkles className="w-3 h-3" />
+                      <Sparkles className="w-2.5 h-2.5" />
                       <span>{isAmharic && pkg.badge === "Popular" ? "ተመራጭ" : isAmharic && pkg.badge === "Best Value" ? "ምርጥ ቅናሽ" : pkg.badge}</span>
                     </span>
                   </div>
                 )}
 
                 <div>
-                  <h3 className="text-lg font-bold">
+                  <h3 className="text-base font-bold">
                     {isAmharic
                       ? (pkg.id === "starter_50" ? t.billing.starterPack : pkg.id === "growth_200" ? t.billing.growthPack : pkg.id === "pro_500" ? t.billing.proPack : pkg.name)
                       : pkg.name}
                   </h3>
                   <p
-                    className={`text-xs mt-1 min-h-[32px] ${isFeatured
+                    className={`text-xs mt-1 min-h-[28px] ${isFeatured
                         ? "text-slate-300"
                         : "text-slate-500 dark:text-slate-400"
                       }`}
@@ -249,62 +245,58 @@ export function BillingClient() {
                       : pkg.description}
                   </p>
 
-                  <div className="mt-5 flex items-baseline gap-1.5">
-                    <span className="text-3xl md:text-4xl font-extrabold tracking-tight">
+                  <div className="mt-3 flex items-baseline gap-1.5">
+                    <span className="text-2xl font-bold tracking-tight">
                       {pkg.priceEtb}
                     </span>
-                    <span className="text-base font-semibold">ETB</span>
+                    <span className="text-xs font-semibold">ETB</span>
                     {pkg.discount && (
-                      <span className="ml-2 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                      <span className="ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                         {pkg.discount}
                       </span>
                     )}
                   </div>
 
-                  <div className="mt-2 text-xs font-medium text-slate-400">
+                  <div className="mt-1 text-xs font-medium text-slate-400">
                     <span>{pkg.credits} {isAmharic ? t.billing.smsCreditsUnit : "SMS Credits"}</span>
-                    <span className="mx-1.5">•</span>
+                    <span className="mx-1">•</span>
                     <span>{(pkg.priceEtb / pkg.credits).toFixed(2)} {isAmharic ? t.billing.etbPerSms : "ETB / SMS"}</span>
                   </div>
 
-                  <ul className="mt-6 space-y-2.5 text-xs">
-                    <li className="flex items-center gap-2">
-                      <Check className={`w-4 h-4 ${isFeatured ? "text-emerald-400" : "text-emerald-500"}`} />
+                  <ul className="mt-4 space-y-1.5 text-xs">
+                    <li className="flex items-center gap-1.5">
+                      <Check className={`w-3.5 h-3.5 flex-shrink-0 ${isFeatured ? "text-emerald-400" : "text-emerald-500"}`} />
                       <span>{isAmharic ? t.billing.featInstantTopUp : "Instant balance top-up"}</span>
                     </li>
-                    <li className="flex items-center gap-2">
-                      <Check className={`w-4 h-4 ${isFeatured ? "text-emerald-400" : "text-emerald-500"}`} />
+                    <li className="flex items-center gap-1.5">
+                      <Check className={`w-3.5 h-3.5 flex-shrink-0 ${isFeatured ? "text-emerald-400" : "text-emerald-500"}`} />
                       <span>{isAmharic ? t.billing.featGateways : "Telebirr, CBE Birr & Cards"}</span>
                     </li>
-                    <li className="flex items-center gap-2">
-                      <Check className={`w-4 h-4 ${isFeatured ? "text-emerald-400" : "text-emerald-500"}`} />
-                      <span>{isAmharic ? t.billing.featNoExpiration : "No monthly expiration date"}</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className={`w-4 h-4 ${isFeatured ? "text-emerald-400" : "text-emerald-500"}`} />
-                      <span>{isAmharic ? t.billing.featReceipts : "Real-time delivery receipts"}</span>
+                    <li className="flex items-center gap-1.5">
+                      <Check className={`w-3.5 h-3.5 flex-shrink-0 ${isFeatured ? "text-emerald-400" : "text-emerald-500"}`} />
+                      <span>{isAmharic ? t.billing.featNoExpiration : "No monthly expiration"}</span>
                     </li>
                   </ul>
                 </div>
 
-                <div className="mt-8 pt-4 border-t border-slate-200/20 dark:border-slate-800">
+                <div className="mt-5 pt-3 border-t border-slate-200/20 dark:border-slate-800">
                   <button
                     onClick={() => handleBuyPackage(pkg)}
                     disabled={isBusy || loading}
-                    className={`w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${isFeatured
-                        ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20 disabled:opacity-50"
+                    className={`w-full py-2.5 px-3 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 transition-all ${isFeatured
+                        ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-sm disabled:opacity-50"
                         : "bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:opacity-50"
                       }`}
                   >
                     {isBusy ? (
                       <>
-                        <RotateCw className="w-4 h-4 animate-spin" />
-                        <span>{isAmharic ? t.billing.connectingToChapa : "Connecting to Chapa..."}</span>
+                        <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>{isAmharic ? t.billing.connectingToChapa : "Connecting..."}</span>
                       </>
                     ) : (
                       <>
                         <span>{isAmharic ? t.billing.buyWithChapaBtn : "Buy with Chapa"}</span>
-                        <ArrowRight className="w-4 h-4" />
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </>
                     )}
                   </button>
@@ -316,14 +308,14 @@ export function BillingClient() {
       </div>
 
       {/* Transaction History */}
-      <div className="space-y-4 pt-6">
+      <div className="space-y-3 pt-2">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
               {isAmharic ? t.billing.transactionsTitle : "Payment & Top-Up History"}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              {isAmharic ? t.billing.auditHistoryDesc : "Audit record of your previous Chapa transactions and purchased credits."}
+              {isAmharic ? t.billing.auditHistoryDesc : "Audit record of your previous transactions."}
             </p>
           </div>
           <button

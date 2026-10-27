@@ -9,9 +9,9 @@ export default function StorefrontNotFound() {
           <Store className="w-7 h-7" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Shop Not Found</h1>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Storefront Unavailable</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-            We couldn&apos;t find a storefront at this address. The seller may have changed their shop link, or the address was typed incorrectly.
+            We couldn&apos;t find an active Snapcart store at this link. The seller may have updated their link, or the address was typed incorrectly.
           </p>
         </div>
         <div className="pt-2">

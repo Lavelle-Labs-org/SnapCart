@@ -31,6 +31,8 @@ import {
   loginSchema,
   UpdateSettingsDto,
   updateSettingsSchema,
+  ChangePasswordDto,
+  changePasswordSchema,
 } from "./auth.types";
 
 function slugify(text: string): string {
@@ -727,6 +729,80 @@ export class AuthService {
         logo_url: null,
         createdAt: updatedSeller.created_at.toISOString(),
       },
+    };
+  }
+
+  /**
+   * Updates a seller's password after verifying their current password.
+   */
+  async changePassword(
+    sellerId: string,
+    dto: ChangePasswordDto
+  ): Promise<{ success: boolean; message: string }> {
+    if (!sellerId) {
+      throw new HttpException(
+        {
+          code: "UNAUTHORIZED",
+          message: "Seller identification required",
+        },
+        HttpStatus.UNAUTHORIZED
+      );
+    }
+
+    const parseResult = changePasswordSchema.safeParse(dto);
+    if (!parseResult.success) {
+      const firstError =
+        (parseResult.error as any).issues?.[0]?.message ||
+        (parseResult.error as any).errors?.[0]?.message ||
+        "Invalid password input";
+      throw new HttpException(
+        {
+          code: "VALIDATION_ERROR",
+          message: firstError,
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    const { currentPassword, newPassword } = parseResult.data;
+
+    const seller = await this.prisma.seller.findUnique({
+      where: { id: sellerId },
+    });
+
+    if (!seller) {
+      throw new HttpException(
+        {
+          code: "NOT_FOUND",
+          message: "Seller not found",
+        },
+        HttpStatus.NOT_FOUND
+      );
+    }
+
+    const passwordMatch = await verifyPassword(currentPassword, seller.password_hash);
+    if (!passwordMatch) {
+      throw new HttpException(
+        {
+          code: "INVALID_CURRENT_PASSWORD",
+          message: "Current password is incorrect",
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    const newPasswordHash = await hashPassword(newPassword);
+
+    await this.prisma.seller.update({
+      where: { id: sellerId },
+      data: {
+        password_hash: newPasswordHash,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Password updated successfully",
     };
   }
 }

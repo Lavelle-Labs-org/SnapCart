@@ -91,7 +91,11 @@ export function VerifyOtpForm({
   const handleVerify = async (codeToVerify: string) => {
     const trimmedCode = codeToVerify.trim();
     if (!/^\d{6}$/.test(trimmedCode)) {
-      setErrorMessage("Please enter the complete 6-digit code.");
+      setErrorMessage(
+        isAmharic
+          ? "እባክዎ ባለ 6 ዲጂት ኮድ ያስገቡ።"
+          : "Please enter the complete 6-digit code."
+      );
       return;
     }
 
@@ -112,10 +116,13 @@ export function VerifyOtpForm({
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
+        const defaultError = isAmharic
+          ? "የተሳሳተ ወይም ጊዜው ያለፈበት ኮድ ነው። እባክዎ እንደገና ይሞክሩ።"
+          : "Invalid or expired verification code. Please check and try again.";
         const errorMsg =
           data?.error?.message ||
           data?.message ||
-          "Invalid or expired verification code. Please check and try again.";
+          defaultError;
         setErrorMessage(errorMsg);
         setIsSubmitting(false);
         return;
@@ -125,10 +132,11 @@ export function VerifyOtpForm({
       // Clear client cart from localStorage
       try {
         if (typeof window !== "undefined") {
+          localStorage.removeItem(`snapcart_cart_${slug}`);
           localStorage.removeItem(`order_by_sms_cart_${slug}`);
         }
-      } catch (storageErr) {
-        console.warn("Could not clear localStorage cart:", storageErr);
+      } catch {
+        // Ignore localStorage clear errors
       }
 
       const orderNumber = data.orderNumber ?? data.data?.orderNumber ?? "";
@@ -149,7 +157,10 @@ export function VerifyOtpForm({
       router.push(targetUrl);
     } catch (err: any) {
       setErrorMessage(
-        err?.message || "Network error. Please check your connection and try again."
+        err?.message ||
+          (isAmharic
+            ? "የኔትወርክ ችግር አጋጥሟል። እባክዎ ኢንተርኔትዎን ይፈትሹና እንደገና ይሞክሩ።"
+            : "Network error. Please check your connection and try again.")
       );
       setIsSubmitting(false);
     }
@@ -189,7 +200,9 @@ export function VerifyOtpForm({
         const errorMsg =
           data?.error?.message ||
           data?.message ||
-          "Failed to resend code. Please try again shortly.";
+          (isAmharic
+            ? "ኮድ እንደገና መላክ አልተቻለም። እባክዎ ከጥቂት ደቂቃዎች በኋላ ይሞክሩ።"
+            : "Failed to resend code. Please try again shortly.");
         setErrorMessage(errorMsg);
 
         if (data?.retryAfter) {
@@ -202,14 +215,21 @@ export function VerifyOtpForm({
       // Successful resend: reset 60-second cooldown
       const retryAfter = data?.retryAfter ?? data?.data?.retryAfter ?? 60;
       setCooldown(retryAfter);
-      setSuccessMessage("New 6-digit verification code sent via SMS.");
+      setSuccessMessage(
+        isAmharic
+          ? "አዲስ ባለ 6 ድጂት ማረጋገጫ ኮድ በኤስኤምኤስ ተልኳል።"
+          : "New 6-digit verification code sent via SMS."
+      );
       setCode("");
       if (inputRef.current) {
         inputRef.current.focus();
       }
     } catch (err: any) {
       setErrorMessage(
-        err?.message || "Network error while requesting new code. Please try again."
+        err?.message ||
+          (isAmharic
+            ? "አዲስ ኮድ መጠየቅ አልተቻለም። እባክዎ እንደገና ይሞክሩ።"
+            : "Network error while requesting new code. Please try again.")
       );
     } finally {
       setIsResending(false);
@@ -252,18 +272,19 @@ export function VerifyOtpForm({
           <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">
             {isAmharic ? (
               <>
-                የኤስኤምኤስ ማረጋገጫ ኮድ ወደ{" "}
+                የትዕዛዝ ማረጋገጫ ኮድ ወደ{" "}
                 <span className="font-semibold text-slate-800 dark:text-slate-100">
                   {formatDisplayPhone(phone)}
                 </span>{" "}
-                ልከናል
+                በኤስኤምኤስ ልከናል
               </>
             ) : (
               <>
-                We sent an SMS verification code to{" "}
+                We texted a 6-digit confirmation code to{" "}
                 <span className="font-semibold text-slate-800 dark:text-slate-100">
                   {formatDisplayPhone(phone)}
                 </span>
+                . Enter it below to confirm your order in a snap.
               </>
             )}
           </p>
@@ -375,8 +396,8 @@ export function VerifyOtpForm({
           <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
           <span>
             {isAmharic
-              ? "ኮዱ የሚያገለግለው ለ 5 ደቂቃ ብቻ ነው። የይለፍ ቃል አያስፈልግም።"
-              : "Code expires in 5 minutes. No password required."}
+              ? "በSnapcart የተረጋገጠ • ኮዱ የሚያገለግለው ለ 5 ደቂቃ ብቻ ነው። የይለፍ ቃል አያስፈልግም።"
+              : "Snapcart verified • Code expires in 5 minutes • No password needed"}
           </span>
         </div>
       </main>
@@ -395,7 +416,7 @@ export function VerifyOtpForm({
               <span>{isAmharic ? "እያረጋገጠ ነው..." : "Verifying & Placing Order..."}</span>
             </>
           ) : (
-            <span>{isAmharic ? "አረጋግጥና እዘዝ" : "Confirm & Place Order"}</span>
+            <span>{isAmharic ? "አረጋግጥና እዘዝ" : "Confirm & Seal Order"}</span>
           )}
         </button>
       </footer>

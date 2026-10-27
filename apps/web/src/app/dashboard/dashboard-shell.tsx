@@ -78,7 +78,9 @@ export function DashboardShell({
   // Restore collapsed state from localStorage on client mount
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("order_by_sms_sidebar_collapsed");
+      const stored =
+        localStorage.getItem("snapcart_sidebar_collapsed") ??
+        localStorage.getItem("order_by_sms_sidebar_collapsed");
       if (stored === "true") {
         setIsCollapsed(true);
       }
@@ -91,7 +93,7 @@ export function DashboardShell({
     setIsCollapsed((prev) => {
       const next = !prev;
       try {
-        localStorage.setItem("order_by_sms_sidebar_collapsed", String(next));
+        localStorage.setItem("snapcart_sidebar_collapsed", String(next));
       } catch {
         // Ignore localStorage errors
       }
