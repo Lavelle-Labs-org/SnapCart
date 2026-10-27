@@ -16,6 +16,7 @@ import {
   Upload,
   Trash2,
   Image as ImageIcon,
+  KeyRound,
 } from "lucide-react";
 import {
   calculateSmsSegments,
@@ -199,6 +200,14 @@ export default function SettingsClient({
   const [logoStatus, setLogoStatus] = useState<"idle" | "success" | "error">("idle");
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordStatus, setPasswordStatus] = useState<"idle" | "success" | "error">("idle");
+  const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
+
   const slug = initialSeller.slug || "shop";
   const [storefrontUrl, setStorefrontUrl] = useState(() => getStorefrontUrl(slug, baseUrl));
 
@@ -371,6 +380,72 @@ export default function SettingsClient({
       setSaveMessage(err?.message || "Network error while saving settings.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordMessage(null);
+
+    if (!currentPassword) {
+      setPasswordStatus("error");
+      setPasswordMessage(isAmharic ? "እባክዎ አሁን ያለዎትን የይለፍ ቃል ያስገቡ" : "Please enter your current password");
+      return;
+    }
+
+    if (newPassword.length < 10) {
+      setPasswordStatus("error");
+      setPasswordMessage(isAmharic ? t.settings.passwordMinLength : "New password must be at least 10 characters long");
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setPasswordStatus("error");
+      setPasswordMessage(isAmharic ? t.settings.passwordMismatch : "New passwords do not match");
+      return;
+    }
+
+    setIsChangingPassword(true);
+    setPasswordStatus("idle");
+
+    try {
+      const res = await fetchFn("/api/settings/password", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+          confirmNewPassword,
+        }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(
+          data?.message ||
+          data?.error?.message ||
+          (isAmharic ? "የይለፍ ቃል መቀየር አልተቻለም" : "Failed to update password")
+        );
+      }
+
+      setPasswordStatus("success");
+      setPasswordMessage(isAmharic ? t.settings.passwordSuccess : "Password updated successfully!");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setTimeout(() => {
+        setPasswordStatus("idle");
+        setPasswordMessage(null);
+      }, 5000);
+    } catch (err: any) {
+      setPasswordStatus("error");
+      setPasswordMessage(
+        err?.message ||
+        (isAmharic ? "የይለፍ ቃል መቀየር አልተቻለም" : "Failed to update password")
+      );
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -716,6 +791,117 @@ export default function SettingsClient({
           </form>
         </div>
 
+        {/* Security & Password Card */}
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <div className="border-b border-slate-100 dark:border-slate-800 pb-2.5">
+            <h2 className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <KeyRound className="w-4 h-4 text-emerald-600" />
+              <span>{isAmharic ? t.settings.securitySection : "Security & Password"}</span>
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              {isAmharic ? t.settings.securitySubtitle : "Update your seller dashboard account login password."}
+            </p>
+          </div>
+
+          <form onSubmit={handlePasswordSubmit} className="space-y-4" noValidate>
+            <div>
+              <label
+                htmlFor="current-password"
+                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
+              >
+                {isAmharic ? t.settings.currentPassword : "Current Password"}
+              </label>
+              <input
+                id="current-password"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder={isAmharic ? t.settings.currentPasswordPlaceholder : "••••••••••"}
+                required
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 min-h-[44px]"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="new-password"
+                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
+              >
+                {isAmharic ? t.settings.newPassword : "New Password"}
+              </label>
+              <input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder={isAmharic ? t.settings.newPasswordPlaceholder : "••••••••••"}
+                required
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 min-h-[44px]"
+              />
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
+                {isAmharic ? "ቢያንስ 10 ፊደላት ወይም ቁጥሮች መሆን አለበት" : "Must be at least 10 characters long"}
+              </p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="confirm-password"
+                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
+              >
+                {isAmharic ? t.settings.confirmNewPassword : "Confirm New Password"}
+              </label>
+              <input
+                id="confirm-password"
+                type="password"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                placeholder={isAmharic ? t.settings.confirmPasswordPlaceholder : "••••••••••"}
+                required
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 min-h-[44px]"
+              />
+            </div>
+
+            {passwordStatus === "success" && (
+              <div
+                id="password-success-banner"
+                className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center space-x-2 text-xs text-emerald-800 dark:text-emerald-300"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                <span>{passwordMessage}</span>
+              </div>
+            )}
+
+            {passwordStatus === "error" && (
+              <div
+                id="password-error-banner"
+                className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl flex items-center space-x-2 text-xs text-rose-800 dark:text-rose-300"
+              >
+                <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 flex-shrink-0" />
+                <span>{passwordMessage}</span>
+              </div>
+            )}
+
+            <button
+              id="change-password-btn"
+              type="submit"
+              disabled={isChangingPassword || !currentPassword || !newPassword || !confirmNewPassword}
+              className="w-full flex items-center justify-center space-x-2 px-5 py-3 rounded-xl font-medium text-sm transition min-h-[44px] shadow-sm bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 text-white disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed"
+            >
+              {isChangingPassword ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{isAmharic ? t.settings.updatingPassword : "Updating..."}</span>
+                </>
+              ) : (
+                <>
+                  <KeyRound className="w-4 h-4" />
+                  <span>{isAmharic ? t.settings.updatePassword : "Change Password"}</span>
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
         {/* Live Preview Column */}
         <div className="lg:col-span-6 space-y-4">
           <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
@@ -724,9 +910,6 @@ export default function SettingsClient({
                 <MessageSquare className="w-4 h-4 text-emerald-600" />
                 <span>{isAmharic ? t.settings.previewTitle : "Live SMS Template Previewer"}</span>
               </h2>
-              <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800/60">
-                Snapcart Engine
-              </span>
             </div>
 
             <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -796,103 +979,6 @@ export default function SettingsClient({
               <div className="text-[11px] text-slate-500 dark:text-slate-400 italic">
                 {isAmharic ? t.settings.legalSignatureNotice : "+ Default verified legal signature (~25 chars) appended by SMSHub upon dispatch"}
               </div>
-            </div>
-
-            {/* Metrics Breakdown Card */}
-            <div
-              id="sms-metrics-card"
-              className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3"
-            >
-              <div className="grid grid-cols-2 gap-4">
-                {/* Encoding Metric */}
-                <div>
-                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
-                    {isAmharic ? t.settings.encodingLabel : "Encoding"}
-                  </span>
-                  <div className="flex items-center space-x-1.5">
-                    <span
-                      id="preview-encoding-badge"
-                      className={`px-2.5 py-0.5 rounded-full text-xs font-bold inline-block ${
-                        smsAnalysis.encoding === "GSM-7"
-                          ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                          : "bg-amber-100 text-amber-800 border border-amber-200"
-                      }`}
-                    >
-                      {smsAnalysis.encoding}
-                    </span>
-                    <span className="text-[11px] text-slate-400">
-                      {smsAnalysis.encoding === "GSM-7"
-                        ? (isAmharic ? t.settings.standardEncoding : "Standard")
-                        : (isAmharic ? t.settings.unicodeEncoding : "Unicode")}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Segments Metric */}
-                <div>
-                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
-                    {isAmharic ? t.settings.estimatedSegmentsLabel : "Estimated Segments"}
-                  </span>
-                  <span
-                    id="preview-segments-badge"
-                    className={`text-xs font-semibold ${
-                      smsAnalysis.exceedsSingleSegment
-                        ? "text-rose-600 font-bold"
-                        : "text-slate-800"
-                    }`}
-                  >
-                    {smsAnalysis.segments} {smsAnalysis.segments === 1 ? (isAmharic ? t.settings.segmentUnit : "segment") : (isAmharic ? t.settings.segmentsUnit : "segments")}
-                  </span>
-                </div>
-              </div>
-
-              {/* Character Progress Bar */}
-              <div className="space-y-1.5 pt-1">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-medium text-slate-700">
-                    {isAmharic ? t.settings.lengthLabel : "Length"}
-                  </span>
-                  <span
-                    id="preview-character-counter"
-                    className="font-mono font-bold text-slate-900"
-                  >
-                    {smsAnalysis.characterCount} / {smsAnalysis.singleSegmentLimit} {isAmharic ? t.settings.charsUnit : "chars"}
-                  </span>
-                </div>
-
-                <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                  <div
-                    className={`h-full transition-all duration-300 ${
-                      smsAnalysis.exceedsSingleSegment
-                        ? "bg-rose-500"
-                        : smsAnalysis.characterCount >= smsAnalysis.singleSegmentLimit * 0.9
-                        ? "bg-amber-500"
-                        : "bg-emerald-500"
-                    }`}
-                    style={{
-                      width: `${Math.min(
-                        100,
-                        (smsAnalysis.characterCount / smsAnalysis.singleSegmentLimit) * 100
-                      )}%`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Multi-segment warning if exceeded */}
-              {smsAnalysis.exceedsSingleSegment && (
-                <div
-                  id="preview-segment-warning"
-                  className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800 flex items-center space-x-2"
-                >
-                  <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
-                  <span>
-                    {isAmharic
-                      ? t.settings.segmentWarning(smsAnalysis.singleSegmentLimit, smsAnalysis.segments)
-                      : `Exceeds single SMS segment limit (${smsAnalysis.singleSegmentLimit} chars). Telecommunication networks will bill this message as ${smsAnalysis.segments} segments.`}
-                  </span>
-                </div>
-              )}
             </div>
           </div>
         </div>

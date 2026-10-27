@@ -16,7 +16,7 @@ import { AuthService } from "./auth.service";
 import { SellerAuthGuard } from "./auth.guard";
 import { CurrentSeller } from "./current-seller.decorator";
 import type { Seller } from "@prisma/client";
-import type { UpdateSettingsDto } from "./auth.types";
+import type { UpdateSettingsDto, ChangePasswordDto } from "./auth.types";
 
 /**
  * Settings Controller (PR-012, Issue #131).
@@ -55,6 +55,24 @@ export class SettingsController {
     @Body() dto: UpdateSettingsDto
   ) {
     return this.authService.updateSettings(seller.id, dto);
+  }
+
+  @Patch("password")
+  @UseGuards(SellerAuthGuard)
+  async changePasswordPatch(
+    @CurrentSeller() seller: Seller,
+    @Body() dto: ChangePasswordDto
+  ) {
+    return this.authService.changePassword(seller.id, dto);
+  }
+
+  @Post("password")
+  @UseGuards(SellerAuthGuard)
+  async changePasswordPost(
+    @CurrentSeller() seller: Seller,
+    @Body() dto: ChangePasswordDto
+  ) {
+    return this.authService.changePassword(seller.id, dto);
   }
 
   @Post("profile-image")

@@ -459,10 +459,18 @@ export interface TranslationSchema {
     previewTitle: string;
     previewSubtitle: string;
     securitySection: string;
+    securitySubtitle: string;
     currentPassword: string;
+    currentPasswordPlaceholder: string;
     newPassword: string;
+    newPasswordPlaceholder: string;
     confirmNewPassword: string;
+    confirmPasswordPlaceholder: string;
     updatePassword: string;
+    updatingPassword: string;
+    passwordSuccess: string;
+    passwordMismatch: string;
+    passwordMinLength: string;
     linksSection: string;
     copyStoreLink: string;
     copyBioText: string;

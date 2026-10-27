@@ -284,5 +284,21 @@ describe("SettingsClient Logic & Component (FE-013, Issue #36)", () => {
       expect(html).toContain("https://r2.orderbysms.et/profiles/seller-101/avatar.png");
       expect(html).toContain("id=\"remove-profile-picture-btn\"");
     });
+
+    it("renders password change section and does not render GSM metrics or Snapcart Engine label", () => {
+      const { renderToString } = require("react-dom/server");
+      const html = renderToString(<SettingsClient initialSeller={mockSeller} />);
+
+      // Password change form
+      expect(html).toContain("id=\"current-password\"");
+      expect(html).toContain("id=\"new-password\"");
+      expect(html).toContain("id=\"confirm-password\"");
+      expect(html).toContain("id=\"change-password-btn\"");
+
+      // Removed unwanted text/metrics
+      expect(html).not.toContain("Snapcart Engine");
+      expect(html).not.toContain("id=\"sms-metrics-card\"");
+      expect(html).not.toContain("Estimated Segments");
+    });
   });
 });

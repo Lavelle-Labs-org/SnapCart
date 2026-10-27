@@ -25,6 +25,7 @@ import type {
   VerifyPhoneDto,
   LoginDto,
   UpdateSettingsDto,
+  ChangePasswordDto,
 } from "./auth.types";
 import type { Seller } from "@prisma/client";
 
@@ -107,6 +108,24 @@ export class AuthController {
     @Body() dto: UpdateSettingsDto
   ) {
     return this.authService.updateSettings(seller.id, dto);
+  }
+
+  @Patch("password")
+  @UseGuards(SellerAuthGuard)
+  async changePasswordPatch(
+    @CurrentSeller() seller: Seller,
+    @Body() dto: ChangePasswordDto
+  ) {
+    return this.authService.changePassword(seller.id, dto);
+  }
+
+  @Post("password")
+  @UseGuards(SellerAuthGuard)
+  async changePasswordPost(
+    @CurrentSeller() seller: Seller,
+    @Body() dto: ChangePasswordDto
+  ) {
+    return this.authService.changePassword(seller.id, dto);
   }
 
   @Post("profile-image")

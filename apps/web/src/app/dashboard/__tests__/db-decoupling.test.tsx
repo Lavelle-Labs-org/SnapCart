@@ -83,18 +83,25 @@ import OrderDetailPage from "../orders/[id]/page";
 import SettingsPage from "../settings/page";
 import DashboardLayout from "../layout";
 
+import { renderToString } from "react-dom/server";
+
 // Helper to recursively extract text from JSX tree
 function extractText(node: any): string {
   if (!node) return "";
-  if (typeof node === "string" || typeof node === "number") return String(node);
-  if (Array.isArray(node)) return node.map(extractText).join(" ");
-  const parts: string[] = [];
-  if (node.props?.displayName) parts.push(String(node.props.displayName));
-  if (node.props?.displaySubtitle) parts.push(String(node.props.displaySubtitle));
-  if (node.props?.seller?.business_name) parts.push(String(node.props.seller.business_name));
-  if (node.props?.seller?.slug) parts.push(`@${node.props.seller.slug}`);
-  if (node.props?.children) parts.push(extractText(node.props.children));
-  return parts.join(" ");
+  try {
+    const html = renderToString(node);
+    return html.replace(/<[^>]+>/g, " ");
+  } catch {
+    if (typeof node === "string" || typeof node === "number") return String(node);
+    if (Array.isArray(node)) return node.map(extractText).join(" ");
+    const parts: string[] = [];
+    if (node.props?.displayName) parts.push(String(node.props.displayName));
+    if (node.props?.displaySubtitle) parts.push(String(node.props.displaySubtitle));
+    if (node.props?.seller?.business_name) parts.push(String(node.props.seller.business_name));
+    if (node.props?.seller?.slug) parts.push(`@${node.props.seller.slug}`);
+    if (node.props?.children) parts.push(extractText(node.props.children));
+    return parts.join(" ");
+  }
 }
 
 describe("Next.js Server Components Database Decoupling (PR-010, Issue #129)", () => {

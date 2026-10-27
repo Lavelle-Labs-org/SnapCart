@@ -39,6 +39,7 @@ describe("Settings Routes (PR-012, Issue #131)", () => {
       logout: vi.fn(),
       uploadProfileImage: vi.fn(),
       deleteProfileImage: vi.fn(),
+      changePassword: vi.fn(),
     };
 
     settingsController = new SettingsController(authServiceMock);
@@ -107,6 +108,26 @@ describe("Settings Routes (PR-012, Issue #131)", () => {
       expect(authServiceMock.deleteProfileImage).toHaveBeenCalledWith("seller-123");
       expect(result.seller.logoUrl).toBeNull();
     });
+
+    it("delegates to authService.changePassword on PATCH and POST /api/settings/password", async () => {
+      authServiceMock.changePassword.mockResolvedValue({
+        success: true,
+        message: "Password updated successfully",
+      });
+
+      const dto = {
+        currentPassword: "oldPassword123",
+        newPassword: "newSecurePassword456",
+        confirmNewPassword: "newSecurePassword456",
+      };
+
+      const resultPatch = await settingsController.changePasswordPatch(mockSeller, dto as any);
+      expect(authServiceMock.changePassword).toHaveBeenCalledWith("seller-123", dto);
+      expect(resultPatch.success).toBe(true);
+
+      const resultPost = await settingsController.changePasswordPost(mockSeller, dto as any);
+      expect(resultPost.success).toBe(true);
+    });
   });
 
   describe("AuthController (/api/auth/settings)", () => {
@@ -167,6 +188,25 @@ describe("Settings Routes (PR-012, Issue #131)", () => {
 
       expect(authServiceMock.deleteProfileImage).toHaveBeenCalledWith("seller-123");
       expect(result.seller.logoUrl).toBeNull();
+    });
+
+    it("delegates to authService.changePassword on PATCH and POST /api/auth/password", async () => {
+      authServiceMock.changePassword.mockResolvedValue({
+        success: true,
+        message: "Password updated successfully",
+      });
+
+      const dto = {
+        currentPassword: "oldPassword123",
+        newPassword: "newSecurePassword456",
+      };
+
+      const resultPatch = await authController.changePasswordPatch(mockSeller, dto as any);
+      expect(authServiceMock.changePassword).toHaveBeenCalledWith("seller-123", dto);
+      expect(resultPatch.success).toBe(true);
+
+      const resultPost = await authController.changePasswordPost(mockSeller, dto as any);
+      expect(resultPost.success).toBe(true);
     });
   });
 });
