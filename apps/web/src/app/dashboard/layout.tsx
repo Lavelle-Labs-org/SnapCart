@@ -70,7 +70,7 @@ export default async function DashboardLayout({
     // Outside request context
   }
 
-  const displayName = seller?.business_name || "Order-by-SMS";
+  const displayName = seller?.business_name || "Snapcart";
   const displaySubtitle = seller?.slug ? `@${seller.slug}` : "Seller Portal";
 
   return (

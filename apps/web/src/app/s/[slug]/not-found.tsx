@@ -20,7 +20,7 @@ export default function StorefrontNotFound() {
             className="inline-flex items-center justify-center space-x-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition text-sm shadow-xs"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Return to Order-by-SMS</span>
+            <span>Return to Snapcart</span>
           </Link>
         </div>
       </div>

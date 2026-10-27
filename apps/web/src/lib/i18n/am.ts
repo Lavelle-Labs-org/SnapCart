@@ -21,7 +21,7 @@ export const am: TranslationSchema = {
     viewDetails: "ዝርዝር ይመልከቱ",
     copy: "ሊንክ ቅዳ",
     copied: "ተቀድቷል!",
-    poweredBy: "በOrder-by-SMS የተጎላበተ",
+    poweredBy: "በSnapcart የተጎላበተ",
   },
   storefront: {
     searchPlaceholder: "እቃዎችን ይፈልጉ...",
@@ -159,7 +159,7 @@ export const am: TranslationSchema = {
     mockupPickupCode: "የመረከቢያ ኮድ:",
     mockupCryptoSecurity: "በክሪፕቶግራፊ የተጠበቁ አገናኞች ያልተፈቀደ እርምጃን ይከላከላሉ።",
     howItWorksBadge: "ቀላል ባለ 3-ደረጃ ሂደት",
-    howItWorksTitle: "ኦርደር-ባይ-ኤስኤምኤስ እንዴት ይሰራል?",
+    howItWorksTitle: "ስናፕካርት እንዴት ይሰራል?",
     howItWorksSubtitle: "የመደብር ሊንክ ከማጋራት ጀምሮ እቃ እስከማስረከብ ድረስ፣ መተግበሪያ ሳያወርዱ ወይም ቀኑን ሙሉ ዳሽቦርድ ላይ ሳይቀመጡ ንግድዎን ይምሩ።",
     step1Title: "የመደብርዎን ሊንክ ያጋሩ",
     step1Desc: "የንግድ ስምዎን እና እቃዎችዎን በደቂቃዎች ውስጥ ይመዝግቡ። በቴሌግራም ቻናሎች ወይም ኢንስታግራም ባዮ ላይ በቀጥታ የሚጋራ እንደ /s/your-shop ያለ ፈጣን ሊንክ ያገኛሉ።",
@@ -187,7 +187,7 @@ export const am: TranslationSchema = {
     feature6Desc: "የቴሌኮም ህግጋትን ሙሉ በሙሉ ያከበረ። ትዕዛዝ በሚሰጥበት ወቅት የደንበኛ ግልጽ ፈቃድ ይሰበስባል፤ በቀላሉ የማቆም አማራጭም አለው።",
     faqBadge: "ተደጋግመው የሚጠየቁ ጥያቄዎች",
     faqTitle: "ስለ ስርዓቱ ማወቅ የሚገባዎ ሁሉ",
-    faqSubtitle: "ኦርደር-ባይ-ኤስኤምኤስ በኢትዮጵያ ውስጥ ለነጋዴዎችና ለገዢዎች እንዴት እንደሚሰራ ግልጽ ምላሾች።",
+    faqSubtitle: "ስናፕካርት በኢትዮጵያ ውስጥ ለነጋዴዎችና ለገዢዎች እንዴት እንደሚሰራ ግልጽ ምላሾች።",
     faqs: [
       {
         question: "ደንበኞቼ መተግበሪያ ማውረድ ወይም መለያ መክፈት አለባቸው?",
@@ -199,7 +199,7 @@ export const am: TranslationSchema = {
       },
       {
         question: "የትኞቹ የኢትዮጵያ የሞባይል ኔትወርኮች ይደገፋሉ?",
-        answer: "ኦርደር-ባይ-ኤስኤምኤስ በቀጥታ ከSMSHub.et ጋር የተገናኘ በመሆኑ የኢትዮ ቴሌኮም (09... እና 07...) እንዲሁም የሳፋሪኮም ኢትዮጵያ (07...) ቁጥሮችን በአስተማማኝ ሁኔታ ይደግፋል።",
+        answer: "ስናፕካርት በቀጥታ ከSMSHub.et ጋር የተገናኘ በመሆኑ የኢትዮ ቴሌኮም (09... እና 07...) እንዲሁም የሳፋሪኮም ኢትዮጵያ (07...) ቁጥሮችን በአስተማማኝ ሁኔታ ይደግፋል።",
       },
       {
         question: "ባለ 4-ዲጂት የመረከቢያ ኮድ ማረጋገጫው እንዴት ነው የሚሰራው?",
@@ -211,7 +211,7 @@ export const am: TranslationSchema = {
       },
     ],
     closingCtaTitle: "ትዕዛዞችን ያለምንም ውዥንብር ዛሬውኑ መቀበል ይጀምሩ።",
-    closingCtaSubtitle: "የትዕዛዝ ሂደታቸውን በኤስኤምኤስ በቀላሉ የሚመሩ የኢትዮጵያ የምግብ ቤቶች፣ ዳቦ ቤቶች፣ ካፌዎች እና ነጋዴዎችን ይቀላቀሉ።" ,
+    closingCtaSubtitle: "የትዕዛዝ ሂደታቸውን በኤስኤምኤስ በቀላሉ የሚመሩ የኢትዮጵያ የምግብ ቤቶች፣ ዳቦ ቤቶች፣ ካፌዎች እና ነጋዴዎችን ይቀላቀሉ።",
     closingCtaPrimary: "ነጻ መደብር ይክፈቱ",
     closingCtaSecondary: "የሙከራ መደብሩን ይመልከቱ",
     closingCtaDisclaimer: "በሁሉም ስልኮች ላይ ይሰራል • ኢትዮ ቴሌኮም እና ሳፋሪኮም • ደንበኞች ምንም መተግበሪያ ማውረድ አይጠበቅባቸውም",
@@ -224,7 +224,7 @@ export const am: TranslationSchema = {
     footerOptOut: "የኤስኤምኤስ ግላዊነትና ማቆሚያ",
     footerGateway: "የኤስኤምኤስ መተላለፊያ፡ SMSHub.et",
     footerCarriers: "አገልግሎት ሰጪዎች፡ ኢትዮ ቴሌኮም • ሳፋሪኮም",
-    footerCopyright: "© 2026 ኦርደር-ባይ-ኤስኤምኤስ። መብቱ በህግ የተጠበቀ ነው።",
+    footerCopyright: "© 2026 ስናፕካርት። መብቱ በህግ የተጠበቀ ነው።",
     footerDesignedFor: "በአዲስ አበባ፣ ኢትዮጵያ ውስጥ ለአካባቢው አነስተኛ ንግድ የተዘጋጀ።",
     footerRights: "መብቱ በህግ የተጠበቀ ነው። ለኢትዮጵያ ነጋዴዎች የተዘጋጀ።",
   },
@@ -398,7 +398,7 @@ export const am: TranslationSchema = {
     successNotice: "ክፍያው በተሳካ ሁኔታ ተፈጽሟል! የኤስኤምኤስ ክሬዲት ወደ ሂሳብዎ ተጨምሯል።",
     failedNotice: "ክፍያው አልተጠናቀቀም፤ እባክዎ እንደገና ይሞክሩ ወይም የደንበኞች አገልግሎትን ያነጋግሩ።",
     balanceTopUpTitle: "የኤስኤምኤስ ሂሳብና መሙያ",
-    balanceTopUpSubtitle: "ትዕዛዝ-በኤስኤምኤስ ለደንበኞችዎ የትዕዛዝ ሁኔታን፣ የመውሰጃ ኮዶችንና ማረጋገጫዎችን በቅጽበት በኢትዮ ቴሌኮም በኩል ለማሳወቅ የኤስኤምኤስ ክሬዲት ይጠቀማል።",
+    balanceTopUpSubtitle: "ስናፕካርት ለደንበኞችዎ የትዕዛዝ ሁኔታን፣ የመውሰጃ ኮዶችንና ማረጋገጫዎችን በቅጽበት በኢትዮ ቴሌኮም በኩል ለማሳወቅ የኤስኤምኤስ ክሬዲት ይጠቀማል።",
     unableToProcess: "ጥያቄውን ማስተናገድ አልተቻለም",
     remainingCreditsCard: "የቀሩ ክሬዲቶች",
     statusActive: "ንቁ",

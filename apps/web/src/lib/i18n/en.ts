@@ -21,7 +21,7 @@ export const en: TranslationSchema = {
     viewDetails: "View Details",
     copy: "Copy Link",
     copied: "Copied!",
-    poweredBy: "Powered by Order-by-SMS",
+    poweredBy: "Powered by Snapcart",
   },
   storefront: {
     searchPlaceholder: "Search products...",
@@ -159,7 +159,7 @@ export const en: TranslationSchema = {
     mockupPickupCode: "Pickup Code:",
     mockupCryptoSecurity: "Cryptographically signed links prevent unauthorized actions.",
     howItWorksBadge: "Simple 3-Step Flow",
-    howItWorksTitle: "How Order-by-SMS Works",
+    howItWorksTitle: "How Snapcart Works",
     howItWorksSubtitle: "From sharing a menu link to verifying pickup, run your business without downloading apps or checking dashboards all day.",
     step1Title: "Share Your Storefront Link",
     step1Desc: "Set up your business name and menu items in minutes. You get a lightweight shareable link like /s/your-shop ready to drop directly into Telegram channels or Instagram bios.",
@@ -187,7 +187,7 @@ export const en: TranslationSchema = {
     feature6Desc: "Fully compliant with telecom privacy standards. Order checkout collects explicit buyer SMS consent with automated opt-out stop handling.",
     faqBadge: "Frequently Asked Questions",
     faqTitle: "Everything You Need to Know",
-    faqSubtitle: "Straightforward answers on how Order-by-SMS operates for merchants and buyers across Ethiopia.",
+    faqSubtitle: "Straightforward answers on how Snapcart operates for merchants and buyers across Ethiopia.",
     faqs: [
       {
         question: "Do my customers need to install an app or create an account?",
@@ -199,7 +199,7 @@ export const en: TranslationSchema = {
       },
       {
         question: "Which mobile phone networks in Ethiopia are supported?",
-        answer: "Order-by-SMS integrates directly with SMSHub.et, providing high-reliability carrier delivery across both Ethio Telecom (09... and 07...) and Safaricom Ethiopia (07...) numbers with automated status callbacks.",
+        answer: "Snapcart integrates directly with SMSHub.et, providing high-reliability carrier delivery across both Ethio Telecom (09... and 07...) and Safaricom Ethiopia (07...) numbers with automated status callbacks.",
       },
       {
         question: "How does the 4-digit pickup code verification work?",
@@ -224,7 +224,7 @@ export const en: TranslationSchema = {
     footerOptOut: "SMS Privacy & Opt-Out",
     footerGateway: "SMS Gateway: SMSHub.et",
     footerCarriers: "Carriers: Ethio Telecom • Safaricom",
-    footerCopyright: "© 2026 Order-by-SMS. All rights reserved.",
+    footerCopyright: "© 2026 Snapcart. All rights reserved.",
     footerDesignedFor: "Designed for local micro-commerce in Addis Ababa, Ethiopia.",
     footerRights: "All rights reserved. Designed for Ethiopian Merchants.",
   },
@@ -398,7 +398,7 @@ export const en: TranslationSchema = {
     successNotice: "Payment successful! Your SMS credits have been added to your balance.",
     failedNotice: "Payment was not completed. Please try again or contact support.",
     balanceTopUpTitle: "SMS Balance & Top-Up",
-    balanceTopUpSubtitle: "Order-by-SMS uses metered SMS credits to notify your customers of order status, pickup codes, and acceptance in real time via Ethio telecom.",
+    balanceTopUpSubtitle: "Snapcart uses metered SMS credits to notify your customers of order status, pickup codes, and acceptance in real time via Ethio telecom.",
     unableToProcess: "Unable to process request",
     remainingCreditsCard: "Remaining Credits",
     statusActive: "Active",

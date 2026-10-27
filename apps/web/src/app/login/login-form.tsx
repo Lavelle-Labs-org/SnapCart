@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { normalizeEthiopianPhone } from "@order-by-sms/contracts";
 import { useTranslation } from "../../lib/i18n";
+import { SnapcartLogo } from "../../components/snapcart-logo";
 
 export interface LoginValidationErrors {
   phone?: string;
@@ -129,11 +130,8 @@ export function LoginForm() {
   return (
     <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm transition-colors duration-200">
       {/* Brand Header */}
-      <div className="flex items-center space-x-2 mb-6">
-        <div className="bg-emerald-600 text-white p-2 rounded-xl shadow-xs">
-          <MessageSquare className="w-5 h-5" />
-        </div>
-        <span className="font-bold text-xl text-slate-900 dark:text-slate-100">Order-by-SMS</span>
+      <div className="mb-6">
+        <SnapcartLogo variant="horizontal" size="sm" />
       </div>
 
       <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">

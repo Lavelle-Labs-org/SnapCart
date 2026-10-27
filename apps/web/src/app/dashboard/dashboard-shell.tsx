@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "../../lib/i18n";
 import { LanguageToggle } from "../../components/language-toggle";
+import { SnapcartIcon } from "../../components/snapcart-logo";
 
 export interface DashboardShellProps {
   seller?: {
@@ -134,9 +135,7 @@ export function DashboardShell({
           {/* Drawer Header */}
           <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <div className="flex items-center space-x-3 min-w-0">
-              <div className="bg-emerald-600 text-white p-2 rounded-xl flex-shrink-0 shadow-xs">
-                <MessageSquare className="w-5 h-5" />
-              </div>
+              <SnapcartIcon size="md" className="p-1 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs" />
               <div className="min-w-0 flex-1">
                 <span className="font-bold text-base block truncate text-slate-900 dark:text-slate-100" title={displayName}>
                   {displayName}
@@ -208,9 +207,7 @@ export function DashboardShell({
             }`}
           >
             <div className={`flex items-center space-x-3 min-w-0 ${isCollapsed ? "justify-center" : ""}`}>
-              <div className="bg-emerald-600 text-white p-2 rounded-xl flex-shrink-0 shadow-xs">
-                <MessageSquare className="w-5 h-5" />
-              </div>
+              <SnapcartIcon size="md" className="p-1 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs" />
               {!isCollapsed && (
                 <div className="min-w-0 flex-1">
                   <span className="font-bold text-sm block truncate text-slate-900 dark:text-slate-100" title={displayName}>

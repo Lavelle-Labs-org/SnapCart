@@ -102,7 +102,7 @@ export function BillingClient() {
           {isAmharic ? t.billing.balanceTopUpTitle : "SMS Balance & Top-Up"}
         </h1>
         <p className="text-slate-600 dark:text-slate-400 text-sm mt-1 max-w-2xl">
-          {isAmharic ? t.billing.balanceTopUpSubtitle : "Order-by-SMS uses metered SMS credits to notify your customers of order status, pickup codes, and acceptance in real time via Ethio telecom."}
+          {isAmharic ? t.billing.balanceTopUpSubtitle : "Snapcart uses metered SMS credits to notify your customers of order status, pickup codes, and acceptance in real time via Ethio telecom."}
         </p>
       </div>
 
