@@ -49,22 +49,15 @@ async function createTestToken(sellerId: string): Promise<string> {
     .sign(secretKey);
 }
 
-import DashboardLayout from "../layout";
+import { renderToString } from "react-dom/server";
+import { LanguageProvider } from "../../../lib/i18n";
 
-function findElements(node: any, predicate: (n: any) => boolean): any[] {
-  const results: any[] = [];
-  function traverse(current: any) {
-    if (!current) return;
-    if (predicate(current)) results.push(current);
-    if (Array.isArray(current)) {
-      current.forEach(traverse);
-    } else if (current.props?.children) {
-      traverse(current.props.children);
-    }
-  }
-  traverse(node);
-  return results;
-}
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/dashboard",
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
+}));
+
+import DashboardLayout from "../layout";
 
 describe("DashboardLayout Component (PR-009, Issue #128)", () => {
   beforeEach(() => {
@@ -84,11 +77,9 @@ describe("DashboardLayout Component (PR-009, Issue #128)", () => {
     const jsx = await DashboardLayout({ children: <div>Child Content</div> });
     expect(jsx).toBeDefined();
 
-    const links = findElements(jsx, (n) => n.type === "a" && n.props?.href?.includes("habesha-coffee"));
-    expect(links.length).toBeGreaterThan(0);
-
-    const storefrontLink = links[0];
-    // This will fail on the unpatched code because href is '/c/habesha-coffee'
-    expect(storefrontLink.props.href).toBe("/s/habesha-coffee");
+    // Render component to string with LanguageProvider
+    const html = renderToString(<LanguageProvider>{jsx}</LanguageProvider>);
+    expect(html).toContain('href="/s/habesha-coffee"');
+    expect(html).not.toContain('href="/c/habesha-coffee"');
   });
 });

@@ -16,6 +16,7 @@ import {
   ImageIcon,
 } from "lucide-react";
 import { toBirr, formatBirr } from "@order-by-sms/contracts";
+import { useTranslation } from "../../../lib/i18n";
 
 export interface ProductItem {
   id: string;
@@ -272,6 +273,7 @@ export async function deleteProductApi(
 
 export default function ProductManager({ initialProducts }: ProductManagerProps) {
   const router = useRouter();
+  const { t, isAmharic } = useTranslation();
   const [products, setProducts] = useState<ProductItem[]>(initialProducts);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
@@ -453,9 +455,11 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Products Catalog</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            {isAmharic ? t.products.catalogTitle : "Products Catalog"}
+          </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Manage item pricing in Birr and storefront availability.
+            {isAmharic ? t.products.catalogSubtitle : "Manage item pricing in Birr and storefront availability."}
           </p>
         </div>
         <button
@@ -464,7 +468,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
           className="inline-flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2.5 rounded-xl transition shadow-xs text-sm"
         >
           <Plus className="w-4 h-4" />
-          <span>Add Product</span>
+          <span>{isAmharic ? t.products.addProduct : "Add Product"}</span>
         </button>
       </div>
 
@@ -474,9 +478,11 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
           <div className="w-14 h-14 mx-auto mb-4 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center">
             <ShoppingBag className="w-7 h-7" />
           </div>
-          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">No products added yet</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
+            {isAmharic ? t.products.emptyTitle : "No products added yet"}
+          </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
-            Add items to your catalog with prices in Birr so buyers can view and purchase them from your storefront.
+            {isAmharic ? t.products.emptyDesc : "Add items to your catalog with prices in Birr so buyers can view and purchase them from your storefront."}
           </p>
           <button
             type="button"
@@ -484,7 +490,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
             className="inline-flex items-center space-x-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition shadow-xs"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Your First Product</span>
+            <span>{isAmharic ? t.products.addFirstProduct : "Add Your First Product"}</span>
           </button>
         </div>
       ) : (
@@ -524,13 +530,13 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                           ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/60"
                           : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
                         } disabled:opacity-50`}
-                      title="Click to toggle storefront availability"
+                      title={isAmharic ? "የመደብር ተደራሽነትን ለመቀየር ይጫኑ" : "Click to toggle storefront availability"}
                     >
                       <span
                         className={`w-2 h-2 rounded-full ${p.available ? "bg-emerald-500" : "bg-slate-400"
                           }`}
                       />
-                      <span>{p.available ? "Available" : "Hidden"}</span>
+                      <span>{p.available ? (isAmharic ? t.products.availableBadge : "Available") : (isAmharic ? t.products.hiddenBadge : "Hidden")}</span>
                     </button>
                   </div>
                   <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
@@ -540,7 +546,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                       className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition min-h-[40px]"
                     >
                       <Edit className="w-3.5 h-3.5" />
-                      <span>Edit</span>
+                      <span>{isAmharic ? t.products.editAction : "Edit"}</span>
                     </button>
                     <button
                       type="button"
@@ -548,7 +554,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                       className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 rounded-lg transition min-h-[40px]"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span>Delete</span>
+                      <span>{isAmharic ? t.products.deleteAction : "Delete"}</span>
                     </button>
                   </div>
                 </div>
@@ -561,10 +567,10 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
             <table className="w-full text-left text-sm text-slate-700 dark:text-slate-200">
               <thead className="bg-slate-50 dark:bg-slate-800/80 text-xs uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <th className="px-4 py-3">Product Name</th>
-                  <th className="px-4 py-3">Price (ETB)</th>
-                  <th className="px-4 py-3">Availability</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3">{isAmharic ? t.products.colName : "Product Name"}</th>
+                  <th className="px-4 py-3">{isAmharic ? t.products.colPrice : "Price (ETB)"}</th>
+                  <th className="px-4 py-3">{isAmharic ? t.products.colStatus : "Availability"}</th>
+                  <th className="px-4 py-3 text-right">{isAmharic ? t.products.colActions : "Actions"}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -603,13 +609,13 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                               ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/60"
                               : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
                             } disabled:opacity-50`}
-                          title="Click to toggle storefront availability"
+                          title={isAmharic ? "የመደብር ተደራሽነትን ለመቀየር ይጫኑ" : "Click to toggle storefront availability"}
                         >
                           <span
                             className={`w-2 h-2 rounded-full ${p.available ? "bg-emerald-500" : "bg-slate-400"
                               }`}
                           />
-                          <span>{p.available ? "Available" : "Hidden"}</span>
+                          <span>{p.available ? (isAmharic ? t.products.availableBadge : "Available") : (isAmharic ? t.products.hiddenBadge : "Hidden")}</span>
                         </button>
                       </td>
                       <td className="px-4 py-3.5 text-right space-x-1">
@@ -617,7 +623,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                           type="button"
                           onClick={() => openEditModal(p)}
                           className="p-1.5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
-                          title="Edit product"
+                          title={isAmharic ? t.products.editAction : "Edit product"}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
@@ -625,7 +631,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                           type="button"
                           onClick={() => setDeletingProduct(p)}
                           className="p-1.5 text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition"
-                          title="Delete product"
+                          title={isAmharic ? t.products.deleteAction : "Delete product"}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -655,7 +661,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
           >
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <h3 id="add-product-title" className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                Add New Product
+                {isAmharic ? t.products.modalAddTitle : "Add New Product"}
               </h3>
               <button
                 type="button"
@@ -680,7 +686,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                   htmlFor="add-product-name"
                   className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
                 >
-                  Product Name *
+                  {isAmharic ? `${t.products.nameLabel} *` : "Product Name *"}
                 </label>
                 <input
                   id="add-product-name"
@@ -688,7 +694,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                   required
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  placeholder="e.g. Special Habesha Doro Wat"
+                  placeholder={isAmharic ? "ለምሳሌ ልዩ የሀበሻ ዶሮ ወጥ" : "e.g. Special Habesha Doro Wat"}
                   className="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
@@ -698,7 +704,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                   htmlFor="add-product-price"
                   className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
                 >
-                  Price in Ethiopian Birr (ETB) *
+                  {isAmharic ? t.products.priceBirrLabel : "Price in Ethiopian Birr (ETB) *"}
                 </label>
                 <div className="relative">
                   <input
@@ -720,7 +726,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                  Product Photo (Optional)
+                  {isAmharic ? t.products.photoOptional : "Product Photo (Optional)"}
                 </label>
                 <div className="flex items-center gap-3">
                   <div className="w-16 h-16 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
@@ -741,7 +747,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg cursor-pointer transition"
                     >
                       <UploadCloud className="w-3.5 h-3.5" />
-                      <span>{formImagePreview ? "Change Photo" : "Upload Photo"}</span>
+                      <span>{formImagePreview ? (isAmharic ? t.products.changePhoto : "Change Photo") : (isAmharic ? t.products.uploadPhoto : "Upload Photo")}</span>
                     </label>
                     <input
                       id="add-product-photo"
@@ -768,12 +774,12 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                           }}
                           className="text-[11px] text-rose-500 hover:text-rose-700 dark:text-rose-400 font-medium transition"
                         >
-                          Remove photo
+                          {isAmharic ? t.products.removePhoto : "Remove photo"}
                         </button>
                       </div>
                     )}
                     <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                      JPEG, PNG, WebP or AVIF up to 5MB
+                      {isAmharic ? t.products.photoFormatHelp : "JPEG, PNG, WebP or AVIF up to 5MB"}
                     </p>
                   </div>
                 </div>
@@ -791,7 +797,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                   htmlFor="add-product-available"
                   className="text-sm font-medium text-slate-700 dark:text-slate-300 select-none cursor-pointer"
                 >
-                  Visible and available on storefront immediately
+                  {isAmharic ? t.products.availableImmediately : "Visible and available on storefront immediately"}
                 </label>
               </div>
 
@@ -801,7 +807,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                   onClick={closeModals}
                   className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
                 >
-                  Cancel
+                  {isAmharic ? t.products.cancelBtn : "Cancel"}
                 </button>
                 <button
                   type="submit"
@@ -809,7 +815,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                   className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition disabled:opacity-50 shadow-xs"
                 >
                   {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                  <span>{isSubmitting ? "Creating..." : "Create Product"}</span>
+                  <span>{isSubmitting ? (isAmharic ? t.products.creatingProductBtn : "Creating...") : (isAmharic ? t.products.createProductBtn : "Create Product")}</span>
                 </button>
               </div>
             </form>
@@ -833,7 +839,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
           >
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <h3 id="edit-product-title" className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                Edit Product
+                {isAmharic ? t.products.modalEditTitle : "Edit Product"}
               </h3>
               <button
                 type="button"
@@ -858,7 +864,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                   htmlFor="edit-product-name"
                   className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
                 >
-                  Product Name *
+                  {isAmharic ? `${t.products.nameLabel} *` : "Product Name *"}
                 </label>
                 <input
                   id="edit-product-name"
@@ -875,7 +881,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                   htmlFor="edit-product-price"
                   className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
                 >
-                  Price in Ethiopian Birr (ETB) *
+                  {isAmharic ? t.products.priceBirrLabel : "Price in Ethiopian Birr (ETB) *"}
                 </label>
                 <div className="relative">
                   <input
@@ -896,7 +902,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                  Product Photo (Optional)
+                  {isAmharic ? t.products.photoOptional : "Product Photo (Optional)"}
                 </label>
                 <div className="flex items-center gap-3">
                   <div className="w-16 h-16 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
@@ -917,7 +923,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg cursor-pointer transition"
                     >
                       <UploadCloud className="w-3.5 h-3.5" />
-                      <span>{formImagePreview ? "Change Photo" : "Upload Photo"}</span>
+                      <span>{formImagePreview ? (isAmharic ? t.products.changePhoto : "Change Photo") : (isAmharic ? t.products.uploadPhoto : "Upload Photo")}</span>
                     </label>
                     <input
                       id="edit-product-photo"
@@ -944,12 +950,12 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                           }}
                           className="text-[11px] text-rose-500 hover:text-rose-700 dark:text-rose-400 font-medium transition"
                         >
-                          Remove photo
+                          {isAmharic ? t.products.removePhoto : "Remove photo"}
                         </button>
                       </div>
                     )}
                     <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                      JPEG, PNG, WebP or AVIF up to 5MB
+                      {isAmharic ? t.products.photoFormatHelp : "JPEG, PNG, WebP or AVIF up to 5MB"}
                     </p>
                   </div>
                 </div>
@@ -967,7 +973,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                   htmlFor="edit-product-available"
                   className="text-sm font-medium text-slate-700 dark:text-slate-300 select-none cursor-pointer"
                 >
-                  Visible and available on storefront
+                  {isAmharic ? t.products.availableOnStorefront : "Visible and available on storefront"}
                 </label>
               </div>
 
@@ -977,7 +983,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                   onClick={closeModals}
                   className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
                 >
-                  Cancel
+                  {isAmharic ? t.products.cancelBtn : "Cancel"}
                 </button>
                 <button
                   type="submit"
@@ -985,7 +991,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                   className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition disabled:opacity-50 shadow-xs"
                 >
                   {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                  <span>{isSubmitting ? "Saving..." : "Save Changes"}</span>
+                  <span>{isSubmitting ? (isAmharic ? t.products.savingChangesBtn : "Saving...") : (isAmharic ? t.products.saveChangesBtn : "Save Changes")}</span>
                 </button>
               </div>
             </form>
@@ -1009,7 +1015,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
           >
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <h3 id="delete-product-title" className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                Delete Product
+                {isAmharic ? t.products.deleteProductModalTitle : "Delete Product"}
               </h3>
               <button
                 type="button"
@@ -1023,14 +1029,20 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
 
             <div className="space-y-2">
               <p className="text-sm text-slate-700 dark:text-slate-300">
-                Are you sure you want to delete{" "}
-                <span className="font-semibold text-slate-900 dark:text-slate-100">
-                  &ldquo;{deletingProduct.name}&rdquo;
-                </span>
-                ?
+                {isAmharic ? (
+                  t.products.deleteConfirmQuestion(deletingProduct.name)
+                ) : (
+                  <>
+                    Are you sure you want to delete{" "}
+                    <span className="font-semibold text-slate-900 dark:text-slate-100">
+                      &ldquo;{deletingProduct.name}&rdquo;
+                    </span>
+                    ?
+                  </>
+                )}
               </p>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                This item will be removed from your public storefront. Existing completed or past orders containing this product will remain completely intact.
+                {isAmharic ? t.products.deleteConfirmWarning : "This item will be removed from your public storefront. Existing completed or past orders containing this product will remain completely intact."}
               </p>
             </div>
 
@@ -1040,7 +1052,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                 onClick={closeModals}
                 className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
               >
-                Cancel
+                {isAmharic ? t.products.cancelBtn : "Cancel"}
               </button>
               <button
                 type="button"
@@ -1049,7 +1061,7 @@ export default function ProductManager({ initialProducts }: ProductManagerProps)
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold transition disabled:opacity-50 shadow-xs"
               >
                 {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                <span>{isSubmitting ? "Deleting..." : "Delete Product"}</span>
+                <span>{isSubmitting ? (isAmharic ? t.products.deletingProductBtn : "Deleting...") : (isAmharic ? t.products.deleteProductBtn : "Delete Product")}</span>
               </button>
             </div>
           </div>

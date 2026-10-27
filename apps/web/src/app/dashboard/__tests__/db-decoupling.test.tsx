@@ -88,8 +88,13 @@ function extractText(node: any): string {
   if (!node) return "";
   if (typeof node === "string" || typeof node === "number") return String(node);
   if (Array.isArray(node)) return node.map(extractText).join(" ");
-  if (node.props?.children) return extractText(node.props.children);
-  return "";
+  const parts: string[] = [];
+  if (node.props?.displayName) parts.push(String(node.props.displayName));
+  if (node.props?.displaySubtitle) parts.push(String(node.props.displaySubtitle));
+  if (node.props?.seller?.business_name) parts.push(String(node.props.seller.business_name));
+  if (node.props?.seller?.slug) parts.push(`@${node.props.seller.slug}`);
+  if (node.props?.children) parts.push(extractText(node.props.children));
+  return parts.join(" ");
 }
 
 describe("Next.js Server Components Database Decoupling (PR-010, Issue #129)", () => {
