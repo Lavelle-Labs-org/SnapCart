@@ -88,6 +88,24 @@ describe("Seller Signup Form Logic & Validation (FE-007, #30)", () => {
       expect(resSafari.isValid).toBe(true);
       expect(resSafari.errors).toEqual({});
     });
+
+    it("returns localized Amharic validation error messages when isAmharic is true", () => {
+      const resAm = validateSignupForm(
+        {
+          business_name: "A",
+          sms_name: "This SMS Name Is Way Too Long To Be Twenty",
+          phone: "0811223344",
+          password: "short",
+        },
+        true
+      );
+
+      expect(resAm.isValid).toBe(false);
+      expect(resAm.errors.business_name).toBe("የንግድ ስም ቢያንስ 2 ፊደላት መሆን አለበት");
+      expect(resAm.errors.sms_name).toBe("የኤስኤምኤስ ስም ከ20 ፊደላት መብለጥ የለበትም");
+      expect(resAm.errors.phone).toBe("እባክዎ ትክክለኛ የኢትዮጵያ ስልክ ቁጥር ያስገቡ (09... ወይም 07...)");
+      expect(resAm.errors.password).toBe("የይለፍ ቃል ቢያንስ 10 ፊደላት መሆን አለበት");
+    });
   });
 
   describe("API Interaction Payloads", () => {

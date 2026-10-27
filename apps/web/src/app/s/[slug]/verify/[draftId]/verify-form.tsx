@@ -91,7 +91,11 @@ export function VerifyOtpForm({
   const handleVerify = async (codeToVerify: string) => {
     const trimmedCode = codeToVerify.trim();
     if (!/^\d{6}$/.test(trimmedCode)) {
-      setErrorMessage("Please enter the complete 6-digit code.");
+      setErrorMessage(
+        isAmharic
+          ? "እባክዎ ባለ 6 ዲጂት ኮድ ያስገቡ።"
+          : "Please enter the complete 6-digit code."
+      );
       return;
     }
 
@@ -112,10 +116,13 @@ export function VerifyOtpForm({
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
+        const defaultError = isAmharic
+          ? "የተሳሳተ ወይም ጊዜው ያለፈበት ኮድ ነው። እባክዎ እንደገና ይሞክሩ።"
+          : "Invalid or expired verification code. Please check and try again.";
         const errorMsg =
           data?.error?.message ||
           data?.message ||
-          "Invalid or expired verification code. Please check and try again.";
+          defaultError;
         setErrorMessage(errorMsg);
         setIsSubmitting(false);
         return;
@@ -150,7 +157,10 @@ export function VerifyOtpForm({
       router.push(targetUrl);
     } catch (err: any) {
       setErrorMessage(
-        err?.message || "Network error. Please check your connection and try again."
+        err?.message ||
+          (isAmharic
+            ? "የኔትወርክ ችግር አጋጥሟል። እባክዎ ኢንተርኔትዎን ይፈትሹና እንደገና ይሞክሩ።"
+            : "Network error. Please check your connection and try again.")
       );
       setIsSubmitting(false);
     }
@@ -190,7 +200,9 @@ export function VerifyOtpForm({
         const errorMsg =
           data?.error?.message ||
           data?.message ||
-          "Failed to resend code. Please try again shortly.";
+          (isAmharic
+            ? "ኮድ እንደገና መላክ አልተቻለም። እባክዎ ከጥቂት ደቂቃዎች በኋላ ይሞክሩ።"
+            : "Failed to resend code. Please try again shortly.");
         setErrorMessage(errorMsg);
 
         if (data?.retryAfter) {
@@ -203,14 +215,21 @@ export function VerifyOtpForm({
       // Successful resend: reset 60-second cooldown
       const retryAfter = data?.retryAfter ?? data?.data?.retryAfter ?? 60;
       setCooldown(retryAfter);
-      setSuccessMessage("New 6-digit verification code sent via SMS.");
+      setSuccessMessage(
+        isAmharic
+          ? "አዲስ ባለ 6 ድጂት ማረጋገጫ ኮድ በኤስኤምኤስ ተልኳል።"
+          : "New 6-digit verification code sent via SMS."
+      );
       setCode("");
       if (inputRef.current) {
         inputRef.current.focus();
       }
     } catch (err: any) {
       setErrorMessage(
-        err?.message || "Network error while requesting new code. Please try again."
+        err?.message ||
+          (isAmharic
+            ? "አዲስ ኮድ መጠየቅ አልተቻለም። እባክዎ እንደገና ይሞክሩ።"
+            : "Network error while requesting new code. Please try again.")
       );
     } finally {
       setIsResending(false);

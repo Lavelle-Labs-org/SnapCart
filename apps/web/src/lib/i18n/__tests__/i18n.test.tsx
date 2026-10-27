@@ -70,6 +70,12 @@ describe("i18n Dictionary Parity & Completeness", () => {
 
     expect(en.settings.segmentWarning(160, 2)).toContain("160");
     expect(am.settings.segmentWarning(160, 2)).toContain("160");
+
+    expect(en.auth.stepIndicator(1, 2)).toContain("1");
+    expect(am.auth.stepIndicator(1, 2)).toContain("1");
+
+    expect(en.auth.charsCount(12)).toContain("12");
+    expect(am.auth.charsCount(12)).toContain("12");
   });
 });
 

@@ -25,38 +25,51 @@ export interface SignupValidationErrors {
 /**
  * Pure validation helper for Step 1 seller registration inputs.
  */
-export function validateSignupForm(values: {
-  business_name?: string;
-  sms_name?: string;
-  phone?: string;
-  password?: string;
-}): { isValid: boolean; errors: SignupValidationErrors } {
+export function validateSignupForm(
+  values: {
+    business_name?: string;
+    sms_name?: string;
+    phone?: string;
+    password?: string;
+  },
+  isAmharic: boolean = false
+): { isValid: boolean; errors: SignupValidationErrors } {
   const errors: SignupValidationErrors = {};
 
   const bName = values.business_name?.trim() || "";
   if (bName.length < 2) {
-    errors.business_name = "Business name must be at least 2 characters";
+    errors.business_name = isAmharic
+      ? "የንግድ ስም ቢያንስ 2 ፊደላት መሆን አለበት"
+      : "Business name must be at least 2 characters";
   } else if (bName.length > 100) {
-    errors.business_name = "Business name cannot exceed 100 characters";
+    errors.business_name = isAmharic
+      ? "የንግድ ስም ከ100 ፊደላት መብለጥ የለበትም"
+      : "Business name cannot exceed 100 characters";
   }
 
   const sName = values.sms_name?.trim() || "";
   if (sName.length < 2) {
-    errors.sms_name = "SMS name must be at least 2 characters";
+    errors.sms_name = isAmharic
+      ? "የኤስኤምኤስ ስም ቢያንስ 2 ፊደላት መሆን አለበት"
+      : "SMS name must be at least 2 characters";
   } else if (sName.length > 20) {
-    errors.sms_name = "SMS name cannot exceed 20 characters";
+    errors.sms_name = isAmharic
+      ? "የኤስኤምኤስ ስም ከ20 ፊደላት መብለጥ የለበትም"
+      : "SMS name cannot exceed 20 characters";
   }
 
   const phoneVal = normalizeEthiopianPhone(values.phone || "");
   if (!phoneVal.isValid) {
-    errors.phone =
-      phoneVal.error ||
-      "Please enter a valid Ethiopian mobile number (09... or 07...)";
+    errors.phone = isAmharic
+      ? "እባክዎ ትክክለኛ የኢትዮጵያ ስልክ ቁጥር ያስገቡ (09... ወይም 07...)"
+      : (phoneVal.error || "Please enter a valid Ethiopian mobile number (09... or 07...)");
   }
 
   const pwd = values.password || "";
   if (pwd.length < 10) {
-    errors.password = "Password must be at least 10 characters long";
+    errors.password = isAmharic
+      ? "የይለፍ ቃል ቢያንስ 10 ፊደላት መሆን አለበት"
+      : "Password must be at least 10 characters long";
   }
 
   return {
@@ -120,12 +133,15 @@ export function SignupForm() {
     e.preventDefault();
     setErrorMessage(null);
 
-    const validation = validateSignupForm({
-      business_name: businessName,
-      sms_name: smsName,
-      phone,
-      password,
-    });
+    const validation = validateSignupForm(
+      {
+        business_name: businessName,
+        sms_name: smsName,
+        phone,
+        password,
+      },
+      isAmharic
+    );
 
     if (!validation.isValid) {
       setFieldErrors(validation.errors);
@@ -154,7 +170,7 @@ export function SignupForm() {
 
       if (!res.ok) {
         throw new Error(
-          data.message || "Failed to create account. Please check your details."
+          data.message || t.auth.accountCreateFailed
         );
       }
 
@@ -164,7 +180,7 @@ export function SignupForm() {
       setCode("");
       setIsSubmitting(false);
     } catch (err: any) {
-      setErrorMessage(err.message || "Network error. Please try again.");
+      setErrorMessage(err.message || t.auth.networkError);
       setIsSubmitting(false);
     }
   };
@@ -173,7 +189,7 @@ export function SignupForm() {
   const handleVerifyOtp = async (codeToVerify?: string) => {
     const codeVal = (codeToVerify || code).trim();
     if (codeVal.length !== 6) {
-      setErrorMessage("Please enter the complete 6-digit verification code");
+      setErrorMessage(t.auth.codeLengthError);
       return;
     }
 
@@ -194,12 +210,11 @@ export function SignupForm() {
 
       if (!res.ok) {
         throw new Error(
-          data.message ||
-            "Invalid or expired verification code. Please check and try again."
+          data.message || t.auth.invalidCodeError
         );
       }
 
-      setSuccessNotice("Phone verified successfully! Redirecting to dashboard...");
+      setSuccessNotice(t.auth.verifySuccessRedirect);
 
       // Small delay for user reassurance, then navigate
       setTimeout(() => {
@@ -210,7 +225,7 @@ export function SignupForm() {
         }
       }, 500);
     } catch (err: any) {
-      setErrorMessage(err.message || "Verification failed. Please try again.");
+      setErrorMessage(err.message || t.auth.verifyFailedError);
       setIsSubmitting(false);
     }
   };
@@ -251,10 +266,10 @@ export function SignupForm() {
       }
 
       setCooldown(60);
-      setSuccessNotice("New verification code requested.");
+      setSuccessNotice(t.auth.resendSuccessNotice);
       setTimeout(() => setSuccessNotice(null), 3000);
     } catch {
-      setErrorMessage("Could not resend code. Please wait a moment and try again.");
+      setErrorMessage(t.auth.resendFailedError);
     } finally {
       setIsResending(false);
     }
@@ -265,7 +280,7 @@ export function SignupForm() {
       {/* Step Indicator Badge */}
       <div className="flex items-center justify-between mb-4">
         <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
-          Step {step} of 2
+          {isAmharic ? t.auth.stepIndicator(step, 2) : `Step ${step} of 2`}
         </span>
       </div>
 
@@ -307,7 +322,7 @@ export function SignupForm() {
               htmlFor="business_name"
               className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
             >
-              Business Name
+              {isAmharic ? t.auth.businessNameLabel : "Business Name"}
             </label>
             <input
               id="business_name"
@@ -320,7 +335,7 @@ export function SignupForm() {
                   setFieldErrors((prev) => ({ ...prev, business_name: undefined }));
                 }
               }}
-              placeholder="e.g. Habesha Cafe & Bakery"
+              placeholder={isAmharic ? t.auth.businessNamePlaceholder : "e.g. Habesha Cafe & Bakery"}
               required
               className={`w-full px-3.5 py-2.5 rounded-xl border text-sm min-h-[44px] transition focus:outline-none focus:ring-2 ${
                 fieldErrors.business_name
@@ -341,10 +356,10 @@ export function SignupForm() {
                 htmlFor="sms_name"
                 className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
               >
-                SMS Sender Name
+                {isAmharic ? t.auth.smsNameLabel : "SMS Sender Name"}
               </label>
               <span className="text-[11px] text-slate-400 dark:text-slate-500">
-                {smsName.length}/20 chars
+                {isAmharic ? t.auth.charsCount(smsName.length) : `${smsName.length}/20 chars`}
               </span>
             </div>
             <input
@@ -359,7 +374,7 @@ export function SignupForm() {
                   setFieldErrors((prev) => ({ ...prev, sms_name: undefined }));
                 }
               }}
-              placeholder="e.g. Habesha Cafe"
+              placeholder={isAmharic ? t.auth.smsNamePlaceholder : "e.g. Habesha Cafe"}
               required
               className={`w-full px-3.5 py-2.5 rounded-xl border text-sm min-h-[44px] transition focus:outline-none focus:ring-2 ${
                 fieldErrors.sms_name
@@ -373,7 +388,7 @@ export function SignupForm() {
               </p>
             ) : (
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                Prefix on all buyer order updates (e.g. &quot;Habesha Cafe: order #1001...&quot;).
+                {isAmharic ? t.auth.smsNameHelp : "Prefix on all buyer order updates (e.g. \"Habesha Cafe: order #1001...\")."}
               </p>
             )}
           </div>
@@ -383,7 +398,7 @@ export function SignupForm() {
               htmlFor="phone"
               className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
             >
-              Mobile Phone (Alert Number)
+              {isAmharic ? t.auth.phoneLabel : "Mobile Phone (Alert Number)"}
             </label>
             <input
               id="phone"
@@ -396,7 +411,7 @@ export function SignupForm() {
                   setFieldErrors((prev) => ({ ...prev, phone: undefined }));
                 }
               }}
-              placeholder="09... or 07..."
+              placeholder={isAmharic ? t.auth.phonePlaceholder : "09... or 07..."}
               required
               className={`w-full px-3.5 py-2.5 rounded-xl border text-sm min-h-[44px] transition focus:outline-none focus:ring-2 ${
                 fieldErrors.phone
@@ -410,7 +425,7 @@ export function SignupForm() {
               </p>
             ) : (
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                Order alerts with 1-tap accept/ready action links will be sent here.
+                {isAmharic ? t.auth.phoneHelp : "Order alerts with 1-tap accept/ready action links will be sent here."}
               </p>
             )}
           </div>
@@ -420,7 +435,7 @@ export function SignupForm() {
               htmlFor="password"
               className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1"
             >
-              Password (Min 10 characters)
+              {isAmharic ? t.auth.passwordLabel : "Password (Min 10 characters)"}
             </label>
             <input
               id="password"
@@ -433,7 +448,7 @@ export function SignupForm() {
                   setFieldErrors((prev) => ({ ...prev, password: undefined }));
                 }
               }}
-              placeholder="••••••••••"
+              placeholder={isAmharic ? t.auth.passwordPlaceholder : "••••••••••"}
               required
               className={`w-full px-3.5 py-2.5 rounded-xl border text-sm min-h-[44px] transition focus:outline-none focus:ring-2 ${
                 fieldErrors.password
@@ -456,11 +471,11 @@ export function SignupForm() {
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Creating account & sending code...</span>
+                <span>{isAmharic ? t.auth.creatingAccount : "Creating account & sending code..."}</span>
               </>
             ) : (
               <>
-                <span>Verify Phone & Create Shop</span>
+                <span>{isAmharic ? t.auth.verifyPhoneAndCreate : "Verify Phone & Create Shop"}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -484,7 +499,7 @@ export function SignupForm() {
               }}
               className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium underline text-xs"
             >
-              Change number
+              {isAmharic ? t.auth.changeNumber : "Change number"}
             </button>
           </div>
 
@@ -494,7 +509,7 @@ export function SignupForm() {
               htmlFor="otp-code"
               className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-center"
             >
-              Enter 6-Digit Code
+              {isAmharic ? t.auth.enterCodeTitle : "Enter 6-Digit Code"}
             </label>
             <input
               id="otp-code"
@@ -512,7 +527,7 @@ export function SignupForm() {
               aria-label="6-Digit Verification Code"
             />
             <p className="text-[11px] text-slate-400 dark:text-slate-400 text-center">
-              Enter the 6 digits texted to your alert phone number
+              {isAmharic ? t.auth.enterCodeHelper : "Enter the 6 digits texted to your alert phone number"}
             </p>
           </div>
 
