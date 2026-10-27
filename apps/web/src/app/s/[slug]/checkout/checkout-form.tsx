@@ -13,6 +13,7 @@ export interface CheckoutSellerProp {
   businessName: string;
   smsName: string;
   slug: string;
+  logoUrl?: string | null;
 }
 
 export interface CheckoutProductProp {
@@ -214,6 +215,13 @@ export function CheckoutForm({ seller, products }: CheckoutFormProps) {
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
+          {seller.logoUrl && (
+            <img
+              src={seller.logoUrl}
+              alt={seller.smsName || seller.businessName}
+              className="w-8 h-8 rounded-lg object-cover border border-slate-200/80 shadow-xs flex-shrink-0 bg-white"
+            />
+          )}
           <div className="min-w-0">
             <h1 className="text-base sm:text-lg font-bold text-slate-900 truncate">
               {isAmharic ? "ትዕዛዝ ማጠናቀቂያ" : "Checkout"}

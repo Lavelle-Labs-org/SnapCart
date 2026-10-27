@@ -49,6 +49,8 @@ export class StorefrontController {
         smsName: seller.sms_name,
         phone: seller.phone,
         slug: seller.slug,
+        logoUrl: seller.logo_url ?? null,
+        logo_url: seller.logo_url ?? null,
         createdAt: seller.created_at ? new Date(seller.created_at).toISOString() : new Date().toISOString(),
       },
       products: products.map((p) => ({

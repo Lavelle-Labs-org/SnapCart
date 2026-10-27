@@ -70,6 +70,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     smsName: dbSeller?.sms_name || dbSeller?.business_name || "My Cafe",
     slug: dbSeller?.slug || "my-cafe",
     phone: dbSeller?.phone || "+251900000000",
+    logoUrl: dbSeller?.logo_url ?? dbSeller?.logoUrl ?? null,
   };
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";

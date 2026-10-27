@@ -12,6 +12,7 @@ export interface StorefrontSellerProp {
   businessName: string;
   smsName: string;
   slug: string;
+  logoUrl?: string | null;
 }
 
 export interface StorefrontProductProp {
@@ -88,9 +89,17 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
       {/* Header */}
       <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3.5 sticky top-0 z-10 flex items-center justify-between shadow-xs gap-2">
         <div className="flex items-center space-x-2.5 min-w-0 flex-1">
-          <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center text-base shadow-xs select-none flex-shrink-0">
-            {shopDisplayName.charAt(0).toUpperCase()}
-          </div>
+          {seller.logoUrl ? (
+            <img
+              src={seller.logoUrl}
+              alt={shopDisplayName}
+              className="w-10 h-10 rounded-xl object-cover border border-slate-200/80 shadow-xs flex-shrink-0 bg-white"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center text-base shadow-xs select-none flex-shrink-0">
+              {shopDisplayName.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div className="min-w-0 pr-1">
             <div className="flex items-center gap-1.5">
               <h1 className="text-sm sm:text-base font-bold text-slate-900 leading-tight truncate">{shopDisplayName}</h1>

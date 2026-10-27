@@ -13,6 +13,9 @@ import {
   Smartphone,
   Store,
   Send,
+  Upload,
+  Trash2,
+  Image as ImageIcon,
 } from "lucide-react";
 import {
   calculateSmsSegments,
@@ -27,6 +30,7 @@ export interface SellerSettingsData {
   smsName: string;
   slug: string;
   phone: string;
+  logoUrl?: string | null;
 }
 
 export interface SettingsClientProps {
@@ -187,6 +191,14 @@ export default function SettingsClient({
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
   const [saveMessage, setSaveMessage] = useState("");
 
+  // Storefront Profile Picture / Logo state
+  const [logoUrl, setLogoUrl] = useState<string | null>(initialSeller.logoUrl ?? null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isDeletingLogo, setIsDeletingLogo] = useState(false);
+  const [logoMessage, setLogoMessage] = useState<string | null>(null);
+  const [logoStatus, setLogoStatus] = useState<"idle" | "success" | "error">("idle");
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
   const slug = initialSeller.slug || "shop";
   const [storefrontUrl, setStorefrontUrl] = useState(() => getStorefrontUrl(slug, baseUrl));
 
@@ -223,6 +235,86 @@ export default function SettingsClient({
   const smsAnalysis = React.useMemo(() => {
     return calculateSmsSegments(renderedMessage);
   }, [renderedMessage]);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.type)) {
+      setLogoStatus("error");
+      setLogoMessage("Please select a JPEG, PNG, WebP, or AVIF image.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setLogoStatus("error");
+      setLogoMessage("Image size must not exceed 5MB.");
+      return;
+    }
+
+    setIsUploadingLogo(true);
+    setLogoStatus("idle");
+    setLogoMessage(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await fetchFn("/api/settings/profile-image", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(data?.message || data?.error?.message || "Failed to upload profile picture.");
+      }
+
+      const sellerPayload = data?.data?.seller || data?.seller;
+      const newLogo = sellerPayload?.logoUrl ?? sellerPayload?.logo_url ?? null;
+      setLogoUrl(newLogo);
+      setLogoStatus("success");
+      setLogoMessage(t.settings.photoSuccess);
+    } catch (err: any) {
+      setLogoStatus("error");
+      setLogoMessage(err?.message || "Failed to upload profile picture.");
+    } finally {
+      setIsUploadingLogo(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleLogoDelete = async () => {
+    if (!logoUrl || isDeletingLogo) return;
+
+    setIsDeletingLogo(true);
+    setLogoStatus("idle");
+    setLogoMessage(null);
+
+    try {
+      const res = await fetchFn("/api/settings/profile-image", {
+        method: "DELETE",
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(data?.message || data?.error?.message || "Failed to remove profile picture.");
+      }
+
+      setLogoUrl(null);
+      setLogoStatus("success");
+      setLogoMessage(t.settings.photoRemoved);
+    } catch (err: any) {
+      setLogoStatus("error");
+      setLogoMessage(err?.message || "Failed to remove profile picture.");
+    } finally {
+      setIsDeletingLogo(false);
+    }
+  };
 
   const handleCopy = async () => {
     try {
@@ -366,6 +458,113 @@ export default function SettingsClient({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Form Column */}
         <div className="lg:col-span-6 space-y-6">
+          {/* Profile Picture Card */}
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-emerald-600" />
+                <span>{isAmharic ? t.settings.profilePictureTitle : "Storefront Profile Picture"}</span>
+              </h2>
+              <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                Cloudflare R2
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-500 leading-relaxed">
+              {isAmharic ? t.settings.profilePictureSubtitle : "Upload a logo or profile image for your public storefront and checkout header."}
+            </p>
+
+            {logoMessage && (
+              <div
+                className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
+                  logoStatus === "error"
+                    ? "bg-rose-50 text-rose-800 border border-rose-200"
+                    : "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                }`}
+              >
+                {logoStatus === "error" ? (
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-600" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-600" />
+                )}
+                <span>{logoMessage}</span>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
+              <div className="relative group flex-shrink-0">
+                {logoUrl ? (
+                  <img
+                    id="profile-picture-preview"
+                    src={logoUrl}
+                    alt={businessName}
+                    className="w-20 h-20 rounded-2xl object-cover border-2 border-emerald-500/20 shadow-md bg-white"
+                  />
+                ) : (
+                  <div
+                    id="profile-picture-placeholder"
+                    className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white font-extrabold flex items-center justify-center text-2xl shadow-md select-none"
+                  >
+                    {(smsName || businessName || "S").charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1 space-y-2 text-center sm:text-left">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/avif"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                    id="profile-picture-file-input"
+                  />
+                  <button
+                    type="button"
+                    id="upload-profile-picture-btn"
+                    disabled={isUploadingLogo || isDeletingLogo}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white text-xs font-semibold rounded-xl shadow-xs transition min-h-[38px]"
+                  >
+                    {isUploadingLogo ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>{isAmharic ? t.settings.uploadingPhoto : "Uploading..."}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>{isAmharic ? t.settings.uploadPhotoBtn : "Upload Photo"}</span>
+                      </>
+                    )}
+                  </button>
+
+                  {logoUrl && (
+                    <button
+                      type="button"
+                      id="remove-profile-picture-btn"
+                      disabled={isUploadingLogo || isDeletingLogo}
+                      onClick={handleLogoDelete}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-medium rounded-xl border border-rose-200 dark:border-rose-800 transition min-h-[38px]"
+                    >
+                      {isDeletingLogo ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-3.5 h-3.5" />
+                      )}
+                      <span>{isAmharic ? t.settings.removePhotoBtn : "Remove"}</span>
+                    </button>
+                  )}
+                </div>
+
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {isAmharic ? t.settings.photoHelp : "PNG, JPG, WebP or AVIF up to 5MB. Stored securely on Cloudflare R2."}
+                </p>
+              </div>
+            </div>
+          </div>
+
           <form
             id="shop-settings-form"
             onSubmit={handleSave}

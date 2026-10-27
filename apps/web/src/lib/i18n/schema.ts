@@ -426,6 +426,14 @@ export interface TranslationSchema {
     smsName: string;
     smsNameLabel: string;
     smsNameHelp: string;
+    profilePictureTitle: string;
+    profilePictureSubtitle: string;
+    uploadPhotoBtn: string;
+    uploadingPhoto: string;
+    removePhotoBtn: string;
+    photoHelp: string;
+    photoSuccess: string;
+    photoRemoved: string;
     saveStore: string;
     savingBtn: string;
     saveBtn: string;

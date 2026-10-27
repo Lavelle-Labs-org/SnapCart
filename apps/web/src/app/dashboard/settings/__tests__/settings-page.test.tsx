@@ -99,6 +99,7 @@ describe("SettingsPage Server Component (FE-013, Issue #36)", () => {
       smsName: "Habesha Bakery",
       slug: "habesha-gourmet",
       phone: "+251911223344",
+      logoUrl: null,
     });
   });
 

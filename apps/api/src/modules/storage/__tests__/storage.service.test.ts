@@ -99,5 +99,23 @@ describe("StorageService & Magic Byte Sniffing", () => {
       await service.deleteProductImage(res.imageUrl);
       expect(fs.existsSync(localPath)).toBe(false);
     });
+
+    it("uploads and saves valid profile image in local fallback mode and deletes it", async () => {
+      const validPng = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d]);
+      const res = await service.uploadStoreProfileImage({
+        buffer: validPng,
+        originalName: "avatar.png",
+        sellerId: "seller_avatar_123",
+      });
+
+      expect(res.imageUrl).toContain("/uploads/profiles/seller_avatar_123/avatar_");
+      expect(res.imageUrl).toMatch(/\.png$/);
+
+      const localPath = path.resolve(process.cwd(), "public", res.imageUrl.replace(/^\//, ""));
+      expect(fs.existsSync(localPath)).toBe(true);
+
+      await service.deleteStoreProfileImage(res.imageUrl);
+      expect(fs.existsSync(localPath)).toBe(false);
+    });
   });
 });

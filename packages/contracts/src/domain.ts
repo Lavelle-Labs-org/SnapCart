@@ -20,6 +20,8 @@ export interface SellerDto {
   phone: string;
   phoneVerifiedAt?: string | null;
   slug: string;
+  logoUrl?: string | null;
+  logo_url?: string | null;
   createdAt: string;
 }
 
