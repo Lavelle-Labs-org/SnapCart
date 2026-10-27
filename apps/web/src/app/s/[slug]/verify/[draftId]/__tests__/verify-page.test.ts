@@ -5,7 +5,9 @@ const mockNotFound = vi.fn();
 vi.mock("next/navigation", () => ({
   notFound: () => {
     mockNotFound();
-    throw new Error("NEXT_NOT_FOUND");
+    const err = new Error("NEXT_NOT_FOUND");
+    (err as any).digest = "NEXT_NOT_FOUND";
+    throw err;
   },
 }));
 
