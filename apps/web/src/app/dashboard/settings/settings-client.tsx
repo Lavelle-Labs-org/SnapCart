@@ -546,6 +546,23 @@ export default function SettingsClient({
             >
               {TEMPLATE_OPTIONS.map((tmpl) => {
                 const isActive = selectedTemplate === tmpl.key;
+                const localizedLabel = isAmharic
+                  ? tmpl.key === "buyerAccepted"
+                    ? t.settings.tmplOrderAccepted
+                    : tmpl.key === "buyerReady"
+                    ? t.settings.tmplOrderReady
+                    : tmpl.key === "buyerRejected"
+                    ? t.settings.tmplOrderDeclined
+                    : tmpl.key === "buyerNewPickupCode"
+                    ? t.settings.tmplPickupVerified
+                    : t.settings.tmplOrderPlaced
+                  : tmpl.label;
+                const localizedRecipient = isAmharic
+                  ? tmpl.recipient === "Buyer"
+                    ? t.settings.toCustomer
+                    : t.settings.toSeller
+                  : `To: ${tmpl.recipient}`;
+
                 return (
                   <button
                     key={tmpl.key}
@@ -558,9 +575,9 @@ export default function SettingsClient({
                         : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/60 dark:hover:bg-slate-750"
                     }`}
                   >
-                    <span className="truncate">{tmpl.label}</span>
+                    <span className="truncate">{localizedLabel}</span>
                     <span className="text-[10px] text-slate-400 dark:text-slate-400 font-normal">
-                      To: {tmpl.recipient}
+                      {localizedRecipient}
                     </span>
                   </button>
                 );
@@ -572,9 +589,9 @@ export default function SettingsClient({
               <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 pb-2">
                 <span className="flex items-center gap-1.5 font-medium">
                   <Send className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Outbound SMS Bubble</span>
+                  <span>{isAmharic ? t.settings.outboundBubbleTitle : "Outbound SMS Bubble"}</span>
                 </span>
-                <span>Ethio / Safaricom Gateway</span>
+                <span>{isAmharic ? t.settings.gatewayCarriers : "Ethio / Safaricom Gateway"}</span>
               </div>
 
               {/* Message Bubble */}
@@ -583,7 +600,7 @@ export default function SettingsClient({
               </div>
 
               <div className="text-[11px] text-slate-500 dark:text-slate-400 italic">
-                + Default verified legal signature (~25 chars) appended by SMSHub upon dispatch
+                {isAmharic ? t.settings.legalSignatureNotice : "+ Default verified legal signature (~25 chars) appended by SMSHub upon dispatch"}
               </div>
             </div>
 
@@ -596,7 +613,7 @@ export default function SettingsClient({
                 {/* Encoding Metric */}
                 <div>
                   <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
-                    Encoding
+                    {isAmharic ? t.settings.encodingLabel : "Encoding"}
                   </span>
                   <div className="flex items-center space-x-1.5">
                     <span
@@ -610,7 +627,9 @@ export default function SettingsClient({
                       {smsAnalysis.encoding}
                     </span>
                     <span className="text-[11px] text-slate-400">
-                      {smsAnalysis.encoding === "GSM-7" ? "Standard" : "Unicode"}
+                      {smsAnalysis.encoding === "GSM-7"
+                        ? (isAmharic ? t.settings.standardEncoding : "Standard")
+                        : (isAmharic ? t.settings.unicodeEncoding : "Unicode")}
                     </span>
                   </div>
                 </div>
@@ -618,7 +637,7 @@ export default function SettingsClient({
                 {/* Segments Metric */}
                 <div>
                   <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
-                    Estimated Segments
+                    {isAmharic ? t.settings.estimatedSegmentsLabel : "Estimated Segments"}
                   </span>
                   <span
                     id="preview-segments-badge"
@@ -628,7 +647,7 @@ export default function SettingsClient({
                         : "text-slate-800"
                     }`}
                   >
-                    {smsAnalysis.segments} {smsAnalysis.segments === 1 ? "segment" : "segments"}
+                    {smsAnalysis.segments} {smsAnalysis.segments === 1 ? (isAmharic ? t.settings.segmentUnit : "segment") : (isAmharic ? t.settings.segmentsUnit : "segments")}
                   </span>
                 </div>
               </div>
@@ -636,12 +655,14 @@ export default function SettingsClient({
               {/* Character Progress Bar */}
               <div className="space-y-1.5 pt-1">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-medium text-slate-700">Length</span>
+                  <span className="font-medium text-slate-700">
+                    {isAmharic ? t.settings.lengthLabel : "Length"}
+                  </span>
                   <span
                     id="preview-character-counter"
                     className="font-mono font-bold text-slate-900"
                   >
-                    {smsAnalysis.characterCount} / {smsAnalysis.singleSegmentLimit} chars
+                    {smsAnalysis.characterCount} / {smsAnalysis.singleSegmentLimit} {isAmharic ? t.settings.charsUnit : "chars"}
                   </span>
                 </div>
 
@@ -672,7 +693,9 @@ export default function SettingsClient({
                 >
                   <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
                   <span>
-                    Exceeds single SMS segment limit ({smsAnalysis.singleSegmentLimit} chars). Telecommunication networks will bill this message as {smsAnalysis.segments} segments.
+                    {isAmharic
+                      ? t.settings.segmentWarning(smsAnalysis.singleSegmentLimit, smsAnalysis.segments)
+                      : `Exceeds single SMS segment limit (${smsAnalysis.singleSegmentLimit} chars). Telecommunication networks will bill this message as ${smsAnalysis.segments} segments.`}
                   </span>
                 </div>
               )}

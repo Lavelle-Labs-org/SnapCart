@@ -61,6 +61,15 @@ describe("i18n Dictionary Parity & Completeness", () => {
 
     expect(en.action.terminalStateNotice("COMPLETED")).toContain("COMPLETED");
     expect(am.action.terminalStateNotice("ተጠናቋል")).toContain("ተጠናቋል");
+
+    expect(en.dashboard.smsLowAlert(2)).toContain("2");
+    expect(am.dashboard.smsLowAlert(2)).toContain("2");
+
+    expect(en.products.deleteConfirmQuestion("Shiro")).toContain("Shiro");
+    expect(am.products.deleteConfirmQuestion("Shiro")).toContain("Shiro");
+
+    expect(en.settings.segmentWarning(160, 2)).toContain("160");
+    expect(am.settings.segmentWarning(160, 2)).toContain("160");
   });
 });
 

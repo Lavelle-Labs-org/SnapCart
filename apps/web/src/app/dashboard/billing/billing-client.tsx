@@ -20,8 +20,10 @@ import {
   BillingBalanceDto,
   PaymentTransactionDto,
 } from "@order-by-sms/contracts";
+import { useTranslation } from "../../../lib/i18n";
 
 export function BillingClient() {
+  const { t, isAmharic } = useTranslation();
   const [balance, setBalance] = useState<BillingBalanceDto | null>(null);
   const [transactions, setTransactions] = useState<PaymentTransactionDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,13 +96,13 @@ export function BillingClient() {
       <div>
         <div className="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400 font-semibold text-sm tracking-wide uppercase">
           <Zap className="w-4 h-4" />
-          <span>Billing & SMS Credits</span>
+          <span>{isAmharic ? t.billing.title : "Billing & SMS Credits"}</span>
         </div>
         <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight mt-1">
-          SMS Balance & Top-Up
+          {isAmharic ? t.billing.balanceTopUpTitle : "SMS Balance & Top-Up"}
         </h1>
         <p className="text-slate-600 dark:text-slate-400 text-sm mt-1 max-w-2xl">
-          Order-by-SMS uses metered SMS credits to notify your customers of order status, pickup codes, and acceptance in real time via Ethio telecom.
+          {isAmharic ? t.billing.balanceTopUpSubtitle : "Order-by-SMS uses metered SMS credits to notify your customers of order status, pickup codes, and acceptance in real time via Ethio telecom."}
         </p>
       </div>
 
@@ -108,7 +110,7 @@ export function BillingClient() {
         <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-sm flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 text-rose-500" />
           <div>
-            <p className="font-semibold">Unable to process request</p>
+            <p className="font-semibold">{isAmharic ? t.billing.unableToProcess : "Unable to process request"}</p>
             <p>{errorMessage}</p>
           </div>
         </div>
@@ -118,7 +120,7 @@ export function BillingClient() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div className="relative overflow-hidden p-6 rounded-2xl bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800/80 border border-slate-200 dark:border-slate-800 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">
-            <span>Remaining Credits</span>
+            <span>{isAmharic ? t.billing.remainingCreditsCard : "Remaining Credits"}</span>
             <span
               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${(balance?.smsCredits ?? 0) > 3
                   ? "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300"
@@ -127,7 +129,9 @@ export function BillingClient() {
                     : "bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300"
                 }`}
             >
-              {(balance?.smsCredits ?? 0) > 0 ? "Active" : "Trial Expired"}
+              {(balance?.smsCredits ?? 0) > 0
+                ? (isAmharic ? t.billing.statusActive : "Active")
+                : (isAmharic ? t.billing.statusTrialExpired : "Trial Expired")}
             </span>
           </div>
           <div className="mt-4 flex items-baseline gap-2">
@@ -140,16 +144,16 @@ export function BillingClient() {
           </div>
           <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
             {(balance?.smsCredits ?? 0) <= 0
-              ? "Your credits are exhausted. Buyer orders will still succeed, but customer SMS updates are paused."
+              ? (isAmharic ? t.billing.creditsExhaustedDesc : "Your credits are exhausted. Buyer orders will still succeed, but customer SMS updates are paused.")
               : (balance?.smsCredits ?? 0) <= 3
-                ? "Running low! Recharge soon to avoid SMS interruptions."
-                : "Enough credits for standard store operation."}
+                ? (isAmharic ? t.billing.creditsLowDesc : "Running low! Recharge soon to avoid SMS interruptions.")
+                : (isAmharic ? t.billing.creditsHealthyDesc : "Enough credits for standard store operation.")}
           </p>
         </div>
 
         <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">
-            <span>Total SMS Dispatched</span>
+            <span>{isAmharic ? t.billing.totalDispatchedCard : "Total SMS Dispatched"}</span>
             <Receipt className="w-4 h-4 text-slate-400" />
           </div>
           <div className="mt-4 flex items-baseline gap-2">
@@ -157,35 +161,35 @@ export function BillingClient() {
               {loading ? "..." : balance?.smsCreditsUsed ?? 0}
             </span>
             <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-              Sent
+              {isAmharic ? t.billing.sentLabel : "Sent"}
             </span>
           </div>
           <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-            Real SMS messages delivered to buyers and sellers via SMSHub.
+            {isAmharic ? t.billing.realSmsDeliveredDesc : "Real SMS messages delivered to buyers and sellers via SMSHub."}
           </p>
         </div>
 
         <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">
-            <span>Supported Gateways</span>
+            <span>{isAmharic ? t.billing.supportedGatewaysCard : "Supported Gateways"}</span>
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
           </div>
           <div className="mt-3 space-y-2">
             <div className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>Telebirr (Ethiopian Mobile Money)</span>
+              <span>{isAmharic ? t.billing.telebirrGateway : "Telebirr (Ethiopian Mobile Money)"}</span>
             </div>
             <div className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
               <span className="w-2 h-2 rounded-full bg-sky-500" />
-              <span>CBE Birr & Commercial Bank</span>
+              <span>{isAmharic ? t.billing.cbeBirrGateway : "CBE Birr & Commercial Bank"}</span>
             </div>
             <div className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
               <span className="w-2 h-2 rounded-full bg-violet-500" />
-              <span>Visa / Mastercard / Awash</span>
+              <span>{isAmharic ? t.billing.cardsGateway : "Visa / Mastercard / Awash"}</span>
             </div>
           </div>
           <p className="mt-3 text-[11px] text-slate-400 dark:text-slate-500">
-            Secured by Chapa Payment Gateway. Instant credit activation upon confirmation.
+            {isAmharic ? t.billing.securedByChapaDesc : "Secured by Chapa Payment Gateway. Instant credit activation upon confirmation."}
           </p>
         </div>
       </div>
@@ -194,10 +198,10 @@ export function BillingClient() {
       <div className="space-y-4">
         <div>
           <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-slate-100">
-            Select an SMS Bundle
+            {isAmharic ? t.billing.selectBundleTitle : "Select an SMS Bundle"}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Choose the package that fits your shop volume. Credits never expire.
+            {isAmharic ? t.billing.selectBundleSubtitle : "Choose the package that fits your shop volume. Credits never expire."}
           </p>
         </div>
 
@@ -223,20 +227,26 @@ export function BillingClient() {
                         }`}
                     >
                       <Sparkles className="w-3 h-3" />
-                      <span>{pkg.badge}</span>
+                      <span>{isAmharic && pkg.badge === "Popular" ? "ተመራጭ" : isAmharic && pkg.badge === "Best Value" ? "ምርጥ ቅናሽ" : pkg.badge}</span>
                     </span>
                   </div>
                 )}
 
                 <div>
-                  <h3 className="text-lg font-bold">{pkg.name}</h3>
+                  <h3 className="text-lg font-bold">
+                    {isAmharic
+                      ? (pkg.id === "starter_50" ? t.billing.starterPack : pkg.id === "growth_200" ? t.billing.growthPack : pkg.id === "pro_500" ? t.billing.proPack : pkg.name)
+                      : pkg.name}
+                  </h3>
                   <p
                     className={`text-xs mt-1 min-h-[32px] ${isFeatured
                         ? "text-slate-300"
                         : "text-slate-500 dark:text-slate-400"
                       }`}
                   >
-                    {pkg.description}
+                    {isAmharic
+                      ? (pkg.id === "starter_50" ? "ለአነስተኛ ሱቆች እና አዲስ ሻጮች ተስማሚ" : pkg.id === "growth_200" ? "ለተሻለ ሽያጭ ላላቸው መካከለኛ ሱቆች ተመራጭ" : pkg.id === "pro_500" ? "ለከፍተኛ የሽያጭ መጠን ላላቸው ሱቆች የሚሆን" : pkg.description)
+                      : pkg.description}
                   </p>
 
                   <div className="mt-5 flex items-baseline gap-1.5">
@@ -252,27 +262,27 @@ export function BillingClient() {
                   </div>
 
                   <div className="mt-2 text-xs font-medium text-slate-400">
-                    <span>{pkg.credits} SMS Credits</span>
+                    <span>{pkg.credits} {isAmharic ? t.billing.smsCreditsUnit : "SMS Credits"}</span>
                     <span className="mx-1.5">•</span>
-                    <span>{(pkg.priceEtb / pkg.credits).toFixed(2)} ETB / SMS</span>
+                    <span>{(pkg.priceEtb / pkg.credits).toFixed(2)} {isAmharic ? t.billing.etbPerSms : "ETB / SMS"}</span>
                   </div>
 
                   <ul className="mt-6 space-y-2.5 text-xs">
                     <li className="flex items-center gap-2">
                       <Check className={`w-4 h-4 ${isFeatured ? "text-emerald-400" : "text-emerald-500"}`} />
-                      <span>Instant balance top-up</span>
+                      <span>{isAmharic ? t.billing.featInstantTopUp : "Instant balance top-up"}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className={`w-4 h-4 ${isFeatured ? "text-emerald-400" : "text-emerald-500"}`} />
-                      <span>Telebirr, CBE Birr & Cards</span>
+                      <span>{isAmharic ? t.billing.featGateways : "Telebirr, CBE Birr & Cards"}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className={`w-4 h-4 ${isFeatured ? "text-emerald-400" : "text-emerald-500"}`} />
-                      <span>No monthly expiration date</span>
+                      <span>{isAmharic ? t.billing.featNoExpiration : "No monthly expiration date"}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className={`w-4 h-4 ${isFeatured ? "text-emerald-400" : "text-emerald-500"}`} />
-                      <span>Real-time delivery receipts</span>
+                      <span>{isAmharic ? t.billing.featReceipts : "Real-time delivery receipts"}</span>
                     </li>
                   </ul>
                 </div>
@@ -289,11 +299,11 @@ export function BillingClient() {
                     {isBusy ? (
                       <>
                         <RotateCw className="w-4 h-4 animate-spin" />
-                        <span>Connecting to Chapa...</span>
+                        <span>{isAmharic ? t.billing.connectingToChapa : "Connecting to Chapa..."}</span>
                       </>
                     ) : (
                       <>
-                        <span>Buy with Chapa</span>
+                        <span>{isAmharic ? t.billing.buyWithChapaBtn : "Buy with Chapa"}</span>
                         <ArrowRight className="w-4 h-4" />
                       </>
                     )}
@@ -310,10 +320,10 @@ export function BillingClient() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-              Payment & Top-Up History
+              {isAmharic ? t.billing.transactionsTitle : "Payment & Top-Up History"}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Audit record of your previous Chapa transactions and purchased credits.
+              {isAmharic ? t.billing.auditHistoryDesc : "Audit record of your previous Chapa transactions and purchased credits."}
             </p>
           </div>
           <button
@@ -321,7 +331,7 @@ export function BillingClient() {
             className="text-xs text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 flex items-center gap-1 font-medium transition"
           >
             <RotateCw className="w-3.5 h-3.5" />
-            <span>Refresh</span>
+            <span>{isAmharic ? t.billing.refreshBtn : "Refresh"}</span>
           </button>
         </div>
 
@@ -329,20 +339,24 @@ export function BillingClient() {
           {transactions.length === 0 ? (
             <div className="p-8 text-center text-slate-500 dark:text-slate-400 text-xs">
               <Clock className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-700 mb-2" />
-              <p className="font-semibold text-slate-700 dark:text-slate-300">No payment transactions yet</p>
-              <p className="mt-1">When you top up your account, payment receipts will appear here.</p>
+              <p className="font-semibold text-slate-700 dark:text-slate-300">
+                {isAmharic ? t.billing.noTransactionsYet : "No payment transactions yet"}
+              </p>
+              <p className="mt-1">
+                {isAmharic ? t.billing.receiptsAppearHere : "When you top up your account, payment receipts will appear here."}
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                   <tr>
-                    <th className="px-4 py-3">Date</th>
-                    <th className="px-4 py-3">Reference</th>
-                    <th className="px-4 py-3">Package / Credits</th>
-                    <th className="px-4 py-3">Amount</th>
-                    <th className="px-4 py-3">Method</th>
-                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">{isAmharic ? t.billing.colDate : "Date"}</th>
+                    <th className="px-4 py-3">{isAmharic ? t.billing.colRef : "Reference"}</th>
+                    <th className="px-4 py-3">{isAmharic ? t.billing.colPackage : "Package / Credits"}</th>
+                    <th className="px-4 py-3">{isAmharic ? t.billing.colAmount : "Amount"}</th>
+                    <th className="px-4 py-3">{isAmharic ? t.billing.colMethod : "Method"}</th>
+                    <th className="px-4 py-3">{isAmharic ? t.billing.colStatus : "Status"}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
