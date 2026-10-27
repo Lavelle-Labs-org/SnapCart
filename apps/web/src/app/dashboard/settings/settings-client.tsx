@@ -494,6 +494,7 @@ export default function SettingsClient({
             <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
               <div className="relative group flex-shrink-0">
                 {logoUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     id="profile-picture-preview"
                     src={logoUrl}

@@ -6,6 +6,7 @@ import { ShoppingBag, ArrowRight, PackageX, Plus, Minus, CheckCircle2 } from "lu
 import { toBirr } from "@order-by-sms/contracts";
 import { useTranslation } from "../../../lib/i18n";
 import { LanguageToggle } from "../../../components/language-toggle";
+import { ThemeToggle } from "../../../components/theme-toggle";
 
 export interface StorefrontSellerProp {
   id: string;
@@ -85,15 +86,16 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
   const shopDisplayName = seller.smsName || seller.businessName;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between max-w-md mx-auto border-x border-slate-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-between max-w-md mx-auto border-x border-slate-200 dark:border-slate-800 transition-colors duration-200">
       {/* Header */}
-      <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3.5 sticky top-0 z-10 flex items-center justify-between shadow-xs gap-2">
+      <header className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3.5 sticky top-0 z-10 flex items-center justify-between shadow-xs gap-2">
         <div className="flex items-center space-x-2.5 min-w-0 flex-1">
           {seller.logoUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={seller.logoUrl}
               alt={shopDisplayName}
-              className="w-10 h-10 rounded-xl object-cover border border-slate-200/80 shadow-xs flex-shrink-0 bg-white"
+              className="w-10 h-10 rounded-xl object-cover border border-slate-200/80 dark:border-slate-700 shadow-xs flex-shrink-0 bg-white dark:bg-slate-800"
             />
           ) : (
             <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center text-base shadow-xs select-none flex-shrink-0">
@@ -102,13 +104,13 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
           )}
           <div className="min-w-0 pr-1">
             <div className="flex items-center gap-1.5">
-              <h1 className="text-sm sm:text-base font-bold text-slate-900 leading-tight truncate">{shopDisplayName}</h1>
-              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full flex-shrink-0">
-                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+              <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">{shopDisplayName}</h1>
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                 {isAmharic ? "የተረጋገጠ" : "Verified"}
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
               {isAmharic ? "በቀጥታ ይዘዙ • በጥሬ ገንዘብ ይክፈሉ" : "Order online • Cash on pickup or delivery"}
             </p>
           </div>
@@ -116,10 +118,11 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <LanguageToggle />
-          <div className="relative bg-emerald-50 text-emerald-700 p-2 rounded-xl border border-emerald-200 flex items-center justify-center min-h-[44px] min-w-[44px]">
+          <ThemeToggle />
+          <div className="relative bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 p-2 rounded-xl border border-emerald-200 dark:border-emerald-800 flex items-center justify-center min-h-[44px] min-w-[44px]">
             <ShoppingBag className="w-4 h-4" />
             {isMounted && totalItems > 0 && (
-              <span className="absolute -top-1 -right-1 bg-emerald-600 text-white font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-xs">
+              <span className="absolute -top-1 -right-1 bg-emerald-600 text-white font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 shadow-xs">
                 {totalItems}
               </span>
             )}
@@ -131,12 +134,12 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
       <main className="p-4 space-y-4 flex-1">
         {products.length === 0 ? (
           // Friendly Empty State
-          <div className="bg-white p-8 rounded-2xl border border-slate-200 text-center space-y-3 mt-6">
-            <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto">
+          <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 text-center space-y-3 mt-6">
+            <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-full flex items-center justify-center mx-auto">
               <PackageX className="w-6 h-6" />
             </div>
-            <h2 className="text-base font-semibold text-slate-900">{t.storefront.noProductsFound}</h2>
-            <p className="text-xs text-slate-500 max-w-xs mx-auto">
+            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">{t.storefront.noProductsFound}</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
               {isAmharic
                 ? "ይህ መደብር በአሁኑ ጊዜ ለትዕዛዝ የሚሆኑ እቃዎች የሉትም። እባክዎ ቆይተው እንደገና ይመልከቱ!"
                 : "This shop doesn't have any items available for ordering at the moment. Please check back later!"}
@@ -152,10 +155,10 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
               return (
                 <div
                   key={product.id}
-                  className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between transition hover:border-slate-300 gap-3"
+                  className="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between transition hover:border-slate-300 dark:hover:border-slate-700 gap-3"
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 flex-shrink-0 overflow-hidden relative flex items-center justify-center">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex-shrink-0 overflow-hidden relative flex items-center justify-center">
                       {product.imageUrl || product.image_url ? (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img
@@ -165,12 +168,12 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
                           loading="lazy"
                         />
                       ) : (
-                        <ShoppingBag className="w-6 h-6 text-slate-300" />
+                        <ShoppingBag className="w-6 h-6 text-slate-300 dark:text-slate-600" />
                       )}
                     </div>
                     <div className="min-w-0 pr-2">
-                      <h3 className="font-semibold text-slate-900 text-sm leading-snug truncate">{product.name}</h3>
-                      <p className="text-sm font-bold text-emerald-700 tabular-nums mt-1">
+                      <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm leading-snug truncate">{product.name}</h3>
+                      <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums mt-1">
                         {priceBirr} {t.common.currency}
                       </p>
                     </div>
@@ -182,23 +185,23 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
                       <button
                         type="button"
                         onClick={() => updateQuantity(product.id, 1)}
-                        className="min-h-[44px] min-w-[72px] bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold px-4 py-2.5 rounded-xl text-xs transition flex items-center justify-center space-x-1"
+                        className="min-h-[44px] min-w-[72px] bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200/60 dark:border-emerald-800/60 font-semibold px-4 py-2.5 rounded-xl text-xs transition flex items-center justify-center space-x-1"
                         aria-label={`Add ${product.name} to cart`}
                       >
                         <Plus className="w-3.5 h-3.5" />
                         <span>{t.storefront.addToCart}</span>
                       </button>
                     ) : (
-                      <div className="flex items-center space-x-1.5 bg-slate-100 rounded-xl p-1 border border-slate-200">
+                      <div className="flex items-center space-x-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl p-1 border border-slate-200 dark:border-slate-700">
                         <button
                           type="button"
                           onClick={() => updateQuantity(product.id, -1)}
-                          className="w-11 h-11 min-h-[44px] min-w-[44px] bg-white text-slate-700 hover:bg-slate-200 rounded-lg flex items-center justify-center transition shadow-xs active:scale-95"
+                          className="w-11 h-11 min-h-[44px] min-w-[44px] bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg flex items-center justify-center transition shadow-xs active:scale-95"
                           aria-label={`Decrease quantity of ${product.name}`}
                         >
                           <Minus className="w-4 h-4" />
                         </button>
-                        <span className="w-7 text-center font-bold text-slate-900 text-sm">{qty}</span>
+                        <span className="w-7 text-center font-bold text-slate-900 dark:text-slate-100 text-sm">{qty}</span>
                         <button
                           type="button"
                           onClick={() => updateQuantity(product.id, 1)}
@@ -219,7 +222,7 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
 
       {/* Sticky Bottom Checkout Footer */}
       {products.length > 0 && (
-        <footer className="bg-white border-t border-slate-200 p-4 sticky bottom-0 z-20 shadow-xs">
+        <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 sticky bottom-0 z-20 shadow-xs">
           {isMounted && totalItems > 0 ? (
             <Link
               href={`/s/${seller.slug}/checkout`}
@@ -236,7 +239,7 @@ export function StorefrontCatalog({ seller, products }: StorefrontCatalogProps) 
               </div>
             </Link>
           ) : (
-            <div className="w-full min-h-[48px] flex items-center justify-between bg-slate-100 text-slate-400 font-medium px-5 py-3.5 rounded-xl cursor-not-allowed text-sm">
+            <div className="w-full min-h-[48px] flex items-center justify-between bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-medium px-5 py-3.5 rounded-xl cursor-not-allowed text-sm">
               <span>{isAmharic ? "እቃዎችን በመምረጥ ማዘዝ ይጀምሩ" : "Select items to start order"}</span>
               <span>0 {t.common.currency}</span>
             </div>

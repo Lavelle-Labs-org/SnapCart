@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CheckCircle2, Home, MessageSquare, Store } from "lucide-react";
 import { prisma } from "../../../../lib/prisma";
 import { LanguageToggle } from "../../../../components/language-toggle";
+import { ThemeToggle } from "../../../../components/theme-toggle";
 
 interface DonePageProps {
   params: Promise<{ slug: string }>;
@@ -101,7 +102,8 @@ export default async function DonePage({ params, searchParams }: DonePageProps) 
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-between max-w-md mx-auto border-x border-slate-200 dark:border-slate-800 p-6 text-center transition-colors duration-200">
-      <div className="w-full flex justify-end pb-2">
+      <div className="w-full flex justify-end items-center gap-2 pb-2">
+        <ThemeToggle />
         <LanguageToggle />
       </div>
 
