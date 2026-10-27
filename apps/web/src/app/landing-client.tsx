@@ -14,6 +14,8 @@ import {
   Store,
   Clock,
   Sparkles,
+  Zap,
+  HelpCircle,
   ChevronDown,
   ExternalLink,
   Lock,
@@ -77,17 +79,132 @@ export default function LandingClient() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-between transition-colors duration-200">
-      {/* 1. Navbar */}
-      <header className="border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          {/* Brand Logo */}
+      {/* Mobile Drawer Backdrop */}
+      {isMobileMenuOpen && (
+        <div
+          role="button"
+          tabIndex={0}
+          aria-label="Close navigation overlay"
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 md:hidden transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape" || e.key === "Enter") setIsMobileMenuOpen(false);
+          }}
+        />
+      )}
+
+      {/* Mobile Navigation Drawer (Slides from Left, identical to Dashboard) */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col justify-between shadow-2xl border-r border-slate-200 dark:border-slate-800 transition-transform duration-300 ease-in-out md:hidden ${
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+        aria-label="Mobile navigation"
+      >
+        <div>
+          {/* Drawer Header */}
+          <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <Link
+              href="/"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center space-x-2.5"
+              aria-label="Snapcart Home"
+            >
+              <SnapcartLogo variant="horizontal" size="md" />
+            </Link>
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-touch min-w-touch flex items-center justify-center focus-visible:ring-2 focus-visible:ring-emerald-500"
+              aria-label="Close navigation menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Drawer Links */}
+          <nav className="p-3 space-y-1">
+            <a
+              href="#how-it-works"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center space-x-3 px-3.5 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-touch"
+            >
+              <Sparkles className="w-5 h-5 flex-shrink-0 text-slate-400" />
+              <span>{isAmharic ? t.landing.howItWorksNav : "How It Works"}</span>
+            </a>
+            <a
+              href="#features"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center space-x-3 px-3.5 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-touch"
+            >
+              <Zap className="w-5 h-5 flex-shrink-0 text-slate-400" />
+              <span>{isAmharic ? t.landing.featuresNav : "Features"}</span>
+            </a>
+            <Link
+              href="/s/habesha-cafe"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-touch"
+            >
+              <div className="flex items-center space-x-3">
+                <ShoppingBag className="w-5 h-5 flex-shrink-0 text-slate-400" />
+                <span>{isAmharic ? t.landing.demoStoreNav : "Demo Store"}</span>
+              </div>
+              <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
+                {isAmharic ? t.landing.mobileLivePreview : "Live Preview"}
+              </span>
+            </Link>
+            <a
+              href="#faq"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center space-x-3 px-3.5 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-touch"
+            >
+              <HelpCircle className="w-5 h-5 flex-shrink-0 text-slate-400" />
+              <span>{isAmharic ? t.landing.faqNav : "FAQ"}</span>
+            </a>
+          </nav>
+        </div>
+
+        {/* Drawer Footer Actions */}
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
           <Link
-            href="/"
-            className="flex items-center space-x-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-lg p-1"
-            aria-label="Snapcart Home"
+            href="/login"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="w-full text-center text-sm font-semibold border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-touch flex items-center justify-center"
           >
-            <SnapcartLogo variant="horizontal" size="md" />
+            {isAmharic ? t.landing.signInBtn : "Seller Login"}
           </Link>
+          <Link
+            href="/signup"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="w-full text-center text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-4 py-3 rounded-xl transition shadow-xs min-h-touch flex items-center justify-center gap-1.5"
+          >
+            <span>{isAmharic ? t.landing.heroCtaPrimary : "Start Selling Free"}</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </aside>
+
+      {/* 1. Navbar */}
+      <header className="border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          {/* Brand Logo & Mobile Menu Hamburger (Left-aligned like Dashboard) */}
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="md:hidden p-2 -ml-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-touch min-w-touch flex items-center justify-center focus-visible:ring-2 focus-visible:ring-emerald-500"
+              aria-label="Open navigation menu"
+              aria-expanded={isMobileMenuOpen}
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <Link
+              href="/"
+              className="flex items-center space-x-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-lg p-1"
+              aria-label="Snapcart Home"
+            >
+              <SnapcartLogo variant="horizontal" size="md" />
+            </Link>
+          </div>
 
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 text-sm font-medium text-slate-600 dark:text-slate-300">
@@ -139,78 +256,12 @@ export default function LandingClient() {
             </Link>
           </div>
 
-          {/* Mobile Right Controls: Theme Toggle, Language Toggle & Hamburger */}
+          {/* Mobile Right Controls: Language Toggle & Theme Toggle */}
           <div className="flex items-center space-x-2 md:hidden">
             <LanguageToggle />
             <ThemeToggle />
-            <button
-              type="button"
-              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-              className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] min-w-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-emerald-500"
-              aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
-              aria-expanded={isMobileMenuOpen}
-            >
-              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
           </div>
         </div>
-
-        {/* Mobile Dropdown Menu Drawer */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pt-2 pb-6 space-y-3 shadow-lg">
-            <nav className="flex flex-col space-y-1 text-sm font-medium text-slate-700 dark:text-slate-200">
-              <a
-                href="#how-it-works"
-                onClick={closeMobileMenu}
-                className="px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] flex items-center"
-              >
-                {isAmharic ? t.landing.howItWorksNav : "How It Works"}
-              </a>
-              <a
-                href="#features"
-                onClick={closeMobileMenu}
-                className="px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] flex items-center"
-              >
-                {isAmharic ? t.landing.featuresNav : "Features"}
-              </a>
-              <Link
-                href="/s/habesha-cafe"
-                onClick={closeMobileMenu}
-                className="px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] flex items-center justify-between"
-              >
-                <span>{isAmharic ? t.landing.demoStoreNav : "Demo Store"}</span>
-                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
-                  {isAmharic ? t.landing.mobileLivePreview : "Live Preview"}
-                </span>
-              </Link>
-              <a
-                href="#faq"
-                onClick={closeMobileMenu}
-                className="px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] flex items-center"
-              >
-                {isAmharic ? t.landing.faqNav : "FAQ"}
-              </a>
-            </nav>
-
-            <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-2">
-              <Link
-                href="/login"
-                onClick={closeMobileMenu}
-                className="w-full text-center text-sm font-semibold border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 px-4 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] flex items-center justify-center"
-              >
-                {isAmharic ? t.landing.signInBtn : "Seller Login"}
-              </Link>
-              <Link
-                href="/signup"
-                onClick={closeMobileMenu}
-                className="w-full text-center text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl transition shadow-xs min-h-[44px] flex items-center justify-center gap-1.5"
-              >
-                <span>{isAmharic ? t.landing.heroCtaPrimary : "Start Selling Free"}</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
-        )}
       </header>
 
       {/* Main Content Area */}

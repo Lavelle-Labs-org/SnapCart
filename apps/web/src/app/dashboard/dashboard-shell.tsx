@@ -133,13 +133,13 @@ export function DashboardShell({
         <div>
           {/* Drawer Header */}
           <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <div className="flex items-center space-x-3 min-w-0">
-              <SnapcartIcon size="md" className="flex-shrink-0" />
+            <div className="flex items-center space-x-3.5 min-w-0">
+              <SnapcartIcon size="lg" className="flex-shrink-0" />
               <div className="min-w-0 flex-1">
-                <span className="font-bold text-base block truncate text-slate-900 dark:text-slate-100" title={displayName}>
+                <span className="font-bold text-lg block truncate text-slate-900 dark:text-slate-100" title={displayName}>
                   {displayName}
                 </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400 block truncate">
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 block truncate">
                   {displaySubtitle}
                 </span>
               </div>
@@ -206,13 +206,13 @@ export function DashboardShell({
             }`}
           >
             <div className={`flex items-center space-x-3 min-w-0 ${isCollapsed ? "justify-center" : ""}`}>
-              <SnapcartIcon size="md" className="flex-shrink-0" />
+              <SnapcartIcon size={isCollapsed ? "lg" : "md"} className="flex-shrink-0" />
               {!isCollapsed && (
                 <div className="min-w-0 flex-1">
-                  <span className="font-bold text-sm block truncate text-slate-900 dark:text-slate-100" title={displayName}>
+                  <span className="font-bold text-base block truncate text-slate-900 dark:text-slate-100" title={displayName}>
                     {displayName}
                   </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 block truncate">
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400 block truncate">
                     {displaySubtitle}
                   </span>
                 </div>
@@ -298,7 +298,7 @@ export function DashboardShell({
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile App Bar */}
         <div className="md:hidden bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-4 py-3 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-xs">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 min-w-0">
             <button
               type="button"
               onClick={() => setIsMobileOpen(true)}
@@ -307,11 +307,16 @@ export function DashboardShell({
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="flex items-center space-x-2.5">
-              <SnapcartIcon size="sm" className="flex-shrink-0" />
-              <span className="font-bold text-sm tracking-tight truncate max-w-[150px] text-slate-900 dark:text-slate-100">
-                {displayName}
-              </span>
+            <div className="flex items-center space-x-3 min-w-0">
+              <SnapcartIcon size="md" className="flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <span className="font-bold text-base tracking-tight truncate block max-w-[160px] sm:max-w-xs text-slate-900 dark:text-slate-100" title={displayName}>
+                  {displayName}
+                </span>
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block truncate leading-none">
+                  {displaySubtitle}
+                </span>
+              </div>
             </div>
           </div>
           <div className="flex items-center space-x-2">
