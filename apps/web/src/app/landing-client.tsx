@@ -64,6 +64,8 @@ export default function LandingClient() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
+  const faqs = isAmharic ? t.landing.faqs : FAQS;
+
   const toggleFaq = (index: number) => {
     setOpenFaqIndex((prev) => (prev === index ? null : index));
   };
@@ -109,9 +111,9 @@ export default function LandingClient() {
               href="/s/habesha-cafe"
               className="px-3 py-2 rounded-lg hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] inline-flex items-center gap-1.5"
             >
-              <span>{isAmharic ? "የሙከራ መደብር" : "Demo Store"}</span>
+              <span>{isAmharic ? t.landing.demoStoreNav : "Demo Store"}</span>
               <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
-                {isAmharic ? "ቀጥታ" : "Live"}
+                {isAmharic ? t.landing.liveBadge : "Live"}
               </span>
             </Link>
             <a
@@ -166,23 +168,23 @@ export default function LandingClient() {
                 onClick={closeMobileMenu}
                 className="px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] flex items-center"
               >
-                How It Works
+                {isAmharic ? t.landing.howItWorksNav : "How It Works"}
               </a>
               <a
                 href="#features"
                 onClick={closeMobileMenu}
                 className="px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] flex items-center"
               >
-                Features
+                {isAmharic ? t.landing.featuresNav : "Features"}
               </a>
               <Link
                 href="/s/habesha-cafe"
                 onClick={closeMobileMenu}
                 className="px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] flex items-center justify-between"
               >
-                <span>Demo Store</span>
+                <span>{isAmharic ? t.landing.demoStoreNav : "Demo Store"}</span>
                 <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
-                  Live Preview
+                  {isAmharic ? t.landing.mobileLivePreview : "Live Preview"}
                 </span>
               </Link>
               <a
@@ -190,7 +192,7 @@ export default function LandingClient() {
                 onClick={closeMobileMenu}
                 className="px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] flex items-center"
               >
-                FAQ
+                {isAmharic ? t.landing.faqNav : "FAQ"}
               </a>
             </nav>
 
@@ -200,14 +202,14 @@ export default function LandingClient() {
                 onClick={closeMobileMenu}
                 className="w-full text-center text-sm font-semibold border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 px-4 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] flex items-center justify-center"
               >
-                Seller Login
+                {isAmharic ? t.landing.signInBtn : "Seller Login"}
               </Link>
               <Link
                 href="/signup"
                 onClick={closeMobileMenu}
                 className="w-full text-center text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl transition shadow-xs min-h-[44px] flex items-center justify-center gap-1.5"
               >
-                <span>Start Selling Free</span>
+                <span>{isAmharic ? t.landing.heroCtaPrimary : "Start Selling Free"}</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -222,18 +224,17 @@ export default function LandingClient() {
           {/* Trust Network Badge */}
           <div className="inline-flex items-center space-x-2 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-semibold px-3.5 py-1.5 rounded-full mb-6 shadow-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Built for Ethiopian Micro-Merchants • Ethio Telecom &amp; Safaricom via SMSHub.et</span>
+            <span>{isAmharic ? t.landing.heroBadge : "Built for Ethiopian Micro-Merchants • Ethio Telecom & Safaricom via SMSHub.et"}</span>
           </div>
 
           {/* Hero Headline */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 max-w-4xl leading-[1.15]">
-            A business you can run entirely from text messages.
+            {isAmharic ? t.landing.heroTitle : "A business you can run entirely from text messages."}
           </h1>
 
           {/* Hero Subhead */}
           <p className="mt-6 text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
-            Share one storefront link in your Telegram channel or Instagram bio. Customers order without an account,
-            and you manage fulfillment with secure 1-tap SMS action links. No apps to install. No complex dashboards.
+            {isAmharic ? t.landing.heroSubtitle : "Share one storefront link in your Telegram channel or Instagram bio. Customers order without an account, and you manage fulfillment with secure 1-tap SMS action links. No apps to install. No complex dashboards."}
           </p>
 
           {/* Hero CTAs */}
@@ -242,7 +243,7 @@ export default function LandingClient() {
               href="/signup"
               className="inline-flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold px-7 py-3.5 rounded-xl transition shadow-sm focus-visible:ring-2 focus-visible:ring-emerald-500 min-h-[44px]"
             >
-              <span>Start Selling Free</span>
+              <span>{isAmharic ? t.landing.heroCtaPrimary : "Start Selling Free"}</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
@@ -250,7 +251,7 @@ export default function LandingClient() {
               className="inline-flex items-center justify-center space-x-2 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-semibold px-6 py-3.5 rounded-xl transition shadow-xs focus-visible:ring-2 focus-visible:ring-slate-400 min-h-[44px]"
             >
               <ShoppingBag className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              <span>Explore Demo Store</span>
+              <span>{isAmharic ? t.landing.heroCtaSecondary : "Explore Demo Store"}</span>
               <ExternalLink className="w-4 h-4 text-slate-400" />
             </Link>
           </div>
@@ -259,15 +260,15 @@ export default function LandingClient() {
           <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5">
               <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              Zero app installs for buyers
+              {isAmharic ? t.landing.trustZeroApps : "Zero app installs for buyers"}
             </span>
             <span className="flex items-center gap-1.5">
               <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              Instant SMS order dispatch
+              {isAmharic ? t.landing.trustInstantSms : "Instant SMS order dispatch"}
             </span>
             <span className="flex items-center gap-1.5">
               <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              4-digit handover proof code
+              {isAmharic ? t.landing.trustHandoverCode : "4-digit handover proof code"}
             </span>
           </div>
 
@@ -286,7 +287,7 @@ export default function LandingClient() {
                 </div>
                 <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
                   <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Live Product Preview</span>
+                  <span>{isAmharic ? t.landing.mockupLivePreview : "Live Product Preview"}</span>
                 </div>
               </div>
 
@@ -300,14 +301,14 @@ export default function LandingClient() {
                       <div>
                         <div className="flex items-center gap-2">
                           <h2 className="font-bold text-base text-slate-900 dark:text-slate-100">
-                            Habesha Cafe &amp; Bakery
+                            {isAmharic ? "ሐበሻ ካፌና ቤከሪ" : "Habesha Cafe & Bakery"}
                           </h2>
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
-                            Verified
+                            {isAmharic ? t.landing.mockupVerified : "Verified"}
                           </span>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                          Bole Medhanialem, Addis Ababa • Pickup in 20-30m
+                          {isAmharic ? t.landing.mockupPickupTime : "Bole Medhanialem, Addis Ababa • Pickup in 20-30m"}
                         </p>
                       </div>
                       <div className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
@@ -320,10 +321,10 @@ export default function LandingClient() {
                       <div className="flex items-center justify-between p-3 rounded-lg border border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/40">
                         <div className="pr-3">
                           <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">
-                            Special Combo Platter
+                            {isAmharic ? "ልዩ ጥብስና ክትፎ ኮምቦ" : "Special Combo Platter"}
                           </h3>
                           <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
-                            Tibs, kitfo, and spicy lentils with two injera
+                            {isAmharic ? "ጥብስ፣ ክትፎ እና ምስር ወጥ ከሁለት እንጀራ ጋር" : "Tibs, kitfo, and spicy lentils with two injera"}
                           </p>
                           <span className="font-bold text-xs text-emerald-600 dark:text-emerald-400 tabular-nums mt-1 block">
                             350.00 ETB
@@ -331,7 +332,7 @@ export default function LandingClient() {
                         </div>
                         <div className="flex items-center space-x-1.5 text-xs font-semibold">
                           <span className="px-2.5 py-1 rounded-md bg-emerald-600 text-white">
-                            1 in cart
+                            {isAmharic ? t.landing.mockupCartItem : "1 in cart"}
                           </span>
                         </div>
                       </div>
@@ -339,10 +340,10 @@ export default function LandingClient() {
                       <div className="flex items-center justify-between p-3 rounded-lg border border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/40">
                         <div className="pr-3">
                           <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">
-                            Single Doro Wat
+                            {isAmharic ? "ነጠላ የዶሮ ወጥ" : "Single Doro Wat"}
                           </h3>
                           <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
-                            Slow-cooked chicken drumstick with hard-boiled egg
+                            {isAmharic ? "የተመረጠ የዶሮ ጭን ከተቀቀለ እንቁላል ጋር" : "Slow-cooked chicken drumstick with hard-boiled egg"}
                           </p>
                           <span className="font-bold text-xs text-emerald-600 dark:text-emerald-400 tabular-nums mt-1 block">
                             220.00 ETB
@@ -352,7 +353,7 @@ export default function LandingClient() {
                           type="button"
                           className="px-2.5 py-1 rounded-md border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium"
                         >
-                          + Add
+                          {isAmharic ? t.landing.mockupAddBtn : "+ Add"}
                         </button>
                       </div>
                     </div>
@@ -361,7 +362,9 @@ export default function LandingClient() {
                   {/* Customer Quick Order Checkout Preview */}
                   <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
                     <div className="flex items-center justify-between text-xs mb-2.5">
-                      <span className="text-slate-500 dark:text-slate-400">Order Subtotal:</span>
+                      <span className="text-slate-500 dark:text-slate-400">
+                        {isAmharic ? t.landing.mockupSubtotal : "Order Subtotal:"}
+                      </span>
                       <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">
                         350.00 ETB
                       </span>
@@ -370,11 +373,11 @@ export default function LandingClient() {
                       <div className="flex-1 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono text-xs flex items-center justify-between">
                         <span>0911 22 33 44</span>
                         <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-sans font-semibold">
-                          OTP Verified
+                          {isAmharic ? t.landing.mockupOtpVerified : "OTP Verified"}
                         </span>
                       </div>
                       <div className="px-3.5 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold flex items-center gap-1">
-                        <span>Place Order</span>
+                        <span>{isAmharic ? t.landing.mockupPlaceOrder : "Place Order"}</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </div>
                     </div>
@@ -392,13 +395,15 @@ export default function LandingClient() {
                         </div>
                         <div>
                           <div className="font-bold text-xs text-slate-900 dark:text-slate-100">
-                            SMSHub Dispatch
+                            {isAmharic ? t.landing.mockupSmsHeader : "SMSHub Dispatch"}
                           </div>
-                          <div className="text-[10px] text-slate-400">Carrier: Ethio Telecom / Safaricom</div>
+                          <div className="text-[10px] text-slate-400">
+                            {isAmharic ? t.landing.mockupSmsCarrier : "Carrier: Ethio Telecom / Safaricom"}
+                          </div>
                         </div>
                       </div>
                       <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
-                        Delivered
+                        {isAmharic ? t.landing.mockupDelivered : "Delivered"}
                       </span>
                     </div>
 
@@ -407,19 +412,31 @@ export default function LandingClient() {
                       {/* Seller Alert Message Bubble */}
                       <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 space-y-1.5 border border-slate-200/60 dark:border-slate-700/60">
                         <div className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">
-                          Incoming Seller SMS • Order #1001
+                          {isAmharic ? t.landing.mockupIncomingTitle : "Incoming Seller SMS • Order #1001"}
                         </div>
                         <p className="leading-tight text-[11px]">
-                          [Habesha Cafe] New Order #1001 (350.00 ETB)!
-                          <br />
-                          1x Special Combo Platter
-                          <br />
-                          Buyer: 0911***344
+                          {isAmharic ? (
+                            <>
+                              [ሐበሻ ካፌ] አዲስ ትዕዛዝ #1001 (350.00 ብር)!
+                              <br />
+                              1x ልዩ ጥብስና ክትፎ ኮምቦ
+                              <br />
+                              ገዢ፡ 0911***344
+                            </>
+                          ) : (
+                            <>
+                              [Habesha Cafe] New Order #1001 (350.00 ETB)!
+                              <br />
+                              1x Special Combo Platter
+                              <br />
+                              Buyer: 0911***344
+                            </>
+                          )}
                         </p>
                         {/* 1-Tap Action Link Box */}
                         <div className="pt-1.5">
                           <div className="p-2 rounded bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 text-[11px] font-sans flex items-center justify-between">
-                            <span className="font-semibold">Tap to Accept:</span>
+                            <span className="font-semibold">{isAmharic ? t.landing.mockupTapToAccept : "Tap to Accept:"}</span>
                             <span className="underline font-mono text-[10px] text-emerald-700 dark:text-emerald-300">
                               orderbysms.et/a/token
                             </span>
@@ -430,13 +447,13 @@ export default function LandingClient() {
                       {/* Customer Handover Code SMS */}
                       <div className="p-3 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 space-y-1 border border-emerald-200/80 dark:border-emerald-900/60">
                         <div className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400">
-                          Customer Ready SMS • 4-Digit Proof
+                          {isAmharic ? t.landing.mockupReadyTitle : "Customer Ready SMS • 4-Digit Proof"}
                         </div>
                         <p className="leading-tight text-[11px]">
-                          [Habesha Cafe] Order #1001 is ready for pickup!
+                          {isAmharic ? t.landing.mockupReadyMsg : "[Habesha Cafe] Order #1001 is ready for pickup!"}
                         </p>
                         <div className="py-1 flex items-center gap-2">
-                          <span className="text-[11px] font-sans">Pickup Code:</span>
+                          <span className="text-[11px] font-sans">{isAmharic ? t.landing.mockupPickupCode : "Pickup Code:"}</span>
                           <span className="font-bold text-sm bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 tracking-wider">
                             4821
                           </span>
@@ -447,7 +464,7 @@ export default function LandingClient() {
 
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-                    <span>Cryptographically signed links prevent unauthorized actions.</span>
+                    <span>{isAmharic ? t.landing.mockupCryptoSecurity : "Cryptographically signed links prevent unauthorized actions."}</span>
                   </div>
                 </div>
               </div>
@@ -461,13 +478,13 @@ export default function LandingClient() {
             <div className="text-center max-w-2xl mx-auto mb-14">
               <div className="inline-flex items-center space-x-1.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-semibold px-3 py-1 rounded-full mb-3">
                 <Clock className="w-3.5 h-3.5" />
-                <span>Simple 3-Step Flow</span>
+                <span>{isAmharic ? t.landing.howItWorksBadge : "Simple 3-Step Flow"}</span>
               </div>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-                How Order-by-SMS Works
+                {isAmharic ? t.landing.howItWorksTitle : "How Order-by-SMS Works"}
               </h2>
               <p className="mt-3 text-base text-slate-600 dark:text-slate-400">
-                From sharing a menu link to verifying pickup, run your business without downloading apps or checking dashboards all day.
+                {isAmharic ? t.landing.howItWorksSubtitle : "From sharing a menu link to verifying pickup, run your business without downloading apps or checking dashboards all day."}
               </p>
             </div>
 
@@ -479,19 +496,25 @@ export default function LandingClient() {
                     01
                   </div>
                   <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
-                    Share Your Storefront Link
+                    {isAmharic ? t.landing.step1Title : "Share Your Storefront Link"}
                   </h3>
                   <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                    Set up your business name and menu items in minutes. You get a lightweight shareable link like{" "}
-                    <code className="text-xs px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-mono">
-                      /s/your-shop
-                    </code>{" "}
-                    ready to drop directly into Telegram channels or Instagram bios.
+                    {isAmharic ? (
+                      t.landing.step1Desc
+                    ) : (
+                      <>
+                        Set up your business name and menu items in minutes. You get a lightweight shareable link like{" "}
+                        <code className="text-xs px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-mono">
+                          /s/your-shop
+                        </code>{" "}
+                        ready to drop directly into Telegram channels or Instagram bios.
+                      </>
+                    )}
                   </p>
                 </div>
                 <div className="mt-6 pt-4 border-t border-slate-200/80 dark:border-slate-800 flex items-center text-xs font-medium text-emerald-600 dark:text-emerald-400">
                   <Store className="w-4 h-4 mr-1.5" />
-                  <span>Zero marketplace listing fees</span>
+                  <span>{isAmharic ? t.landing.step1Note : "Zero marketplace listing fees"}</span>
                 </div>
               </div>
 
@@ -502,16 +525,15 @@ export default function LandingClient() {
                     02
                   </div>
                   <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
-                    Customers Order &amp; Verify OTP
+                    {isAmharic ? t.landing.step2Title : "Customers Order & Verify OTP"}
                   </h3>
                   <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                    Shoppers pick their items and enter their Ethiopian phone number. A quick SMSHub OTP verification
-                    confirms their phone in seconds. No account registration, password creation, or app install needed.
+                    {isAmharic ? t.landing.step2Desc : "Shoppers pick their items and enter their Ethiopian phone number. A quick SMSHub OTP verification confirms their phone in seconds. No account registration, password creation, or app install needed."}
                   </p>
                 </div>
                 <div className="mt-6 pt-4 border-t border-slate-200/80 dark:border-slate-800 flex items-center text-xs font-medium text-blue-600 dark:text-blue-400">
                   <ShieldCheck className="w-4 h-4 mr-1.5" />
-                  <span>Eliminates fake orders and bot spam</span>
+                  <span>{isAmharic ? t.landing.step2Note : "Eliminates fake orders and bot spam"}</span>
                 </div>
               </div>
 
@@ -522,16 +544,15 @@ export default function LandingClient() {
                     03
                   </div>
                   <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
-                    Fulfill via 1-Tap SMS Links
+                    {isAmharic ? t.landing.step3Title : "Fulfill via 1-Tap SMS Links"}
                   </h3>
                   <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                    You receive an SMS alert with a cryptographically signed link to Accept or Reject on your phone.
-                    When marked Ready, the buyer receives a 4-digit pickup code to show at handover.
+                    {isAmharic ? t.landing.step3Desc : "You receive an SMS alert with a cryptographically signed link to Accept or Reject on your phone. When marked Ready, the buyer receives a 4-digit pickup code to show at handover."}
                   </p>
                 </div>
                 <div className="mt-6 pt-4 border-t border-slate-200/80 dark:border-slate-800 flex items-center text-xs font-medium text-teal-600 dark:text-teal-400">
                   <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                  <span>Verified 4-digit handover proof</span>
+                  <span>{isAmharic ? t.landing.step3Note : "Verified 4-digit handover proof"}</span>
                 </div>
               </div>
             </div>
@@ -544,13 +565,13 @@ export default function LandingClient() {
             <div className="text-center max-w-2xl mx-auto mb-14">
               <div className="inline-flex items-center space-x-1.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-semibold px-3 py-1 rounded-full mb-3">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Purpose-Built Capabilities</span>
+                <span>{isAmharic ? t.landing.featuresBadge : "Purpose-Built Capabilities"}</span>
               </div>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-                Built for Ethiopian Micro-Commerce
+                {isAmharic ? t.landing.featuresTitle : "Built for Ethiopian Micro-Commerce"}
               </h2>
               <p className="mt-3 text-base text-slate-600 dark:text-slate-400">
-                Engineered from the ground up for low data, mobile-first buyers, and local carrier realities.
+                {isAmharic ? t.landing.featuresSubtitle : "Engineered from the ground up for low data, mobile-first buyers, and local carrier realities."}
               </p>
             </div>
 
@@ -561,10 +582,10 @@ export default function LandingClient() {
                   <Smartphone className="w-5 h-5" />
                 </div>
                 <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
-                  One-Tap Signed Action Links
+                  {isAmharic ? t.landing.feature1Title : "One-Tap Signed Action Links"}
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                  Sellers receive an SMS alert with a tamper-proof HMAC link. Accept, reject, or mark orders ready with one tap on your phone without logging into a dashboard.
+                  {isAmharic ? t.landing.feature1Desc : "Sellers receive an SMS alert with a tamper-proof HMAC link. Accept, reject, or mark orders ready with one tap on your phone without logging into a dashboard."}
                 </p>
               </div>
 
@@ -574,10 +595,10 @@ export default function LandingClient() {
                   <Radio className="w-5 h-5" />
                 </div>
                 <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
-                  Carrier Integration via SMSHub
+                  {isAmharic ? t.landing.feature2Title : "Carrier Integration via SMSHub"}
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                  Direct SMSHub.et integration supports Ethio Telecom (09... / 07...) and Safaricom Ethiopia (07...) numbers with verified delivery callbacks.
+                  {isAmharic ? t.landing.feature2Desc : "Direct SMSHub.et integration supports Ethio Telecom (09... / 07...) and Safaricom Ethiopia (07...) numbers with verified delivery callbacks."}
                 </p>
               </div>
 
@@ -587,10 +608,10 @@ export default function LandingClient() {
                   <Lock className="w-5 h-5" />
                 </div>
                 <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
-                  4-Digit Pickup Handover Proof
+                  {isAmharic ? t.landing.feature3Title : "4-Digit Pickup Handover Proof"}
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                  Every order is locked with a random 4-digit code sent only to the buyer. At pickup, you verify the code to prevent disputes and wrong handovers.
+                  {isAmharic ? t.landing.feature3Desc : "Every order is locked with a random 4-digit code sent only to the buyer. At pickup, you verify the code to prevent disputes and wrong handovers."}
                 </p>
               </div>
 
@@ -600,10 +621,10 @@ export default function LandingClient() {
                   <Store className="w-5 h-5" />
                 </div>
                 <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
-                  Shareable In-App Storefronts
+                  {isAmharic ? t.landing.feature4Title : "Shareable In-App Storefronts"}
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                  Lightweight web menus optimized to open instantly inside Telegram and Instagram in-app webviews with zero friction and fast loading.
+                  {isAmharic ? t.landing.feature4Desc : "Lightweight web menus optimized to open instantly inside Telegram and Instagram in-app webviews with zero friction and fast loading."}
                 </p>
               </div>
 
@@ -613,10 +634,10 @@ export default function LandingClient() {
                   <History className="w-5 h-5" />
                 </div>
                 <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
-                  Honest SMS Delivery Audit Logs
+                  {isAmharic ? t.landing.feature5Title : "Honest SMS Delivery Audit Logs"}
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                  Inspect real delivery timestamps, carrier receipts, webhook events, and trigger instant manual resends if a customer has reception problems.
+                  {isAmharic ? t.landing.feature5Desc : "Inspect real delivery timestamps, carrier receipts, webhook events, and trigger instant manual resends if a customer has reception problems."}
                 </p>
               </div>
 
@@ -626,10 +647,10 @@ export default function LandingClient() {
                   <FileText className="w-5 h-5" />
                 </div>
                 <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
-                  Legal SMS Consent &amp; Opt-Out
+                  {isAmharic ? t.landing.feature6Title : "Legal SMS Consent & Opt-Out"}
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                  Fully compliant with telecom privacy standards. Order checkout collects explicit buyer SMS consent with automated opt-out stop handling.
+                  {isAmharic ? t.landing.feature6Desc : "Fully compliant with telecom privacy standards. Order checkout collects explicit buyer SMS consent with automated opt-out stop handling."}
                 </p>
               </div>
             </div>
@@ -641,19 +662,19 @@ export default function LandingClient() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6">
             <div className="text-center max-w-2xl mx-auto mb-12">
               <div className="inline-flex items-center space-x-1.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-semibold px-3 py-1 rounded-full mb-3">
-                <span>Frequently Asked Questions</span>
+                <span>{isAmharic ? t.landing.faqBadge : "Frequently Asked Questions"}</span>
               </div>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-                Everything You Need to Know
+                {isAmharic ? t.landing.faqTitle : "Everything You Need to Know"}
               </h2>
               <p className="mt-3 text-base text-slate-600 dark:text-slate-400">
-                Straightforward answers on how Order-by-SMS operates for merchants and buyers across Ethiopia.
+                {isAmharic ? t.landing.faqSubtitle : "Straightforward answers on how Order-by-SMS operates for merchants and buyers across Ethiopia."}
               </p>
             </div>
 
             {/* Accordion List */}
             <div className="space-y-3.5">
-              {FAQS.map((faq, idx) => {
+              {faqs.map((faq, idx) => {
                 const isOpen = openFaqIndex === idx;
                 return (
                   <div
@@ -693,10 +714,10 @@ export default function LandingClient() {
             <div className="relative rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-8 sm:p-12 md:p-16 text-center shadow-lg overflow-hidden">
               <div className="relative z-10 max-w-2xl mx-auto space-y-6">
                 <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-tight">
-                  Start taking orders without the chaos today.
+                  {isAmharic ? t.landing.closingCtaTitle : "Start taking orders without the chaos today."}
                 </h2>
                 <p className="text-emerald-100 text-base sm:text-lg leading-relaxed">
-                  Join Ethiopian food stalls, bakeries, cafes, and independent merchants running their order queues seamlessly over SMS.
+                  {isAmharic ? t.landing.closingCtaSubtitle : "Join Ethiopian food stalls, bakeries, cafes, and independent merchants running their order queues seamlessly over SMS."}
                 </p>
 
                 <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3.5">
@@ -704,7 +725,7 @@ export default function LandingClient() {
                     href="/signup"
                     className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-white text-emerald-800 hover:bg-emerald-50 active:bg-emerald-100 font-bold px-7 py-3.5 rounded-xl transition shadow-md min-h-[44px]"
                   >
-                    <span>Create Free Storefront</span>
+                    <span>{isAmharic ? t.landing.closingCtaPrimary : "Create Free Storefront"}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
@@ -712,12 +733,12 @@ export default function LandingClient() {
                     className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 border border-emerald-300/60 hover:bg-emerald-700/50 text-white font-semibold px-6 py-3.5 rounded-xl transition min-h-[44px]"
                   >
                     <ShoppingBag className="w-4 h-4" />
-                    <span>See Demo Store</span>
+                    <span>{isAmharic ? t.landing.closingCtaSecondary : "See Demo Store"}</span>
                   </Link>
                 </div>
 
                 <div className="text-xs text-emerald-200 pt-2">
-                  Works on all phones • Ethio Telecom &amp; Safaricom • Zero customer app downloads
+                  {isAmharic ? t.landing.closingCtaDisclaimer : "Works on all phones • Ethio Telecom & Safaricom • Zero customer app downloads"}
                 </div>
               </div>
             </div>
@@ -740,34 +761,34 @@ export default function LandingClient() {
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Lightweight SMS ordering infrastructure built for Ethiopian micro-merchants on Ethio Telecom &amp; Safaricom networks.
+                {isAmharic ? t.landing.footerBrandDesc : "Lightweight SMS ordering infrastructure built for Ethiopian micro-merchants on Ethio Telecom & Safaricom networks."}
               </p>
             </div>
 
             {/* Column 2: Product */}
             <div className="space-y-2.5">
               <h4 className="font-semibold text-xs uppercase tracking-wider text-slate-900 dark:text-slate-100">
-                Product
+                {isAmharic ? t.landing.footerColProduct : "Product"}
               </h4>
               <ul className="space-y-2 text-xs">
                 <li>
                   <a href="#how-it-works" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition">
-                    How It Works
+                    {isAmharic ? t.landing.howItWorksNav : "How It Works"}
                   </a>
                 </li>
                 <li>
                   <a href="#features" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition">
-                    Features
+                    {isAmharic ? t.landing.featuresNav : "Features"}
                   </a>
                 </li>
                 <li>
                   <a href="#faq" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition">
-                    FAQ
+                    {isAmharic ? t.landing.faqNav : "FAQ"}
                   </a>
                 </li>
                 <li>
                   <Link href="/s/habesha-cafe" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition flex items-center gap-1">
-                    <span>Live Demo Store</span>
+                    <span>{isAmharic ? t.landing.footerLiveDemo : "Live Demo Store"}</span>
                     <ExternalLink className="w-3 h-3" />
                   </Link>
                 </li>
@@ -777,22 +798,22 @@ export default function LandingClient() {
             {/* Column 3: Sellers */}
             <div className="space-y-2.5">
               <h4 className="font-semibold text-xs uppercase tracking-wider text-slate-900 dark:text-slate-100">
-                Sellers
+                {isAmharic ? t.landing.footerColSellers : "Sellers"}
               </h4>
               <ul className="space-y-2 text-xs">
                 <li>
                   <Link href="/signup" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition">
-                    Start Selling Free
+                    {isAmharic ? t.landing.closingCtaPrimary : "Start Selling Free"}
                   </Link>
                 </li>
                 <li>
                   <Link href="/login" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition">
-                    Seller Sign In
+                    {isAmharic ? t.landing.signInBtn : "Seller Sign In"}
                   </Link>
                 </li>
                 <li>
                   <Link href="/dashboard" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition">
-                    Seller Dashboard
+                    {isAmharic ? t.landing.footerDashboard : "Seller Dashboard"}
                   </Link>
                 </li>
               </ul>
@@ -801,19 +822,19 @@ export default function LandingClient() {
             {/* Column 4: Trust & Compliance */}
             <div className="space-y-2.5">
               <h4 className="font-semibold text-xs uppercase tracking-wider text-slate-900 dark:text-slate-100">
-                Trust &amp; Privacy
+                {isAmharic ? t.landing.footerColTrust : "Trust & Privacy"}
               </h4>
               <ul className="space-y-2 text-xs">
                 <li>
                   <Link href="/x/demo" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition">
-                    SMS Privacy &amp; Opt-Out
+                    {isAmharic ? t.landing.footerOptOut : "SMS Privacy & Opt-Out"}
                   </Link>
                 </li>
                 <li className="text-slate-400 dark:text-slate-500">
-                  SMS Gateway: SMSHub.et
+                  {isAmharic ? t.landing.footerGateway : "SMS Gateway: SMSHub.et"}
                 </li>
                 <li className="text-slate-400 dark:text-slate-500">
-                  Carriers: Ethio Telecom • Safaricom
+                  {isAmharic ? t.landing.footerCarriers : "Carriers: Ethio Telecom • Safaricom"}
                 </li>
               </ul>
             </div>
@@ -821,8 +842,8 @@ export default function LandingClient() {
 
           {/* Bottom Copyright */}
           <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
-            <p>© 2026 Order-by-SMS. All rights reserved.</p>
-            <p>Designed for local micro-commerce in Addis Ababa, Ethiopia.</p>
+            <p>{isAmharic ? t.landing.footerCopyright : "© 2026 Order-by-SMS. All rights reserved."}</p>
+            <p>{isAmharic ? t.landing.footerDesignedFor : "Designed for local micro-commerce in Addis Ababa, Ethiopia."}</p>
           </div>
         </div>
       </footer>

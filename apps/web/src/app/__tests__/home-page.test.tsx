@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { renderToString } from "react-dom/server";
 import Home from "../page";
 import LandingClient from "../landing-client";
+import { LanguageProvider } from "../../lib/i18n";
 
 describe("Landing Page Refinement (Home / LandingClient)", () => {
   it("renders Home component returning LandingClient", () => {
@@ -100,6 +101,61 @@ describe("Landing Page Refinement (Home / LandingClient)", () => {
     const html = renderToString(<LandingClient />);
     expect(html).toContain("min-h-[44px]");
     expect(html).toContain("min-w-[44px]");
+  });
+
+  it("renders full Amharic translation across all landing page sections when locale is 'am'", () => {
+    const html = renderToString(
+      <LanguageProvider initialLocale="am">
+        <LandingClient />
+      </LanguageProvider>
+    );
+    // Navbar
+    expect(html).toContain("እንዴት ይሰራል");
+    expect(html).toContain("ባህሪያት");
+    expect(html).toContain("ጥያቄዎች");
+    expect(html).toContain("የሻጭ መግቢያ");
+    expect(html).toContain("መሸጥ ይጀምሩ");
+
+    // Hero Section
+    expect(html).toContain("ለኢትዮጵያ አነስተኛ ነጋዴዎች የተዘጋጀ");
+    expect(html).toContain("ሙሉ በሙሉ በኤስኤምኤስ መልዕክቶች የሚመራ የንግድ ስርዓት።");
+    expect(html).toContain("በነጻ መሸጥ ይጀምሩ");
+    expect(html).toContain("የሙከራ መደብሩን ይመልከቱ");
+    expect(html).toContain("ለገዢዎች ምንም የሚጫን መተግበሪያ የለም");
+    expect(html).toContain("ፈጣን የኤስኤምኤስ ትዕዛዝ ማሳወቂያ");
+    expect(html).toContain("ባለ 4-ዲጂት አስተማማኝ የመረከቢያ ኮድ");
+
+    // Mockup
+    expect(html).toContain("የቀጥታ ምርት ቅድመ-ዕይታ");
+    expect(html).toContain("ሐበሻ ካፌና ቤከሪ");
+    expect(html).toContain("ልዩ ጥብስና ክትፎ ኮምቦ");
+    expect(html).toContain("የትዕዛዝ ድምር:");
+    expect(html).toContain("ትዕዛዝ ይላኩ");
+    expect(html).toContain("የSMSHub መልዕክት");
+
+    // How It Works
+    expect(html).toContain("ኦርደር-ባይ-ኤስኤምኤስ እንዴት ይሰራል?");
+    expect(html).toContain("የመደብርዎን ሊንክ ያጋሩ");
+    expect(html).toContain("ደንበኞች ያዛሉ፤ በኦቲፒ ያረጋግጣሉ");
+    expect(html).toContain("በ1-ጠቅታ የኤስኤምኤስ ሊንክ ትዕዛዝ ያጠናቁ");
+
+    // Features
+    expect(html).toContain("ለኢትዮጵያ አነስተኛ ንግዶች የተሰራ");
+    expect(html).toContain("በአንድ ጠቅታ የተፈረሙ ፈጣን አገናኞች");
+    expect(html).toContain("ባለ 4-ዲጂት የመረከቢያ ማረጋገጫ ኮድ");
+
+    // FAQ
+    expect(html).toContain("ስለ ስርዓቱ ማወቅ የሚገባዎ ሁሉ");
+    expect(html).toContain("ደንበኞቼ መተግበሪያ ማውረድ ወይም መለያ መክፈት አለባቸው?");
+    expect(html).toContain("እንደ ሻጭ የደንበኞችን ትዕዛዝ እንዴት እቀበላለሁ፤ አስተዳድራለሁ?");
+
+    // Closing CTA & Footer
+    expect(html).toContain("ትዕዛዞችን ያለምንም ውዥንብር ዛሬውኑ መቀበል ይጀምሩ።");
+    expect(html).toContain("ነጻ መደብር ይክፈቱ");
+    expect(html).toContain("ምርት");
+    expect(html).toContain("ነጋዴዎች");
+    expect(html).toContain("ደህንነትና ግላዊነት");
+    expect(html).toContain("© 2026 ኦርደር-ባይ-ኤስኤምኤስ። መብቱ በህግ የተጠበቀ ነው።");
   });
 });
 
