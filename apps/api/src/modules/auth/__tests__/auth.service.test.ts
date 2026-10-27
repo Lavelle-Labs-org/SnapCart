@@ -3,6 +3,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { AuthService } from "../auth.service";
 import { PrismaService } from "../../../prisma/prisma.service";
 import { SMSHubService } from "../../smshub/smshub.service";
+import { StorageService } from "../../storage/storage.service";
 import { hashPassword, verifyPassword } from "../password";
 import {
   SESSION_COOKIE_NAME,
@@ -14,6 +15,7 @@ describe("AuthService (apps/api - MIG-006)", () => {
   let authService: AuthService;
   let prismaMock: any;
   let smshubMock: any;
+  let storageMock: any;
 
   const TEST_SECRET = "super_secret_session_key_at_least_32_characters_long!";
   const TEST_SELLER_ID = "seller-uuid-1234-5678";
@@ -37,11 +39,17 @@ describe("AuthService (apps/api - MIG-006)", () => {
       verifyCheck: vi.fn(),
     };
 
+    storageMock = {
+      uploadStoreProfileImage: vi.fn(),
+      deleteStoreProfileImage: vi.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: PrismaService, useValue: prismaMock },
         { provide: SMSHubService, useValue: smshubMock },
+        { provide: StorageService, useValue: storageMock },
       ],
     }).compile();
 
@@ -377,6 +385,85 @@ describe("AuthService (apps/api - MIG-006)", () => {
           status: HttpStatus.BAD_REQUEST,
         })
       );
+    });
+  });
+
+  describe("Storefront Profile Picture Upload & Deletion", () => {
+    it("successfully uploads profile image, deletes old avatar, and updates seller logo_url", async () => {
+      prismaMock.seller.findUnique.mockResolvedValue({
+        id: "seller-123",
+        business_name: "Original Cafe",
+        sms_name: "Original",
+        phone: "+251911223344",
+        slug: "original-cafe",
+        logo_url: "https://r2.orderbysms.et/profiles/seller-123/old-avatar.png",
+        created_at: new Date("2026-10-15T10:00:00.000Z"),
+      });
+
+      storageMock.uploadStoreProfileImage.mockResolvedValue({
+        imageUrl: "https://r2.orderbysms.et/profiles/seller-123/new-avatar.png",
+        storageKey: "profiles/seller-123/new-avatar.png",
+      });
+
+      prismaMock.seller.update.mockResolvedValue({
+        id: "seller-123",
+        business_name: "Original Cafe",
+        sms_name: "Original",
+        phone: "+251911223344",
+        slug: "original-cafe",
+        logo_url: "https://r2.orderbysms.et/profiles/seller-123/new-avatar.png",
+        created_at: new Date("2026-10-15T10:00:00.000Z"),
+      });
+
+      const buffer = Buffer.from("fake-image");
+      const result = await authService.uploadProfileImage("seller-123", buffer, "new.png");
+
+      expect(storageMock.uploadStoreProfileImage).toHaveBeenCalledWith({
+        buffer,
+        originalName: "new.png",
+        sellerId: "seller-123",
+      });
+      expect(storageMock.deleteStoreProfileImage).toHaveBeenCalledWith(
+        "https://r2.orderbysms.et/profiles/seller-123/old-avatar.png"
+      );
+      expect(prismaMock.seller.update).toHaveBeenCalledWith({
+        where: { id: "seller-123" },
+        data: { logo_url: "https://r2.orderbysms.et/profiles/seller-123/new-avatar.png" },
+      });
+      expect(result.seller.logoUrl).toBe("https://r2.orderbysms.et/profiles/seller-123/new-avatar.png");
+    });
+
+    it("successfully deletes profile image and sets logo_url to null", async () => {
+      prismaMock.seller.findUnique.mockResolvedValue({
+        id: "seller-123",
+        business_name: "Original Cafe",
+        sms_name: "Original",
+        phone: "+251911223344",
+        slug: "original-cafe",
+        logo_url: "https://r2.orderbysms.et/profiles/seller-123/avatar.png",
+        created_at: new Date("2026-10-15T10:00:00.000Z"),
+      });
+
+      prismaMock.seller.update.mockResolvedValue({
+        id: "seller-123",
+        business_name: "Original Cafe",
+        sms_name: "Original",
+        phone: "+251911223344",
+        slug: "original-cafe",
+        logo_url: null,
+        created_at: new Date("2026-10-15T10:00:00.000Z"),
+      });
+
+      const result = await authService.deleteProfileImage("seller-123");
+
+      expect(storageMock.deleteStoreProfileImage).toHaveBeenCalledWith(
+        "https://r2.orderbysms.et/profiles/seller-123/avatar.png"
+      );
+      expect(prismaMock.seller.update).toHaveBeenCalledWith({
+        where: { id: "seller-123" },
+        data: { logo_url: null },
+      });
+      expect(result.seller.logoUrl).toBeNull();
     });
   });
 });

@@ -3,12 +3,17 @@ import {
   Post,
   Get,
   Patch,
+  Delete,
   Body,
   Res,
   Req,
   UseGuards,
   Inject,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
 import type { Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import { extractClientIp } from "../../lib/rate-limit";
@@ -82,6 +87,8 @@ export class AuthController {
         phone: seller.phone,
         slug: seller.slug,
         phoneVerifiedAt: seller.phone_verified_at?.toISOString() ?? null,
+        logoUrl: seller.logo_url ?? null,
+        logo_url: seller.logo_url ?? null,
         createdAt: seller.created_at.toISOString(),
       },
     };
@@ -100,5 +107,29 @@ export class AuthController {
     @Body() dto: UpdateSettingsDto
   ) {
     return this.authService.updateSettings(seller.id, dto);
+  }
+
+  @Post("profile-image")
+  @UseGuards(SellerAuthGuard)
+  @UseInterceptors(FileInterceptor("image"))
+  async uploadProfileImage(
+    @CurrentSeller() seller: Seller,
+    @UploadedFile() file: any
+  ) {
+    if (!file || !file.buffer) {
+      throw new BadRequestException("Image file is required");
+    }
+
+    return this.authService.uploadProfileImage(
+      seller.id,
+      file.buffer,
+      file.originalname || "profile.jpg"
+    );
+  }
+
+  @Delete("profile-image")
+  @UseGuards(SellerAuthGuard)
+  async deleteProfileImage(@CurrentSeller() seller: Seller) {
+    return this.authService.deleteProfileImage(seller.id);
   }
 }

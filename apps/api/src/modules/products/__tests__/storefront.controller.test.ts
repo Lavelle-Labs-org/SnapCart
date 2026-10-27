@@ -12,6 +12,7 @@ describe("StorefrontController (FE-001 / BE-006)", () => {
     sms_name: "Habesha Cafe",
     phone: "0911223344",
     slug: "habesha-cafe",
+    logo_url: "https://r2.orderbysms.et/profiles/seller-1/avatar.png",
     created_at: new Date("2026-10-18T10:00:00Z"),
   };
 
@@ -69,6 +70,7 @@ describe("StorefrontController (FE-001 / BE-006)", () => {
     expect(result).toBeDefined();
     expect(result.seller.slug).toBe("habesha-cafe");
     expect(result.seller.businessName).toBe("Habesha Cafe & Bakery");
+    expect(result.seller.logoUrl).toBe("https://r2.orderbysms.et/profiles/seller-1/avatar.png");
     expect(result.products).toHaveLength(2);
     expect(result.products[0].name).toBe("Special Macchiato");
     expect(result.products[0].priceSantim).toBe(4500);

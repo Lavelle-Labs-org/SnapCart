@@ -9,13 +9,15 @@ import { PrismaService } from "../../prisma/prisma.service";
 import { SMSHubService } from "../smshub/smshub.service";
 import { env } from "../../config/env";
 import { hashPassword, verifyPassword } from "./password";
-import { normalizeEthiopianPhone, maskPhoneNumber } from "@order-by-sms/contracts";
+import { normalizeEthiopianPhone, maskPhoneNumber, SellerDto } from "@order-by-sms/contracts";
 import {
   checkPhoneRateLimit,
   checkIpRateLimit,
   enforceRateLimit,
+  consumeRateLimit,
   getRateLimitConfig,
 } from "../../lib/rate-limit";
+import { StorageService } from "../storage/storage.service";
 import {
   SESSION_COOKIE_NAME,
   SESSION_DURATION_SECONDS,
@@ -47,7 +49,9 @@ export class AuthService {
     @Inject(PrismaService)
     private readonly prisma: PrismaService,
     @Inject(SMSHubService)
-    private readonly smshub: SMSHubService
+    private readonly smshub: SMSHubService,
+    @Inject(StorageService)
+    private readonly storageService: StorageService
   ) {}
 
   private getSessionSecretKey(secret?: string): Uint8Array {
@@ -576,6 +580,147 @@ export class AuthService {
         phone: updatedSeller.phone,
         slug: updatedSeller.slug,
         phoneVerifiedAt: updatedSeller.phone_verified_at?.toISOString() ?? null,
+        logoUrl: updatedSeller.logo_url ?? null,
+        logo_url: updatedSeller.logo_url ?? null,
+        createdAt: updatedSeller.created_at.toISOString(),
+      },
+    };
+  }
+
+  /**
+   * Uploads and saves a storefront profile picture to Cloudflare R2 or local storage.
+   */
+  async uploadProfileImage(
+    sellerId: string,
+    buffer: Buffer,
+    originalName: string
+  ): Promise<{ seller: SellerDto }> {
+    if (!sellerId) {
+      throw new HttpException(
+        {
+          code: "UNAUTHORIZED",
+          message: "Seller identification required",
+        },
+        HttpStatus.UNAUTHORIZED
+      );
+    }
+
+    const seller = await this.prisma.seller.findUnique({
+      where: { id: sellerId },
+    });
+
+    if (!seller) {
+      throw new HttpException(
+        {
+          code: "NOT_FOUND",
+          message: "Seller not found",
+        },
+        HttpStatus.NOT_FOUND
+      );
+    }
+
+    // Rate limiting: 30 uploads / hour
+    const maxUploads = parseInt(
+      process.env.RATE_LIMIT_PROFILE_UPLOADS_MAX || "30",
+      10
+    );
+    const windowSeconds = parseInt(
+      process.env.RATE_LIMIT_PROFILE_UPLOADS_WINDOW_SECONDS || "3600",
+      10
+    );
+
+    const rateLimit = await consumeRateLimit(this.prisma, {
+      key: `rate:profile:${sellerId}`,
+      limit: maxUploads,
+      windowSeconds,
+    });
+    enforceRateLimit(
+      rateLimit,
+      "Profile image upload rate limit exceeded. Please wait before uploading another photo."
+    );
+
+    const uploadResult = await this.storageService.uploadStoreProfileImage({
+      buffer,
+      originalName,
+      sellerId,
+    });
+
+    // Delete old profile picture if exists
+    if (seller.logo_url) {
+      await this.storageService.deleteStoreProfileImage(seller.logo_url);
+    }
+
+    const updatedSeller = await this.prisma.seller.update({
+      where: { id: sellerId },
+      data: {
+        logo_url: uploadResult.imageUrl,
+      },
+    });
+
+    return {
+      seller: {
+        id: updatedSeller.id,
+        businessName: updatedSeller.business_name,
+        smsName: updatedSeller.sms_name,
+        phone: updatedSeller.phone,
+        slug: updatedSeller.slug,
+        phoneVerifiedAt: updatedSeller.phone_verified_at?.toISOString() ?? null,
+        logoUrl: updatedSeller.logo_url ?? null,
+        logo_url: updatedSeller.logo_url ?? null,
+        createdAt: updatedSeller.created_at.toISOString(),
+      },
+    };
+  }
+
+  /**
+   * Deletes a storefront profile picture.
+   */
+  async deleteProfileImage(sellerId: string): Promise<{ seller: SellerDto }> {
+    if (!sellerId) {
+      throw new HttpException(
+        {
+          code: "UNAUTHORIZED",
+          message: "Seller identification required",
+        },
+        HttpStatus.UNAUTHORIZED
+      );
+    }
+
+    const seller = await this.prisma.seller.findUnique({
+      where: { id: sellerId },
+    });
+
+    if (!seller) {
+      throw new HttpException(
+        {
+          code: "NOT_FOUND",
+          message: "Seller not found",
+        },
+        HttpStatus.NOT_FOUND
+      );
+    }
+
+    if (seller.logo_url) {
+      await this.storageService.deleteStoreProfileImage(seller.logo_url);
+    }
+
+    const updatedSeller = await this.prisma.seller.update({
+      where: { id: sellerId },
+      data: {
+        logo_url: null,
+      },
+    });
+
+    return {
+      seller: {
+        id: updatedSeller.id,
+        businessName: updatedSeller.business_name,
+        smsName: updatedSeller.sms_name,
+        phone: updatedSeller.phone,
+        slug: updatedSeller.slug,
+        phoneVerifiedAt: updatedSeller.phone_verified_at?.toISOString() ?? null,
+        logoUrl: null,
+        logo_url: null,
         createdAt: updatedSeller.created_at.toISOString(),
       },
     };

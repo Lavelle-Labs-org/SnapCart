@@ -19,6 +19,12 @@ export interface UploadImageOptions {
   productId: string;
 }
 
+export interface UploadStoreProfileImageOptions {
+  buffer: Buffer;
+  originalName: string;
+  sellerId: string;
+}
+
 export interface UploadImageResult {
   imageUrl: string;
   storageKey: string;
@@ -183,6 +189,69 @@ export class StorageService {
   }
 
   /**
+   * Uploads a store profile picture (avatar / storefront logo) to Cloudflare R2 or local storage.
+   */
+  async uploadStoreProfileImage(
+    options: UploadStoreProfileImageOptions
+  ): Promise<UploadImageResult> {
+    const { buffer, originalName: _originalName, sellerId } = options;
+
+    if (!buffer || buffer.length === 0) {
+      throw new BadRequestException("Image file buffer is empty");
+    }
+
+    // 5MB max file size limit
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    if (buffer.length > MAX_FILE_SIZE) {
+      throw new BadRequestException(
+        "Store profile picture size must not exceed 5MB"
+      );
+    }
+
+    const inspection = validateImageMagicBytes(buffer);
+    if (!inspection.isValid || !inspection.mimeType || !inspection.ext) {
+      throw new BadRequestException(
+        "Invalid file format. Only JPEG, PNG, WebP, and AVIF image files are permitted."
+      );
+    }
+
+    const uniqueSuffix = randomBytes(4).toString("hex");
+    const sanitizedFilename = `avatar_${Date.now()}_${uniqueSuffix}.${inspection.ext}`;
+    const storageKey = `profiles/${sellerId}/${sanitizedFilename}`;
+
+    if (this.s3Client && !this.isMockStorage) {
+      try {
+        await this.s3Client.send(
+          new PutObjectCommand({
+            Bucket: this.bucketName,
+            Key: storageKey,
+            Body: buffer,
+            ContentType: inspection.mimeType,
+            CacheControl: "public, max-age=31536000, immutable",
+          })
+        );
+
+        const imageUrl = `${this.publicDomain}/${storageKey}`;
+        this.logger.log(`Uploaded storefront profile image to R2: ${storageKey}`);
+        return { imageUrl, storageKey };
+      } catch (err: any) {
+        this.logger.error(`Failed to upload profile image to Cloudflare R2: ${err.message}`, err.stack);
+        throw new BadRequestException("Failed to upload image to storage service");
+      }
+    }
+
+    // Local / Dev Fallback
+    const localDir = path.resolve(process.cwd(), "public", "uploads", "profiles", sellerId);
+    fs.mkdirSync(localDir, { recursive: true });
+    const localFilePath = path.join(localDir, sanitizedFilename);
+    fs.writeFileSync(localFilePath, buffer);
+
+    const imageUrl = `/uploads/profiles/${sellerId}/${sanitizedFilename}`;
+    this.logger.log(`Saved local fallback storefront profile image: ${imageUrl}`);
+    return { imageUrl, storageKey };
+  }
+
+  /**
    * Deletes an image from storage given its URL or storage key.
    */
   async deleteProductImage(imageUrlOrKey: string): Promise<void> {
@@ -227,4 +296,12 @@ export class StorageService {
       this.logger.warn(`Could not delete local file: ${err.message}`);
     }
   }
+
+  /**
+   * Deletes a store profile picture from storage.
+   */
+  async deleteStoreProfileImage(imageUrlOrKey: string): Promise<void> {
+    return this.deleteProductImage(imageUrlOrKey);
+  }
 }
+

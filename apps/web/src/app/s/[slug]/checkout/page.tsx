@@ -30,6 +30,7 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
         business_name: true,
         sms_name: true,
         slug: true,
+        logo_url: true,
       },
     });
 
@@ -81,6 +82,7 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
             businessName: data.seller.businessName,
             smsName: data.seller.smsName,
             slug: data.seller.slug,
+            logoUrl: data.seller.logoUrl ?? data.seller.logo_url ?? null,
           }}
           products={(data.products || []).map((p: any) => ({
             id: p.id,
@@ -105,6 +107,7 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
         businessName: seller.business_name,
         smsName: seller.sms_name,
         slug: seller.slug,
+        logoUrl: seller.logo_url ?? null,
       }}
       products={products.map((p) => ({
         id: p.id,

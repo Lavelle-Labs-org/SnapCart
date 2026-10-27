@@ -94,6 +94,7 @@ describe("StorefrontPage (FE-001 - /s/[slug])", () => {
         business_name: true,
         sms_name: true,
         slug: true,
+        logo_url: true,
       },
     });
 
@@ -116,6 +117,7 @@ describe("StorefrontPage (FE-001 - /s/[slug])", () => {
     expect(jsx).toBeDefined();
     expect(jsx.props.seller.slug).toBe("habesha-cafe");
     expect(jsx.props.seller.businessName).toBe("Habesha Cafe & Bakery");
+    expect(jsx.props.seller.logoUrl).toBeNull();
     expect(jsx.props.products).toHaveLength(2);
     expect(jsx.props.products[0].name).toBe("Special Macchiato");
     expect(jsx.props.products[0].priceSantim).toBe(4500);

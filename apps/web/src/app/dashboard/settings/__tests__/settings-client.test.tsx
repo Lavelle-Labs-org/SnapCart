@@ -261,5 +261,28 @@ describe("SettingsClient Logic & Component (FE-013, Issue #36)", () => {
       const html = renderToString(<SettingsClient initialSeller={mockSeller} />);
       expect(html).toContain("max-w-4xl mx-auto");
     });
+
+    it("renders profile picture placeholder when logoUrl is not provided", () => {
+      const { renderToString } = require("react-dom/server");
+      const html = renderToString(<SettingsClient initialSeller={mockSeller} />);
+      expect(html).toContain("id=\"upload-profile-picture-btn\"");
+      expect(html).toContain("id=\"profile-picture-placeholder\"");
+      expect(html).toContain("Cloudflare R2");
+    });
+
+    it("renders profile picture image preview and remove button when logoUrl is provided", () => {
+      const { renderToString } = require("react-dom/server");
+      const html = renderToString(
+        <SettingsClient
+          initialSeller={{
+            ...mockSeller,
+            logoUrl: "https://r2.orderbysms.et/profiles/seller-101/avatar.png",
+          }}
+        />
+      );
+      expect(html).toContain("id=\"profile-picture-preview\"");
+      expect(html).toContain("https://r2.orderbysms.et/profiles/seller-101/avatar.png");
+      expect(html).toContain("id=\"remove-profile-picture-btn\"");
+    });
   });
 });
