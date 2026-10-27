@@ -78,10 +78,6 @@ export function DashboardHeader({ seller }: DashboardHeaderProps) {
               <span>{isAmharic ? t.dashboard.viewStorefront : "View Storefront"}</span>
             </a>
           )}
-          <span className="inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-3 py-1.5 rounded-full font-medium border border-emerald-200 dark:border-emerald-800">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{isAmharic ? t.dashboard.smshubModeTest : "SMSHub Mode: Test"}</span>
-          </span>
           <LanguageToggle />
           <ThemeToggle />
         </div>

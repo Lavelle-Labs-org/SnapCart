@@ -103,15 +103,7 @@ export default function LandingClient() {
             >
               {isAmharic ? t.landing.featuresNav : "Features"}
             </a>
-            <Link
-              href="/s/habesha-cafe"
-              className="px-3 py-2 rounded-lg hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] inline-flex items-center gap-1.5"
-            >
-              <span>{isAmharic ? t.landing.demoStoreNav : "Demo Store"}</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
-                {isAmharic ? t.landing.liveBadge : "Live"}
-              </span>
-            </Link>
+
             <a
               href="#faq"
               className="px-3 py-2 rounded-lg hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] inline-flex items-center"
@@ -173,16 +165,7 @@ export default function LandingClient() {
               >
                 {isAmharic ? t.landing.featuresNav : "Features"}
               </a>
-              <Link
-                href="/s/habesha-cafe"
-                onClick={closeMobileMenu}
-                className="px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-[44px] flex items-center justify-between"
-              >
-                <span>{isAmharic ? t.landing.demoStoreNav : "Demo Store"}</span>
-                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
-                  {isAmharic ? t.landing.mobileLivePreview : "Live Preview"}
-                </span>
-              </Link>
+
               <a
                 href="#faq"
                 onClick={closeMobileMenu}

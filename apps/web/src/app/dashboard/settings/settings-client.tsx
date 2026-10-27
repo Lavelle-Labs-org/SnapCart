@@ -375,37 +375,31 @@ export default function SettingsClient({
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-12">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <div className="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400 mb-1">
-          <Store className="w-5 h-5" />
-          <span className="text-xs font-semibold uppercase tracking-wider">
-            {isAmharic ? "የመደብር እና የኤስኤምኤስ ቅንብሮች" : "Storefront & SMS Configuration"}
-          </span>
-        </div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
           {isAmharic ? t.settings.title : "Shop Settings"}
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          {isAmharic ? t.settings.subtitle : "Manage your customer-facing shop identity, storefront shareable link, and SMS notification branding."}
+          {isAmharic ? t.settings.subtitle : "Manage your shop identity, storefront link, and SMS notification settings."}
         </p>
       </div>
 
       {/* Storefront Link Card */}
-      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+      <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
+          <h2 className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
             <Smartphone className="w-4 h-4 text-emerald-600" />
             <span>{isAmharic ? t.settings.storefrontLinkTitle : "Storefront Link"}</span>
           </h2>
-          <span className="text-xs bg-emerald-50 text-emerald-700 font-medium px-2.5 py-1 rounded-full border border-emerald-200">
+          <span className="text-[11px] bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-medium px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
             {isAmharic ? "ንቁ ካታሎግ" : "Active Catalog"}
           </span>
         </div>
 
-        <p className="text-xs text-slate-500 leading-relaxed">
-          {isAmharic ? t.settings.storefrontLinkDesc : "Share this direct link in your Telegram channel, Instagram bio, or TikTok profile for customers to browse and order without an app download."}
+        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+          {isAmharic ? t.settings.storefrontLinkDesc : "Share this direct link on Telegram or Instagram for customers to browse and order without an app."}
         </p>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -414,7 +408,7 @@ export default function SettingsClient({
             type="text"
             readOnly
             value={storefrontUrl}
-            className="flex-1 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-mono text-slate-800 dark:text-slate-100 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="flex-1 px-3.5 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-800 dark:text-slate-100 min-h-[40px] focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
 
           <div className="flex items-center gap-2">
@@ -422,7 +416,7 @@ export default function SettingsClient({
               id="copy-storefront-btn"
               type="button"
               onClick={handleCopy}
-              className={`flex-1 sm:flex-initial flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-medium transition min-h-[44px] shadow-sm ${
+              className={`flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition min-h-[40px] shadow-xs ${
                 isCopied
                   ? "bg-emerald-600 text-white"
                   : "bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95"
@@ -430,12 +424,12 @@ export default function SettingsClient({
             >
               {isCopied ? (
                 <>
-                  <Check className="w-4 h-4" />
+                  <Check className="w-3.5 h-3.5" />
                   <span>{isAmharic ? t.settings.copiedBtn : "Copied!"}</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-4 h-4" />
+                  <Copy className="w-3.5 h-3.5" />
                   <span>{isAmharic ? t.settings.copyLinkBtn : "Copy Link"}</span>
                 </>
               )}
@@ -447,31 +441,31 @@ export default function SettingsClient({
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Open storefront in new tab"
-              className="flex items-center justify-center p-2.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition min-h-[44px] min-w-[44px]"
+              className="flex items-center justify-center p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition min-h-[40px] min-w-[40px]"
             >
-              <ExternalLink className="w-5 h-5" />
+              <ExternalLink className="w-4 h-4" />
             </a>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Form Column */}
         <div className="lg:col-span-6 space-y-6">
           {/* Profile Picture Card */}
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+              <h2 className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                 <ImageIcon className="w-4 h-4 text-emerald-600" />
                 <span>{isAmharic ? t.settings.profilePictureTitle : "Storefront Profile Picture"}</span>
               </h2>
-              <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+              <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
                 Cloudflare R2
               </span>
             </div>
 
-            <p className="text-xs text-slate-500 leading-relaxed">
-              {isAmharic ? t.settings.profilePictureSubtitle : "Upload a logo or profile image for your public storefront and checkout header."}
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {isAmharic ? t.settings.profilePictureSubtitle : "Upload a logo or profile image for your public storefront header."}
             </p>
 
             {logoMessage && (
@@ -569,10 +563,10 @@ export default function SettingsClient({
           <form
             id="shop-settings-form"
             onSubmit={handleSave}
-            className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5"
+            className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4"
           >
-            <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-2.5">
+              <h2 className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 {isAmharic ? t.settings.brandingTitle : "Shop & SMS Branding"}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -724,19 +718,19 @@ export default function SettingsClient({
 
         {/* Live Preview Column */}
         <div className="lg:col-span-6 space-y-4">
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+              <h2 className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                 <MessageSquare className="w-4 h-4 text-emerald-600" />
                 <span>{isAmharic ? t.settings.previewTitle : "Live SMS Template Previewer"}</span>
               </h2>
-              <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+              <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800/60">
                 Snapcart Engine
               </span>
             </div>
 
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              {isAmharic ? t.settings.previewSubtitle : "Select a message event to preview how your shop name looks and verify character limits before customers receive it:"}
+              {isAmharic ? t.settings.previewSubtitle : "Preview outgoing SMS templates before customers receive them:"}
             </p>
 
             {/* Template Selector Tabs */}
