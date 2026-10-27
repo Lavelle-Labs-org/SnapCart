@@ -271,7 +271,8 @@ export default function SettingsClient({
         throw new Error(data?.message || data?.error?.message || "Failed to upload profile picture.");
       }
 
-      const newLogo = data?.seller?.logoUrl ?? data?.seller?.logo_url ?? null;
+      const sellerPayload = data?.data?.seller || data?.seller;
+      const newLogo = sellerPayload?.logoUrl ?? sellerPayload?.logo_url ?? null;
       setLogoUrl(newLogo);
       setLogoStatus("success");
       setLogoMessage(t.settings.photoSuccess);

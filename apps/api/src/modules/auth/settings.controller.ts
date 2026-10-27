@@ -9,6 +9,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  Inject,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { AuthService } from "./auth.service";
@@ -24,7 +25,10 @@ import type { UpdateSettingsDto } from "./auth.types";
  */
 @Controller("settings")
 export class SettingsController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    @Inject(AuthService)
+    private readonly authService: AuthService
+  ) {}
 
   @Get()
   @UseGuards(SellerAuthGuard)

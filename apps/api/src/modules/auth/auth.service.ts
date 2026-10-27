@@ -619,13 +619,17 @@ export class AuthService {
       );
     }
 
-    // Rate limiting: 30 uploads / hour
+    // Configurable rate limit matching product image uploads (default 30 uploads / hour per seller)
     const maxUploads = parseInt(
-      process.env.RATE_LIMIT_PROFILE_UPLOADS_MAX || "30",
+      process.env.RATE_LIMIT_IMAGE_UPLOADS_MAX ||
+        process.env.RATE_LIMIT_PROFILE_UPLOADS_MAX ||
+        "30",
       10
     );
     const windowSeconds = parseInt(
-      process.env.RATE_LIMIT_PROFILE_UPLOADS_WINDOW_SECONDS || "3600",
+      process.env.RATE_LIMIT_IMAGE_UPLOADS_WINDOW_SECONDS ||
+        process.env.RATE_LIMIT_PROFILE_UPLOADS_WINDOW_SECONDS ||
+        "3600",
       10
     );
 

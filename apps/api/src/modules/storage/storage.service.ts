@@ -200,11 +200,10 @@ export class StorageService {
       throw new BadRequestException("Image file buffer is empty");
     }
 
-    // 5MB max file size limit
-    const MAX_FILE_SIZE = 5 * 1024 * 1024;
-    if (buffer.length > MAX_FILE_SIZE) {
+    if (buffer.length > this.maxFileSizeBytes) {
+      const maxMb = Math.round(this.maxFileSizeBytes / (1024 * 1024));
       throw new BadRequestException(
-        "Store profile picture size must not exceed 5MB"
+        `File size exceeds maximum allowed limit of ${maxMb}MB`
       );
     }
 
