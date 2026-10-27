@@ -125,8 +125,8 @@ export function DashboardShell({
 
       {/* Mobile Navigation Drawer */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col justify-between shadow-2xl border-r border-slate-200 dark:border-slate-800 transition-transform duration-300 ease-in-out md:hidden ${
-          isMobileOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed inset-y-0 right-0 z-50 w-72 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col justify-between shadow-2xl border-l border-slate-200 dark:border-slate-800 transition-transform duration-300 ease-in-out md:hidden ${
+          isMobileOpen ? "translate-x-0" : "translate-x-full"
         }`}
         aria-label="Mobile navigation"
       >
@@ -298,28 +298,21 @@ export function DashboardShell({
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile App Bar */}
         <div className="md:hidden bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-4 py-3 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-xs">
+          {/* Left: Brand Logo & Store Info */}
           <div className="flex items-center space-x-3 min-w-0">
-            <button
-              type="button"
-              onClick={() => setIsMobileOpen(true)}
-              className="p-2 -ml-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-touch min-w-touch flex items-center justify-center focus-visible:ring-2 focus-visible:ring-emerald-500"
-              aria-label="Open navigation menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <div className="flex items-center space-x-3 min-w-0">
-              <SnapcartIcon size="md" className="flex-shrink-0" />
-              <div className="min-w-0 flex-1">
-                <span className="font-bold text-base tracking-tight truncate block max-w-[160px] sm:max-w-xs text-slate-900 dark:text-slate-100" title={displayName}>
-                  {displayName}
-                </span>
-                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block truncate leading-none">
-                  {displaySubtitle}
-                </span>
-              </div>
+            <SnapcartIcon size="md" className="flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <span className="font-bold text-base tracking-tight truncate block max-w-[160px] sm:max-w-xs text-slate-900 dark:text-slate-100" title={displayName}>
+                {displayName}
+              </span>
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block truncate leading-none">
+                {displaySubtitle}
+              </span>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+
+          {/* Right: Controls & Hamburger Menu */}
+          <div className="flex items-center space-x-2 flex-shrink-0">
             <LanguageToggle />
             {seller?.slug && (
               <a
@@ -331,6 +324,14 @@ export function DashboardShell({
                 {t.dashboard.switchStore}
               </a>
             )}
+            <button
+              type="button"
+              onClick={() => setIsMobileOpen(true)}
+              className="p-2 -mr-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition min-h-touch min-w-touch flex items-center justify-center focus-visible:ring-2 focus-visible:ring-emerald-500"
+              aria-label="Open navigation menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
