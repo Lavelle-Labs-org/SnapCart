@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
+import { SNAPCART_BODY_PATH, SNAPCART_WHEELS_PATH } from "./snapcart-svg-paths";
 
 export interface SnapcartLogoProps {
   /**
@@ -23,34 +23,34 @@ export function SnapcartIcon({
   className?: string;
 }) {
   const dimMap = {
-    sm: { w: 24, h: 24 },
-    md: { w: 32, h: 32 },
-    lg: { w: 40, h: 40 },
-    xl: { w: 56, h: 56 },
+    sm: { w: 28, h: 18 },
+    md: { w: 36, h: 23 },
+    lg: { w: 46, h: 29 },
+    xl: { w: 64, h: 40 },
   };
   const { w, h } = dimMap[size] || dimMap.md;
 
   return (
-    <div className={`relative inline-flex items-center justify-center flex-shrink-0 ${className}`}>
-      {/* Light Mode Cart Icon */}
-      <Image
-        src="/snapcart-icon.png"
-        alt="Snapcart"
-        width={w}
-        height={h}
-        className="dark:hidden object-contain"
-        priority
+    <svg
+      viewBox="0 0 320 190"
+      width={w}
+      height={h}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`inline-block flex-shrink-0 transition-colors duration-200 ${className}`}
+      aria-label="Snapcart Logo"
+    >
+      <path
+        d={SNAPCART_BODY_PATH}
+        fillRule="evenodd"
+        className="fill-[#00976f] dark:fill-[#10b981] transition-colors duration-200"
       />
-      {/* Dark Mode Cart Icon (emerald body with light-slate wheels, zero background fringe) */}
-      <Image
-        src="/snapcart-icon-dark.png"
-        alt="Snapcart"
-        width={w}
-        height={h}
-        className="hidden dark:block object-contain"
-        priority
+      <path
+        d={SNAPCART_WHEELS_PATH}
+        fillRule="evenodd"
+        className="fill-[#18262f] dark:fill-[#f8fafc] transition-colors duration-200"
       />
-    </div>
+    </svg>
   );
 }
 
