@@ -267,7 +267,8 @@ describe("SettingsClient Logic & Component (FE-013, Issue #36)", () => {
       const html = renderToString(<SettingsClient initialSeller={mockSeller} />);
       expect(html).toContain("id=\"upload-profile-picture-btn\"");
       expect(html).toContain("id=\"profile-picture-placeholder\"");
-      expect(html).toContain("Cloudflare R2");
+      expect(html).not.toContain("Cloudflare R2");
+      expect(html).toContain("Stored securely.");
     });
 
     it("renders profile picture image preview and remove button when logoUrl is provided", () => {

@@ -89,5 +89,9 @@ export default async function OrdersDashboardPage({
     }
   }
 
-  return <OrdersClient initialOrders={orders} initialLocale={isAmharic ? "am" : "en"} />;
+  return (
+    <div className="overflow-x-auto">
+      <OrdersClient initialOrders={orders} initialLocale={isAmharic ? "am" : "en"} />
+    </div>
+  );
 }

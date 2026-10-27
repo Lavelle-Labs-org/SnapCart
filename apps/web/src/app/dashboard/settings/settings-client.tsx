@@ -534,9 +534,6 @@ export default function SettingsClient({
                 <ImageIcon className="w-4 h-4 text-emerald-600" />
                 <span>{isAmharic ? t.settings.profilePictureTitle : "Storefront Profile Picture"}</span>
               </h2>
-              <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
-                Cloudflare R2
-              </span>
             </div>
 
             <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -629,7 +626,7 @@ export default function SettingsClient({
                 </div>
 
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  {isAmharic ? t.settings.photoHelp : "PNG, JPG, WebP or AVIF up to 5MB. Stored securely on Cloudflare R2."}
+                  {isAmharic ? t.settings.photoHelp : "PNG, JPG, WebP or AVIF up to 5MB. Stored securely."}
                 </p>
               </div>
             </div>

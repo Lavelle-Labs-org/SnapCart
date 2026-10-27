@@ -471,7 +471,7 @@ export const am: TranslationSchema = {
     uploadPhotoBtn: "ምስል ስቀል",
     uploadingPhoto: "በመስቀል ላይ...",
     removePhotoBtn: "አስወግድ",
-    photoHelp: "PNG, JPG, WebP ወይም AVIF እስከ 5MB። በCloudflare R2 ላይ በደህንነት ይቀመጣል።",
+    photoHelp: "PNG, JPG, WebP ወይም AVIF እስከ 5MB። በደህንነት ይቀመጣል።",
     photoSuccess: "የመደብሩ መገለጫ ምስል በተሳካ ሁኔታ ተዘምኗል!",
     photoRemoved: "የመደብሩ መገለጫ ምስል ተወግዷል።",
     saveStore: "ለውጦችን አስቀምጥ",

@@ -471,7 +471,7 @@ export const en: TranslationSchema = {
     uploadPhotoBtn: "Upload Photo",
     uploadingPhoto: "Uploading...",
     removePhotoBtn: "Remove",
-    photoHelp: "PNG, JPG, WebP or AVIF up to 5MB. Stored securely on Cloudflare R2.",
+    photoHelp: "PNG, JPG, WebP or AVIF up to 5MB. Stored securely.",
     photoSuccess: "Profile picture updated successfully!",
     photoRemoved: "Profile picture removed.",
     saveStore: "Save Store Changes",
