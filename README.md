@@ -1,103 +1,201 @@
-# Order-by-SMS
+# Snapcart ⚡
 
 > **A business you can run entirely from text messages.**
-> A seller pastes one storefront link into Telegram or Instagram, customers order through it without an account, and every subsequent step (seller order alerts, confirmations, ready status, and pickup handover) happens via SMS. No native app to install and no dashboard the seller is forced to monitor.
+> Ethiopian conversational SMS commerce platform. A seller shares one storefront link on Telegram, TikTok, or Instagram, customers order in seconds with verified phone numbers, and every operational step — order alerts, approvals, fulfillment status, and pickup handover — runs seamlessly over SMS.
+
+[![CI Quality Gates](https://github.com/fenet-as/order-by-sms/actions/workflows/ci.yml/badge.svg)](https://github.com/fenet-as/order-by-sms/actions/workflows/ci.yml)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14.x-black.svg)](https://nextjs.org/)
+[![NestJS](https://img.shields.io/badge/NestJS-10.x-ea2845.svg)](https://nestjs.com/)
+[![Prisma](https://img.shields.io/badge/Prisma-5.x-2D3748.svg)](https://www.prisma.io/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.x-38B2AC.svg)](https://tailwindcss.com/)
+[![SMSHub](https://img.shields.io/badge/SMSHub-Gateway-FF6B00.svg)](https://smshub.et)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
 ## The Problem
 
-Micro and small businesses in Ethiopia (food stalls, dry cleaners, tailors, print shops) take orders through Telegram channels, Instagram DMs, and incoming phone calls. This leads to:
-1. **Lost Orders:** Sellers preparing orders miss incoming chat messages during busy rush hours.
-2. **Fake or Unreliable Numbers:** Orders placed from chats provide no verified phone contact, leading to wasted preparation time.
-3. **Disputed Handovers:** When a rider or pickup goes wrong, neither party has proof that the correct customer received the package.
+Micro and small enterprises in Ethiopia (cafés, fast-food stalls, dry cleaners, tailors, boutique shops, and print houses) handle daily customer orders through Telegram channels, Instagram DMs, TikTok, and phone calls. This informal commerce workflow suffers from:
 
-## The Solution
-
-Order-by-SMS solves this end-to-end:
-1. **Storefront Link:** Seller shares a short link (`/s/{slug}`) on social media.
-2. **Guest Checkout + Phone OTP:** Buyer selects items and verifies their phone number via an SMSHub OTP code. No login required.
-3. **One-Tap Seller Actions:** The seller receives an instant SMS with a signed, unguessable link (`/a/{token}`) to Accept, Reject, or Mark Ready directly from their mobile phone without logging in.
-4. **Pickup Code Handover:** When the order is marked ready, the buyer receives a 4-digit pickup code via SMS. The seller enters this code at collection to complete the order.
-5. **Audited Delivery & Opt-Out:** Every SMS status is confirmed via signed webhooks, failed messages have manual resend controls, and buyers can opt out at any time.
+1. **Missed & Lost Orders:** Busy sellers preparing goods overlook incoming chat notifications during rush hours.
+2. **Fake / Unreachable Phone Numbers:** Cash-on-Delivery (COD) orders placed via chat frequently give invalid contact numbers, causing wasted inventory and delivery driver delays.
+3. **Disputed Handovers & Package Theft:** Without verifiable proof of handover, neither the merchant, courier, nor customer has definitive proof of collection.
+4. **App Fatigue & Connectivity Friction:** Asking Ethiopian buyers to download a heavy native app or register with passwords causes instant checkout drop-off, especially on 3G and congested networks.
 
 ---
 
-## Key Features (MVP)
+## The Solution: Snapcart
 
-- **Seller Onboarding:** Fast registration with phone number verification.
-- **Product Management:** Name, price in Ethiopian Birr (stored as Santim integer), and availability toggle.
-- **Mobile-First Storefront:** Lightweight, low-bandwidth catalog designed for 3G/EDGE networks.
-- **SMSHub Verify API:** Automated 6-digit phone verification OTP with 60-second cooldown and attempt limits.
-- **Signed Action Links (`/a/{token}`):** Cryptographically secure, single-use, 48-hour links for one-thumb order handling.
-- **HMAC Pickup Codes:** 4-digit handover codes protected against brute-force (locks after 5 wrong attempts).
-- **Message Audit Log:** Real-time visibility into SMSHub status (`sent`, `failed`, `skipped`), credit consumption, and `msg_...` IDs.
-- **Customer Privacy & Consent:** Unticked-by-default SMS consent and single-tap opt-out suppression.
+Snapcart transforms the chaotic social commerce flow into a reliable, automated SMS-first pipeline:
+
+```
+┌─────────────────┐       ┌──────────────────────┐       ┌────────────────────────┐
+│ 1. Storefront   │  ──►  │ 2. Verified Checkout │  ──►  │ 3. One-Tap Actions     │
+│ Seller shares   │       │ Buyer places order;  │       │ Seller receives SMS    │
+│ /s/{slug} link  │       │ OTP validates phone  │       │ with secure /a/{token} │
+└─────────────────┘       └──────────────────────┘       └────────────────────────┘
+                                                                     │
+                                                                     ▼
+┌─────────────────┐       ┌──────────────────────┐       ┌────────────────────────┐
+│ 6. Real-time    │  ◄──  │ 5. Pickup Security   │  ◄──  │ 4. Order Preparation   │
+│ Audit & Webhook │       │ Buyer shows 4-digit  │       │ Buyer gets SMS update; │
+│ SMSHub reports  │       │ HMAC code at counter │       │ seller marks as ready  │
+└─────────────────┘       └──────────────────────┘       └────────────────────────┘
+```
+
+1. **Shareable Storefront (`/s/{slug}`):** Sellers share their branded, ultra-fast mobile catalog link on social media.
+2. **Guest Checkout + SMSHub Phone OTP:** Buyers build their cart and verify their phone number via SMS OTP in seconds. No account registration needed.
+3. **One-Tap Seller Action Links (`/a/{token}`):** The merchant immediately receives an SMS notification with a signed, single-use, 48-hour link to Accept, Reject, or Mark Ready directly from their phone with one thumb.
+4. **Tamper-Proof Pickup Handover:** When ready, the buyer receives a 4-digit HMAC pickup code via SMS. The seller verifies this code at the counter to close the order (locks after 5 failed attempts).
+5. **Audited SMS Lifecycle & Webhooks:** Delivery webhooks track Ethio Telecom / Safaricom transmission in real-time, failed messages feature instant manual resend, and buyers retain full opt-out privacy.
 
 ---
 
-## Architecture & SMSHub Integration
+## Key Features
+
+### 🇪🇹 Bilingual Experience (Amharic & English)
+- Instant, reactive language toggle (`en` / `am`) across all pages without layout shift.
+- Full native Amharic translations for landing page, customer storefront, checkout flow, OTP modals, order confirmation, pickup screens, seller action links, and merchant dashboard.
+
+### 🌗 Modern Responsive Design & Dark Mode
+- Universal dark mode & light mode toggle with system preference sync across landing, auth, dashboard, storefronts, and action links.
+- Sleek speed-cart SVG vector brand identity with warm saffron amber accents and ambient aurora glow.
+- Interactive order flow simulator on the landing page demonstrating the end-to-end customer and seller SMS journey.
+
+### 📱 SMS-Driven Merchant Operations
+- **Zero-Dashboard Operation:** Sellers can run daily sales entirely via incoming SMS and signed action links without logging into a web dashboard.
+- **Message Audit Log:** Real-time visibility into SMSHub status (`sent`, `failed`, `skipped`), carrier network (`ethio` / `safaricom`), credit consumption, and `msg_...` IDs.
+- **Fail-Safe Resend Controls:** Single-click manual resend for undelivered SMS alerts directly from the dashboard.
+
+### 🔐 Zero-Trust Security & Privacy
+- **Signed Action Links:** Cryptographically secure 22-character CSPRNG action tokens with 48-hour single-use validity.
+- **HMAC-SHA256 Handover Codes:** Constant-time `timingSafeEqual` 4-digit pickup code comparison with automatic 5-attempt rate-limit lockout.
+- **Database Row Level Security (RLS):** Supabase PostgreSQL protected with RLS enabled across public tables.
+- **Carrier Replay Protection:** Inbound webhooks enforce 300-second timestamp validation against replay attacks.
+- **Strict Privacy Compliance:** Unticked-by-default SMS consent and single-tap buyer opt-out suppression.
+
+### ☁️ Cloudflare R2 Media Storage
+- Fast, S3-compatible cloud storage for merchant profile pictures and product catalog images.
+- Automated file validation, safe file naming, and direct CDN-backed asset delivery.
+
+### 💳 Chapa Subscription Billing
+- Integrated Chapa payment gateway for seller subscriptions with 14-day free trials.
+- Tiered merchant plans (Free Trial, Starter, Growth, Pro) with automated billing webhook synchronization.
+
+---
+
+## Monorepo Architecture
+
+The codebase is organized as an enterprise-grade npm monorepo:
 
 ```
-Buyer / Seller Phone ──► Next.js Frontend (apps/web)
-                                │ (REST API / Proxy)
-                                ▼
-                       NestJS Backend (apps/api) ──► PostgreSQL (Prisma)
-                                │        ▲
-                Outbound SMS    │        │ Webhooks (HMAC-SHA256)
-                                ▼        │
-                          SMSHub Gateway (Ethio Telecom / Safaricom)
+order-by-sms/
+├── apps/
+│   ├── web/                     # Next.js 14+ App Router frontend
+│   │   ├── src/app/             # Pages: Landing, Auth, Dashboard, Storefront (/s/[slug]), Actions (/a/[token])
+│   │   ├── src/lib/             # i18n dictionaries (en/am), Prisma client, auth session
+│   │   └── next.config.mjs      # Proxy rewrites (/api/* -> INTERNAL_API_URL)
+│   └── api/                     # NestJS 10 modular backend service
+│       └── src/
+│           ├── modules/         # Auth, Orders, Products, Webhooks, SMSHub, Chapa, Settings
+│           └── config/          # Zod-validated environment configuration
+├── packages/
+│   └── contracts/               # Shared TypeScript schemas, DTOs, and Zod validators
+├── prisma/
+│   ├── schema.prisma            # Canonical database schema
+│   ├── migrations/              # Versioned PostgreSQL migrations & RLS policies
+│   └── seed.ts                  # Database seed script for local development
+└── docs/                        # Complete architecture and product specifications
 ```
-
-- **Monorepo Structure:** Structured with npm workspaces (`apps/web`, `apps/api`, `packages/contracts`, `prisma/`).
-- **SMS Dispatch & Test Mode:** Supports `SMSHUB_MODE="test"` (calls `POST /api/test`, 0 credits) and `SMSHUB_MODE="live"` (calls `POST /api/sms`).
-- **OTP Verification:** Uses `POST /api/verify/send` and `POST /api/verify/check`.
-- **Signed Webhooks:** Validates `X-SMSHub-Signature` via HMAC-SHA256 with 5-minute replay attack protection.
-- **Error Matrix:** Automatic backoff retries for 502/500 gateway errors and 429 rate limit pacing.
 
 ---
 
 ## Tech Stack
 
-- **Monorepo:** npm workspaces (`apps/web`, `apps/api`, `packages/contracts`)
-- **Backend:** NestJS (Modular Monolith) + TypeScript
-- **Frontend:** Next.js (App Router) + TypeScript + React
-- **Database:** PostgreSQL + Prisma ORM
-- **Styling:** Tailwind CSS (mobile-first responsive)
-- **Validation:** Zod schemas
-- **Testing:** Vitest & Supertest
-- **Security:** CSPRNG tokens, HMAC-SHA256, bcrypt password hashing, HttpOnly sessions
+| Domain | Technology |
+|---|---|
+| **Frontend Framework** | [Next.js](https://nextjs.org/) (App Router, React 18, TypeScript) |
+| **Backend Framework** | [NestJS](https://nestjs.com/) (Modular Monolith, Fastify/Express) |
+| **Database & ORM** | [PostgreSQL](https://www.postgresql.org/) (Supabase) + [Prisma ORM](https://www.prisma.io/) |
+| **SMS Gateway & OTP** | [SMSHub.et](https://smshub.et) (Ethio Telecom & Safaricom routing) |
+| **Object Storage** | [Cloudflare R2](https://www.cloudflare.com/developer-platform/r2/) (S3-compatible) |
+| **Payment Gateway** | [Chapa](https://chapa.co/) (Ethiopian Birr merchant subscription billing) |
+| **Styling & Icons** | [Tailwind CSS](https://tailwindcss.com/) + Lucide Icons + Custom Vector SVG branding |
+| **Validation & State** | [Zod](https://zod.dev/) + TypeScript strict mode |
+| **Testing Suite** | [Vitest](https://vitest.dev/), Supertest, Testing Library (80+ suites, 600+ tests) |
+| **Security** | CSPRNG, HMAC-SHA256, bcrypt, timingSafeEqual, Helmet, Rate-Limiting, Row Level Security |
 
 ---
 
 ## Getting Started Locally
 
 ### 1. Prerequisites
-- Node.js v20+ or v24
-- PostgreSQL database
-- SMSHub.et API account
+- **Node.js**: `v20.x` or `v22.x` (LTS recommended)
+- **npm**: `v10+`
+- **PostgreSQL**: Local instance, Docker container, or Supabase project
+- **SMSHub Account**: Free sandbox credentials from [SMSHub.et](https://smshub.et)
 
-### 2. Installation
+### 2. Clone and Install Dependencies
 ```bash
-git clone <repo-url>
+git clone https://github.com/fenet-as/order-by-sms.git
 cd "order by sms"
 npm install
 ```
 
-### 3. Environment Setup
+### 3. Environment Configuration
+Copy the template configuration:
 ```bash
 cp .env.example .env
 ```
-Edit `.env` to configure your database URL and SMSHub credentials. Note that `SMSHUB_MODE="test"` runs all sends against the zero-credit test endpoint.
 
-### 4. Database Setup (Local PostgreSQL or Docker)
+Key environment variables to configure in `.env`:
+```env
+# ------------------------------------------------------------------------------
+# 1. Database Connection (PostgreSQL / Supabase)
+# ------------------------------------------------------------------------------
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/order_by_sms?schema=public"
+DIRECT_URL="postgresql://postgres:postgres@localhost:5432/order_by_sms?schema=public"
 
-Order-by-SMS requires a PostgreSQL instance. You can run PostgreSQL either locally or via Docker:
+# ------------------------------------------------------------------------------
+# 2. Service URLs & Cross-Origin Communication
+# ------------------------------------------------------------------------------
+PORT=3001
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+FRONTEND_URL="http://localhost:3000"
+INTERNAL_API_URL="http://localhost:3001"
 
-#### Option A: Docker (Recommended for quick local dev)
-Start a dedicated PostgreSQL 16 container matching `.env.example`:
+# ------------------------------------------------------------------------------
+# 3. Security & Session Secrets
+# ------------------------------------------------------------------------------
+SESSION_SECRET="your-32-character-session-secret-here"
+PICKUP_CODE_SALT="your-cryptographic-pickup-salt"
+
+# ------------------------------------------------------------------------------
+# 4. SMSHub Integration (Ethio Telecom / Safaricom SMS Gateway)
+# ------------------------------------------------------------------------------
+SMSHUB_API_KEY="your_smshub_api_key"
+SMSHUB_SENDER_ID="Snapcart"
+SMSHUB_MODE="test"                    # "test" for zero-credit testing, "live" for production
+SMSHUB_WEBHOOK_SECRET="your_webhook_signing_secret_here"
+
+# ------------------------------------------------------------------------------
+# 5. Media Storage (Cloudflare R2) & Payments (Chapa) - Optional for local dev
+# ------------------------------------------------------------------------------
+R2_ACCOUNT_ID="your_cloudflare_account_id"
+R2_ACCESS_KEY_ID="your_r2_access_key_id"
+R2_SECRET_ACCESS_KEY="your_r2_secret_access_key"
+R2_BUCKET_NAME="snapcart-media"
+R2_PUBLIC_URL="https://your-custom-domain.com"
+
+CHAPA_SECRET_KEY="CHASECK_TEST-your-key"
+CHAPA_WEBHOOK_SECRET="your-chapa-webhook-secret"
+```
+
+### 4. Database Setup & Migrations
+You can spin up a local PostgreSQL container using Docker:
 ```bash
-docker run --name order-by-sms-db \
+docker run --name snapcart-db \
   -e POSTGRES_USER=postgres \
   -e POSTGRES_PASSWORD=postgres \
   -e POSTGRES_DB=order_by_sms \
@@ -105,136 +203,148 @@ docker run --name order-by-sms-db \
   -d postgres:16-alpine
 ```
 
-Or using Docker Compose:
-```yaml
-# docker-compose.yml
-services:
-  db:
-    image: postgres:16-alpine
-    container_name: order-by-sms-db
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: order_by_sms
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-volumes:
-  pgdata:
-```
-Run `docker compose up -d` to launch the database container.
-
-#### Option B: Native PostgreSQL
-1. Ensure PostgreSQL service is running on your system (`localhost:5432`).
-2. Create the development database:
-```sql
-CREATE DATABASE order_by_sms;
-```
-3. Update `DATABASE_URL` in `.env` if using custom credentials.
-
-#### Apply Schema to Database
-Once your PostgreSQL instance is running, apply versioned migrations:
+Apply database migrations:
 ```bash
-# In production / CI (applies pending migrations):
-npm run prisma:migrate:deploy
-
-# In local development (applies migrations and checks schema drift):
+# Apply pending Prisma migrations
 npm run prisma:migrate
-```
-To inspect your database visually:
-```bash
-npm run prisma:studio
+
+# Seed development database with demo merchant & sample catalog
+npm run db:seed
 ```
 
-### 5. Run the Application
+### 5. Running the Monorepo
+Start both the Next.js frontend and NestJS API concurrently:
 ```bash
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 6. SMSHub Webhook Integration ("Hooked" Quest)
+- **Frontend Application:** [http://localhost:3000](http://localhost:3000)
+- **Backend API:** [http://localhost:3001](http://localhost:3001)
+- **API Health Check:** [http://localhost:3001/api/health](http://localhost:3001/api/health)
 
-To earn the **"Hooked" quest badge (+15 pts)** in the SMSHub Buildathon, configure the inbound delivery webhook endpoint:
-
-#### 1. Configuration & Security
-Add your webhook signing secret in your `.env`:
-```env
-SMSHUB_WEBHOOK_SECRET="your_webhook_signing_secret_here"
-```
-> [!IMPORTANT]
-> Keep `SMSHUB_WEBHOOK_SECRET` secret and never commit live secrets to git.
-
-#### 2. Supported Public Callback URLs
-Snapcart supports flexible webhook routing with full cryptographic HMAC-SHA256 verification:
-- Primary Callback: `https://<your-public-domain>/webhooks/smshub`
-- Dual Callback: `https://<your-public-domain>/api/webhooks/smshub`
-
-Both URLs seamlessly ingest delivery reports, verify `X-SMSHub-Signature` (`t={timestamp},v1={hmac}`), enforce 300-second replay attack protection, sanitize sensitive codes (OTPs and pickup codes), and update order notification states.
-
-#### 3. Local Development Tunnel Setup
-SMSHub requires a public HTTPS URL to deliver webhook events. You can expose your local server using `ngrok` or `cloudflared`:
-
+To run either service independently:
 ```bash
-# Using ngrok (forwarding to Next.js on port 3000):
-ngrok http 3000
+npm run dev:web    # Runs Next.js frontend only
+npm run dev:api    # Runs NestJS backend only
+```
 
-# Or using cloudflared:
+---
+
+## SMSHub Webhook Integration ("Hooked" Quest)
+
+To earn the **"Hooked" quest badge (+15 pts)** in the SMSHub Buildathon, Snapcart provides a fully verified inbound delivery webhook pipeline:
+
+### 1. Webhook Endpoints
+Both routes are available and verify inbound carrier delivery reports:
+- Primary: `POST https://<your-domain>/webhooks/smshub`
+- API Route: `POST https://<your-domain>/api/webhooks/smshub`
+
+### 2. Cryptographic Verification & Replay Protection
+- Verifies the `X-SMSHub-Signature` header (`t={timestamp},v1={hmac}`) using HMAC-SHA256.
+- Enforces a 300-second (5-minute) replay attack tolerance window.
+- Automatically handles test pings with `{ "received": true, "event": "ping" }`.
+
+### 3. Local Webhook Testing via Tunnel
+Expose your local development port to the web:
+```bash
+# Using cloudflared:
 cloudflared tunnel --url http://localhost:3000
+
+# Or using ngrok:
+ngrok http 3000
 ```
-Copy your assigned HTTPS tunnel URL (e.g. `https://abc123.ngrok-free.app`) and configure the webhook URL as:
-`https://abc123.ngrok-free.app/webhooks/smshub`
+Register `https://<tunnel-subdomain>/webhooks/smshub` in your [SMSHub Webhooks Dashboard](https://smshub.et/dashboard/webhooks).
 
-#### 4. Register Endpoint in SMSHub Dashboard
-1. Log into your [SMSHub Dashboard](https://smshub.et).
-2. Navigate to **API Access → Webhooks** (or [smshub.et/dashboard/webhooks](https://smshub.et/dashboard/webhooks)).
-3. Click **Add Endpoint**.
-4. Enter your Endpoint URL: `https://<your-domain>/webhooks/smshub`.
-5. Select event subscriptions:
-   - `message.sent` (carrier delivery confirmation)
-   - `message.failed` (carrier rejection / credit refund)
-   - `credits.low` (balance alerts)
-   - `ping` (health checks)
-6. Copy the generated **Webhook Secret** (`whsec_...`) into your `.env` file as `SMSHUB_WEBHOOK_SECRET`.
-7. Click **Send Test** in the SMSHub dashboard to dispatch a `ping` test event. Your server will respond with HTTP `200 OK` (`{"received": true, "event": "ping"}`).
+---
 
-#### 5. Supported Event Payloads & Lifecycle Updates
-- **`message.sent`**: Updates the internal message status to `sent`, records `network` (`ethio` / `safaricom`) and `credits_used`, and logs an audited event in `message_events`.
-- **`message.failed`**: Updates the message status to `failed` and records the carrier `error_type`.
-- **`ping`**: Validates webhook connectivity without mutating order or message state.
-- **`credits.low`**: Logs proactive alerts when SMSHub credits drop below threshold.
-- **Idempotency**: Duplicate delivery IDs (`id` or `delivery_id`) are safely detected and ignored via unique constraints (`P2002`).
+## Testing & Quality Assurance
 
-### 7. Run Unit & E2E Tests
+Snapcart maintains rigorous test coverage with over 80 test suites and 600+ tests:
+
 ```bash
-# Run all webhook integration and service tests:
-npx vitest run test/e2e/webhook-sync.test.ts apps/api/src/modules/webhooks/__tests__/
-
-# Run complete test suite:
+# Run all unit, integration, and e2e tests
 npm test
+
+# Run tests in watch mode during development
+npx vitest
+
+# Run targeted test suites
+npx vitest run test/e2e/webhook-sync.test.ts
+npx vitest run apps/api/src/modules/auth/__tests__/
 ```
 
-### 8. Secret Scanning & Repository Hygiene
-To verify that no live production secrets (`sk_live_...`, `whsec_...`) or unencrypted credential files are staged before committing:
+### Automated Quality Gates
+All commits and Pull Requests are verified against automated CI quality gates:
 ```bash
+# Linting checks
+npm run lint
+
+# Secret scanning (verifies no live API keys or credentials are staged)
 npm run check:secrets
+
+# TypeScript typechecking
+npx tsc --noEmit
+
+# High-severity dependency vulnerability audit
+npm audit --audit-level=high
 ```
+
+---
+
+## Production Deployment Guide
+
+Snapcart is architected for decoupled cloud deployment:
+
+### Frontend (Next.js on Vercel)
+1. Deploy `apps/web` to Vercel (Root Directory: `./`).
+2. Configure Environment Variables on Vercel:
+   - `INTERNAL_API_URL`: Public HTTPS URL of the deployed NestJS API (e.g. `https://api.yourdomain.com`).
+   - `DATABASE_URL`: Supabase Transaction Pooler URL (port `6543`).
+   - `DIRECT_URL`: Supabase Direct Connection URL (port `5432`).
+   - `SESSION_SECRET`: Cryptographically random 32+ character string.
+   - `NEXT_PUBLIC_APP_URL`: Public frontend URL (e.g. `https://snapcart.vercel.app`).
+3. The Next.js rewrite engine automatically routes `/api/*` requests directly to `INTERNAL_API_URL`.
+
+### Backend (NestJS on Railway / Render / Fly.io / VPS)
+1. Deploy `apps/api` using the included production Dockerfile or container runner.
+2. Configure Environment Variables:
+   - `DATABASE_URL` & `DIRECT_URL`: Supabase database credentials.
+   - `FRONTEND_URL`: Public frontend domain for CORS authorization.
+   - `SESSION_SECRET`: Identical to the frontend session secret.
+   - `SMSHUB_API_KEY`, `SMSHUB_SENDER_ID`, `SMSHUB_MODE="live"`.
+   - `SMSHUB_WEBHOOK_SECRET`: SMSHub dashboard webhook signing key.
+   - `R2_*` and `CHAPA_*`: Production credentials for Cloudflare R2 and Chapa.
 
 ---
 
 ## Documentation Suite
 
-Detailed architectural specifications and guides are located in the [`docs/`](file:///c:/Users/Student4/OneDrive/Documents/0%20-%20projects/order%20by%20sms/docs/) directory:
-- [01. Product Overview & Scope](file:///c:/Users/Student4/OneDrive/Documents/0%20-%20projects/order%20by%20sms/docs/01-product-overview-and-scope.md)
-- [02. User Journeys & Lifecycle](file:///c:/Users/Student4/OneDrive/Documents/0%20-%20projects/order%20by%20sms/docs/02-user-journeys-and-lifecycle.md)
-- [03. Functional Requirements](file:///c:/Users/Student4/OneDrive/Documents/0%20-%20projects/order%20by%20sms/docs/03-functional-requirements.md)
-- [04. SMS Strategy & Templates](file:///c:/Users/Student4/OneDrive/Documents/0%20-%20projects/order%20by%20sms/docs/04-sms-strategy-and-templates.md)
-- [05. SMSHub Integration](file:///c:/Users/Student4/OneDrive/Documents/0%20-%20projects/order%20by%20sms/docs/05-smshub-integration.md)
-- [06. Security & Privacy](file:///c:/Users/Student4/OneDrive/Documents/0%20-%20projects/order%20by%20sms/docs/06-security-and-privacy.md)
-- [07. System Architecture](file:///c:/Users/Student4/OneDrive/Documents/0%20-%20projects/order%20by%20sms/docs/07-system-architecture-and-tech-stack.md)
-- [08. Data Model & Database](file:///c:/Users/Student4/OneDrive/Documents/0%20-%20projects/order%20by%20sms/docs/08-data-model-and-database.md)
-- [09. Routes & API Specification](file:///c:/Users/Student4/OneDrive/Documents/0%20-%20projects/order%20by%20sms/docs/09-routes-and-api-spec.md)
-- [10. UI & UX Specifications](file:///c:/Users/Student4/OneDrive/Documents/0%20-%20projects/order%20by%20sms/docs/10-ui-ux-design-specs.md)
-- [11. Testing & QA Plan](file:///c:/Users/Student4/OneDrive/Documents/0%20-%20projects/order%20by%20sms/docs/11-testing-and-quality-assurance.md)
+Comprehensive architectural, security, and product specifications are maintained in the [`docs/`](./docs/) directory:
+
+- [01. Product Overview & Scope](./docs/01-product-overview-and-scope.md)
+- [02. User Journeys & Lifecycle](./docs/02-user-journeys-and-lifecycle.md)
+- [03. Functional Requirements](./docs/03-functional-requirements.md)
+- [04. SMS Strategy & Templates](./docs/04-sms-strategy-and-templates.md)
+- [05. SMSHub Integration](./docs/05-smshub-integration.md)
+- [06. Security & Privacy](./docs/06-security-and-privacy.md)
+- [07. System Architecture](./docs/07-system-architecture-and-tech-stack.md)
+- [08. Data Model & Database](./docs/08-data-model-and-database.md)
+- [09. Routes & API Specification](./docs/09-routes-and-api-spec.md)
+- [10. UI & UX Specifications](./docs/10-ui-ux-design-specs.md)
+- [11. Testing & Quality Assurance](./docs/11-testing-and-quality-assurance.md)
+
+---
+
+## Contributing
+
+1. Create a descriptive feature branch: `git checkout -b feat/your-feature-name`
+2. Implement your changes adhering to existing architectural standards.
+3. Verify all tests pass: `npm test`
+4. Run all quality gates: `npm run lint && npm run check:secrets && npx tsc --noEmit`
+5. Push to GitHub and open a Pull Request.
+
+---
+
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
