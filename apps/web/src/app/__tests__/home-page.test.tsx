@@ -117,7 +117,7 @@ describe("Landing Page Refinement (Home / LandingClient)", () => {
     expect(html).toContain("መሸጥ ይጀምሩ");
 
     // Hero Section
-    expect(html).toContain("ለኢትዮጵያ አነስተኛ ነጋዴዎች የተዘጋጀ");
+    expect(html).toContain("Snapcart • በቅጽበት ይዘዙ");
     expect(html).toContain("ሙሉ በሙሉ በኤስኤምኤስ መልዕክቶች የሚመራ የንግድ ስርዓት።");
     expect(html).toContain("በነጻ መሸጥ ይጀምሩ");
     expect(html).toContain("የሙከራ መደብሩን ይመልከቱ");
