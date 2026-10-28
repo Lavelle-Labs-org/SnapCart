@@ -83,6 +83,16 @@ export interface TranslationSchema {
     itemsOrdered: string;
     smsNotice: string;
     backToStore: string;
+    atShop: (shopName: string) => string;
+    orderBadge: (num: string | number) => string;
+    consentedNotice: string;
+    pickupCodeSmsTitle: string;
+    pickupCodeSmsDesc: string;
+    optedOutNotice: string;
+    checkWithSellerTitle: string;
+    checkWithSellerDesc: string;
+    backToStorefront: string;
+    brandPowered: string;
   };
   action: {
     pageTitle: (storeName: string) => string;
