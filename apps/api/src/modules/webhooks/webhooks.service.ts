@@ -116,12 +116,28 @@ export class WebhooksService {
       if (messageRecord) {
         // On message.sent (or message.delivered), update status to 'sent'
         if (eventType === "message.sent" || eventType === "message.delivered") {
+          const network = payload?.data?.network || payload?.network;
+          const creditsUsed =
+            payload?.data?.credits_used !== undefined
+              ? Number(payload.data.credits_used)
+              : payload?.credits_used !== undefined
+                ? Number(payload.credits_used)
+                : undefined;
+
+          const updateData: any = {
+            status: "sent",
+            updated_at: new Date(),
+          };
+          if (network && typeof network === "string") {
+            updateData.network = network;
+          }
+          if (creditsUsed !== undefined && !isNaN(creditsUsed)) {
+            updateData.credits_used = creditsUsed;
+          }
+
           await this.prisma.message.update({
             where: { id: messageRecord.id },
-            data: {
-              status: "sent",
-              updated_at: new Date(),
-            },
+            data: updateData,
           });
           this.logger.log(
             `Updated message ${messageRecord.id} (SMSHub ID: ${smshubMessageId}) status to 'sent'`
@@ -151,6 +167,16 @@ export class WebhooksService {
           );
         }
       }
+    }
+
+    if (eventType === "credits.low") {
+      this.logger.warn(
+        `SMSHub credits.low webhook event received. Remaining credits: ${payload?.data?.credits_remaining ?? payload?.credits_remaining ?? "unknown"}`
+      );
+    } else if (eventType === "ping") {
+      this.logger.log(
+        `SMSHub ping health check event received (deliveryId: ${deliveryId || "ping-test"})`
+      );
     }
 
     // 3. Sanitize payload: strip any plain pickup codes, OTPs, or sensitive text before saving

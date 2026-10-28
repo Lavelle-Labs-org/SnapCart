@@ -27,7 +27,7 @@ export async function bootstrap() {
 
   // Global API routing prefix (excluding webhooks per SMSHub spec)
   app.setGlobalPrefix("api", {
-    exclude: ["webhooks/smshub", "webhooks/(.*)"],
+    exclude: ["webhooks/smshub", "webhooks/(.*)", "api/webhooks/smshub", "api/webhooks/(.*)"],
   });
 
   // CORS configuration for frontend origin with credentials

@@ -30,6 +30,10 @@ const nextConfig = {
     const apiUrl = process.env.INTERNAL_API_URL || "http://localhost:4000";
     return [
       {
+        source: "/api/webhooks/:path*",
+        destination: `${apiUrl}/webhooks/:path*`,
+      },
+      {
         source: "/api/:path*",
         destination: `${apiUrl}/api/:path*`,
       },

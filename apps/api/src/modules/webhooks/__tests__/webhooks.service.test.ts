@@ -199,5 +199,74 @@ describe("WebhooksService (BE-014 - Webhook Event Ingestion & Message Status Syn
       expect(result.received).toBe(true);
       expect(result.duplicate).toBe(true);
     });
+
+    it("handles dashboard 'ping' health check events gracefully without database calls", async () => {
+      const result = await service.handleSMSHubWebhook({
+        eventType: "ping",
+        deliveryId: "evt_ping_123",
+        payload: { id: "evt_ping_123", type: "ping" },
+        rawBody: "{}",
+      });
+
+      expect(result.received).toBe(true);
+      expect(result.event).toBe("ping");
+      expect(prismaMock.message.update).not.toHaveBeenCalled();
+      expect(prismaMock.messageEvent.create).toHaveBeenCalled();
+    });
+
+    it("handles 'credits.low' balance alert events without requiring message_id", async () => {
+      const result = await service.handleSMSHubWebhook({
+        eventType: "credits.low",
+        deliveryId: "evt_credits_low_456",
+        payload: {
+          id: "evt_credits_low_456",
+          type: "credits.low",
+          data: { balance: 25, threshold: 50 },
+        },
+        rawBody: "{}",
+      });
+
+      expect(result.received).toBe(true);
+      expect(result.event).toBe("credits.low");
+      expect(prismaMock.message.update).not.toHaveBeenCalled();
+    });
+
+    it("records network and credits_used on message.sent with official SMSHub payload schema", async () => {
+      prismaMock.messageEvent.findUnique.mockResolvedValue(null);
+      prismaMock.message.findUnique.mockResolvedValue({ id: "msg-db-3" });
+      prismaMock.message.update.mockResolvedValue({});
+      prismaMock.messageEvent.create.mockResolvedValue({});
+
+      const result = await service.handleSMSHubWebhook({
+        eventType: "message.sent",
+        deliveryId: "evt_3f1c9a0b",
+        payload: {
+          id: "evt_3f1c9a0b",
+          type: "message.sent",
+          created: "2026-10-13T10:15:02+03:00",
+          data: {
+            message_id: "msg_9b2d4e6f",
+            msisdn: "0911234567",
+            network: "ethio",
+            status: "sent",
+            credits_used: 1,
+            text: "Your order #1042 is ready.",
+          },
+        },
+        rawBody: "{}",
+      });
+
+      expect(result.received).toBe(true);
+      expect(prismaMock.message.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "msg-db-3" },
+          data: expect.objectContaining({
+            status: "sent",
+            network: "ethio",
+            credits_used: 1,
+          }),
+        })
+      );
+    });
   });
 });

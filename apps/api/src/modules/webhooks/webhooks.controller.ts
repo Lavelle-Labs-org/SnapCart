@@ -16,7 +16,7 @@ import { WebhookSignatureGuard } from "./webhook-signature.guard";
 import { BillingService } from "../billing/billing.service";
 import { ChapaService } from "../billing/chapa.service";
 
-@Controller("webhooks")
+@Controller(["webhooks", "api/webhooks"])
 export class WebhooksController {
   constructor(
     @Inject(WebhooksService)
@@ -37,9 +37,9 @@ export class WebhooksController {
     @Req() req: Request
   ) {
     const eventType =
-      eventHeader || body?.event || "ping";
+      eventHeader || body?.type || body?.event || "ping";
     const deliveryId =
-      deliveryHeader || body?.delivery_id || "";
+      deliveryHeader || body?.id || body?.delivery_id || "";
     const rawBody =
       (req as any).verifiedRawBody ||
       ((req as any).rawBody
