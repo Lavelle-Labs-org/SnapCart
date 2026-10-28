@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   MessageSquare,
@@ -21,6 +21,10 @@ import {
   Radio,
   FileText,
   Check,
+  Play,
+  Pause,
+  Zap,
+  RotateCcw,
 } from "lucide-react";
 import { ThemeToggle } from "../components/theme-toggle";
 import { LanguageToggle } from "../components/language-toggle";
@@ -65,6 +69,18 @@ export default function LandingClient() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [mockCartCount, setMockCartCount] = useState(0);
+
+  // Interactive Live Order-to-SMS Flow Simulation (1: Item Added, 2: OTP Verified, 3: Seller 1-Tap SMS, 4: Pickup Proof)
+  const [activeSimStep, setActiveSimStep] = useState<1 | 2 | 3 | 4>(1);
+  const [isSimPlaying, setIsSimPlaying] = useState(true);
+
+  useEffect(() => {
+    if (!isSimPlaying) return;
+    const interval = setInterval(() => {
+      setActiveSimStep((prev) => ((prev % 4) + 1) as 1 | 2 | 3 | 4);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [isSimPlaying]);
 
   const faqs = isAmharic ? t.landing.faqs : FAQS;
 
@@ -200,7 +216,10 @@ export default function LandingClient() {
       {/* Main Content Area */}
       <main className="flex-1">
         {/* 2. Hero Section */}
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-16 md:pt-20 md:pb-24 flex flex-col items-center text-center">
+        <section className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-16 md:pt-20 md:pb-24 flex flex-col items-center text-center">
+          {/* Ambient Glowing Aurora Mesh (Pure CSS) */}
+          <div className="absolute top-12 left-1/2 -translate-x-1/2 w-[720px] max-w-[95vw] h-[400px] bg-gradient-to-tr from-emerald-500/15 via-teal-400/10 to-cyan-400/15 dark:from-emerald-500/25 dark:via-emerald-400/10 dark:to-teal-500/20 rounded-full blur-3xl pointer-events-none -z-10 animate-aurora" />
+
           {/* Trust Network Badge */}
           <div className="inline-flex items-center space-x-2 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-semibold px-3.5 py-1.5 rounded-full mb-6 shadow-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -252,11 +271,22 @@ export default function LandingClient() {
             </span>
           </div>
 
-          {/* 3. Realistic Product Visual Mockup */}
-          <div className="w-full mt-14 max-w-5xl text-left">
-            <div className="relative rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-900/50 p-3 sm:p-5 shadow-xl">
-              {/* Mockup Top Window Bar */}
-              <div className="flex items-center justify-between pb-3 px-2 border-b border-slate-200/80 dark:border-slate-800/80 text-xs text-slate-500 dark:text-slate-400">
+          {/* 3. Realistic Product Visual Mockup & Interactive Flow Simulator */}
+          <div className="w-full mt-14 max-w-5xl text-left relative">
+            {/* Floating Live Activity Pills (Desktop) */}
+            <div className="hidden lg:flex items-center gap-2.5 absolute -top-4 -left-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold px-4 py-2 rounded-full shadow-lg animate-float-slow pointer-events-none z-20">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>{isAmharic ? "አዲስ ትዕዛዝ #1001 • 350.00 ብር" : "New Order #1001 • 350.00 ETB"}</span>
+            </div>
+
+            <div className="hidden lg:flex items-center gap-2 absolute -top-4 -right-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold px-4 py-2 rounded-full shadow-lg animate-float-delayed pointer-events-none z-20">
+              <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+              <span>{isAmharic ? "SMS ደርሷል (1.2 ሰከንድ) • Ethio Telecom" : "SMS Delivered in 1.2s • Ethio Telecom"}</span>
+            </div>
+
+            <div className="relative rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-900/50 p-3 sm:p-5 shadow-xl transition-all duration-300">
+              {/* Mockup Top Window Bar with Interactive Stepper Tabs */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 px-2 border-b border-slate-200/80 dark:border-slate-800/80 text-xs text-slate-500 dark:text-slate-400">
                 <div className="flex items-center space-x-2">
                   <span className="w-3 h-3 rounded-full bg-rose-400" />
                   <span className="w-3 h-3 rounded-full bg-amber-400" />
@@ -265,9 +295,53 @@ export default function LandingClient() {
                     orderbysms.et/s/habesha-cafe
                   </span>
                 </div>
-                <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>{isAmharic ? t.landing.mockupLivePreview : "Live Product Preview"}</span>
+
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>{isAmharic ? t.landing.mockupLivePreview : "Live Product Preview"}</span>
+                  </div>
+                </div>
+
+                {/* 4-Step Interactive Navigation Tabs */}
+                <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto py-0.5">
+                  {[
+                    { step: 1, en: "1. Add to Cart", am: "1. ምርት መምረጥ" },
+                    { step: 2, en: "2. Verify OTP", am: "2. በOTP ማረጋገጥ" },
+                    { step: 3, en: "3. Seller 1-Tap", am: "3. የሻጭ 1-መታ" },
+                    { step: 4, en: "4. Pickup Code", am: "4. የመቀበያ ኮድ" },
+                  ].map((item) => {
+                    const isCurrent = activeSimStep === item.step;
+                    return (
+                      <button
+                        key={item.step}
+                        type="button"
+                        onClick={() => {
+                          setActiveSimStep(item.step as 1 | 2 | 3 | 4);
+                          setIsSimPlaying(false);
+                        }}
+                        className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
+                          isCurrent
+                            ? "bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-500/30"
+                            : "bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                        }`}
+                      >
+                        {isCurrent && <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />}
+                        <span>{isAmharic ? item.am : item.en}</span>
+                      </button>
+                    );
+                  })}
+
+                  {/* Play / Pause Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsSimPlaying((p) => !p)}
+                    className="p-1.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition cursor-pointer"
+                    title={isSimPlaying ? "Pause simulation" : "Auto-play simulation"}
+                    aria-label={isSimPlaying ? "Pause simulation" : "Auto-play simulation"}
+                  >
+                    {isSimPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                  </button>
                 </div>
               </div>
 
@@ -298,11 +372,25 @@ export default function LandingClient() {
 
                     {/* Storefront Menu Items */}
                     <div className="py-4 space-y-3">
-                      <div className="flex items-center justify-between p-3 rounded-lg border border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/40">
+                      {/* Item 1: Special Combo Platter (Active in Sim) */}
+                      <div
+                        className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-300 ${
+                          activeSimStep >= 1
+                            ? "border-emerald-500/80 bg-emerald-50/50 dark:bg-emerald-950/30 ring-1 ring-emerald-500/20"
+                            : "border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/40"
+                        }`}
+                      >
                         <div className="pr-3">
-                          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">
-                            {isAmharic ? "ልዩ ጥብስና ክትፎ ኮምቦ" : "Special Combo Platter"}
-                          </h3>
+                          <div className="flex items-center gap-1.5">
+                            <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">
+                              {isAmharic ? "ልዩ ጥብስና ክትፎ ኮምቦ" : "Special Combo Platter"}
+                            </h3>
+                            {activeSimStep >= 1 && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300">
+                                1x
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
                             {isAmharic ? "ጥብስ፣ ክትፎ እና ምስር ወጥ ከሁለት እንጀራ ጋር" : "Tibs, kitfo, and spicy lentils with two injera"}
                           </p>
@@ -311,27 +399,32 @@ export default function LandingClient() {
                           </span>
                         </div>
                         <div>
-                          {mockCartCount === 0 ? (
-                            <button
-                              type="button"
-                              onClick={() => setMockCartCount(1)}
-                              className="px-2.5 py-1 rounded-md border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 text-xs font-medium transition cursor-pointer"
-                            >
-                              {isAmharic ? t.landing.mockupAddBtn : "+ Add"}
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => setMockCartCount(0)}
-                              className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition cursor-pointer"
-                            >
-                              {isAmharic ? t.landing.mockupCartItem : "1 in cart"}
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveSimStep(1);
+                              setIsSimPlaying(false);
+                            }}
+                            className={`px-2.5 py-1 rounded-md text-xs font-semibold transition cursor-pointer flex items-center gap-1 ${
+                              activeSimStep >= 1
+                                ? "bg-emerald-600 text-white shadow-xs"
+                                : "border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400"
+                            }`}
+                          >
+                            {activeSimStep >= 1 ? (
+                              <>
+                                <Check className="w-3.5 h-3.5" />
+                                <span>{isAmharic ? "1 በቅርጫት" : "1 in cart"}</span>
+                              </>
+                            ) : (
+                              <span>{isAmharic ? t.landing.mockupAddBtn : "+ Add"}</span>
+                            )}
+                          </button>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between p-3 rounded-lg border border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/40">
+                      {/* Item 2: Single Doro Wat */}
+                      <div className="flex items-center justify-between p-3 rounded-lg border border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/40 opacity-75">
                         <div className="pr-3">
                           <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">
                             {isAmharic ? "ነጠላ የዶሮ ወጥ" : "Single Doro Wat"}
@@ -343,13 +436,9 @@ export default function LandingClient() {
                             220.00 ETB
                           </span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setMockCartCount((c) => (c === 0 ? 1 : 0))}
-                          className="px-2.5 py-1 rounded-md border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium cursor-pointer"
-                        >
+                        <span className="px-2.5 py-1 rounded-md border border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 text-xs font-medium">
                           {isAmharic ? t.landing.mockupAddBtn : "+ Add"}
-                        </button>
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -360,20 +449,48 @@ export default function LandingClient() {
                       <span className="text-slate-500 dark:text-slate-400">
                         {isAmharic ? t.landing.mockupSubtotal : "Order Subtotal:"}
                       </span>
-                      <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">
-                        {mockCartCount > 0 ? "350.00 ETB" : "0.00 ETB"}
+                      <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums text-sm">
+                        {activeSimStep >= 1 ? "350.00 ETB" : "0.00 ETB"}
                       </span>
                     </div>
-                    <div className="flex gap-2">
-                      <div className="flex-1 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono text-xs flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <div
+                        className={`flex-1 px-3 py-2 rounded-lg font-mono text-xs flex items-center justify-between transition-all duration-300 ${
+                          activeSimStep >= 2
+                            ? "bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                        }`}
+                      >
                         <span>0911 22 33 44</span>
-                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-sans font-semibold">
-                          {isAmharic ? t.landing.mockupOtpVerified : "OTP Verified"}
+                        <span
+                          className={`text-[10px] font-sans font-semibold flex items-center gap-1 ${
+                            activeSimStep >= 2
+                              ? "text-emerald-700 dark:text-emerald-300"
+                              : "text-slate-400"
+                          }`}
+                        >
+                          {activeSimStep >= 2 && <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />}
+                          <span>{isAmharic ? t.landing.mockupOtpVerified : "OTP Verified"}</span>
                         </span>
                       </div>
-                      <div className="px-3.5 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold flex items-center gap-1">
-                        <span>{isAmharic ? t.landing.mockupPlaceOrder : "Place Order"}</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
+                      <div
+                        className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all duration-300 ${
+                          activeSimStep >= 2
+                            ? "bg-emerald-700 text-white shadow-xs"
+                            : "bg-emerald-600 text-white"
+                        }`}
+                      >
+                        {activeSimStep >= 2 ? (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>{isAmharic ? "ትዕዛዝ ተልኳል!" : "Order Dispatched!"}</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>{isAmharic ? t.landing.mockupPlaceOrder : "Place Order"}</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -397,17 +514,40 @@ export default function LandingClient() {
                           </div>
                         </div>
                       </div>
-                      <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
-                        {isAmharic ? t.landing.mockupDelivered : "Delivered"}
+                      <span
+                        className={`text-[11px] font-mono px-2 py-0.5 rounded transition-all duration-300 ${
+                          activeSimStep >= 2
+                            ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 font-semibold"
+                            : "text-slate-400 bg-slate-100 dark:bg-slate-800"
+                        }`}
+                      >
+                        {activeSimStep >= 2
+                          ? isAmharic
+                            ? t.landing.mockupDelivered
+                            : "Delivered"
+                          : isAmharic
+                            ? "ዝግጁ"
+                            : "Standby"}
                       </span>
                     </div>
 
-                    {/* Simulated SMS Messages */}
+                    {/* Simulated SMS Messages Thread */}
                     <div className="py-3 space-y-3 font-mono text-xs">
                       {/* Seller Alert Message Bubble */}
-                      <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 space-y-1.5 border border-slate-200/60 dark:border-slate-700/60">
-                        <div className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">
-                          {isAmharic ? t.landing.mockupIncomingTitle : "Incoming Seller SMS • Order #1001"}
+                      <div
+                        className={`p-3 rounded-lg text-slate-800 dark:text-slate-200 space-y-1.5 border transition-all duration-300 ${
+                          activeSimStep === 3
+                            ? "bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700 ring-2 ring-emerald-500/20 shadow-xs"
+                            : "bg-slate-100 dark:bg-slate-800 border-slate-200/60 dark:border-slate-700/60"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">
+                          <span>{isAmharic ? t.landing.mockupIncomingTitle : "Incoming Seller SMS • Order #1001"}</span>
+                          {activeSimStep >= 3 && (
+                            <span className="text-emerald-600 dark:text-emerald-400 font-sans normal-case font-semibold">
+                              {isAmharic ? "✓ ተቀብለዋል" : "✓ Accepted"}
+                            </span>
+                          )}
                         </div>
                         <p className="leading-tight text-[11px]">
                           {isAmharic ? (
@@ -430,9 +570,28 @@ export default function LandingClient() {
                         </p>
                         {/* 1-Tap Action Link Box */}
                         <div className="pt-1.5">
-                          <div className="p-2 rounded bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 text-[11px] font-sans flex items-center justify-between">
-                            <span className="font-semibold">{isAmharic ? t.landing.mockupTapToAccept : "Tap to Accept:"}</span>
-                            <span className="underline font-mono text-[10px] text-emerald-700 dark:text-emerald-300">
+                          <div
+                            className={`p-2 rounded border text-[11px] font-sans flex items-center justify-between transition-all duration-300 ${
+                              activeSimStep === 3
+                                ? "bg-emerald-600 text-white border-emerald-500 shadow-xs"
+                                : "bg-emerald-50 dark:bg-emerald-950/70 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200"
+                            }`}
+                          >
+                            <span className="font-semibold flex items-center gap-1">
+                              {activeSimStep === 3 ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>{isAmharic ? "ትዕዛዙ ተቀባይነት አግኝቷል (20-30ደ)" : "Accepted & Preparing (20-30m)"}</span>
+                                </>
+                              ) : (
+                                <span>{isAmharic ? t.landing.mockupTapToAccept : "Tap to Accept:"}</span>
+                              )}
+                            </span>
+                            <span
+                              className={`font-mono text-[10px] ${
+                                activeSimStep === 3 ? "text-emerald-100 underline" : "text-emerald-700 dark:text-emerald-300 underline"
+                              }`}
+                            >
                               orderbysms.et/a/token
                             </span>
                           </div>
@@ -440,16 +599,36 @@ export default function LandingClient() {
                       </div>
 
                       {/* Customer Handover Code SMS */}
-                      <div className="p-3 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 space-y-1 border border-emerald-200/80 dark:border-emerald-900/60">
-                        <div className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400">
-                          {isAmharic ? t.landing.mockupReadyTitle : "Customer Ready SMS • 4-Digit Proof"}
+                      <div
+                        className={`p-3 rounded-lg text-emerald-900 dark:text-emerald-100 space-y-1.5 border transition-all duration-300 ${
+                          activeSimStep === 4
+                            ? "bg-emerald-50/90 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-600 ring-2 ring-emerald-500/20 shadow-xs"
+                            : "bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-200/80 dark:border-emerald-900/60"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400">
+                          <span>{isAmharic ? t.landing.mockupReadyTitle : "Customer Ready SMS • 4-Digit Proof"}</span>
+                          {activeSimStep === 4 ? (
+                            <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-300 font-sans normal-case font-semibold">
+                              <Sparkles className="w-3 h-3 text-amber-500 fill-amber-500" />
+                              <span>{isAmharic ? "መረከብ ተረጋግጧል" : "Verified Handover"}</span>
+                            </span>
+                          ) : null}
                         </div>
                         <p className="leading-tight text-[11px]">
                           {isAmharic ? t.landing.mockupReadyMsg : "[Habesha Cafe] Order #1001 is ready for pickup!"}
                         </p>
                         <div className="py-1 flex items-center gap-2">
-                          <span className="text-[11px] font-sans">{isAmharic ? t.landing.mockupPickupCode : "Pickup Code:"}</span>
-                          <span className="font-bold text-sm bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 tracking-wider">
+                          <span className="text-[11px] font-sans font-medium">
+                            {isAmharic ? t.landing.mockupPickupCode : "Pickup Code:"}
+                          </span>
+                          <span
+                            className={`font-bold text-sm px-2.5 py-0.5 rounded-md border tracking-widest shadow-xs transition-all duration-300 ${
+                              activeSimStep === 4
+                                ? "bg-white dark:bg-slate-900 border-emerald-500 text-emerald-700 dark:text-emerald-300 scale-105 ring-2 ring-emerald-500/20"
+                                : "bg-white dark:bg-slate-900 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300"
+                            }`}
+                          >
                             4821
                           </span>
                         </div>
