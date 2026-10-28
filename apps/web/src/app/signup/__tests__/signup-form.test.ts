@@ -106,6 +106,25 @@ describe("Seller Signup Form Logic & Validation (FE-007, #30)", () => {
       expect(resAm.errors.phone).toBe("እባክዎ ትክክለኛ የኢትዮጵያ ስልክ ቁጥር ያስገቡ (09... ወይም 07...)");
       expect(resAm.errors.password).toBe("የይለፍ ቃል ቢያንስ 10 ፊደላት መሆን አለበት");
     });
+
+    it("ensures consistent character count constraints across English and Amharic dictionaries (20 for sender name, 10 for password)", async () => {
+      const { en } = await import("../../../lib/i18n/en");
+      const { am } = await import("../../../lib/i18n/am");
+
+      // SMS sender name (20 characters, not 11)
+      expect(en.auth.smsNamePlaceholder).toContain("20");
+      expect(en.auth.smsNamePlaceholder).not.toContain("11");
+      expect(am.auth.smsNamePlaceholder).toContain("20");
+      expect(am.auth.smsNamePlaceholder).not.toContain("11");
+
+      // Password (10 characters, not 6)
+      expect(en.auth.passwordLabel).toContain("10");
+      expect(en.auth.passwordPlaceholder).toContain("10");
+      expect(en.auth.passwordPlaceholder).not.toContain("6");
+      expect(am.auth.passwordLabel).toContain("10");
+      expect(am.auth.passwordPlaceholder).toContain("10");
+      expect(am.auth.passwordPlaceholder).not.toContain("6");
+    });
   });
 
   describe("API Interaction Payloads", () => {

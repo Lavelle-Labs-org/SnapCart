@@ -374,7 +374,7 @@ export function SignupForm() {
                   setFieldErrors((prev) => ({ ...prev, sms_name: undefined }));
                 }
               }}
-              placeholder={isAmharic ? t.auth.smsNamePlaceholder : "e.g. Habesha Cafe"}
+              placeholder={isAmharic ? t.auth.smsNamePlaceholder : (t.auth.smsNamePlaceholder || "e.g. Habesha Cafe (Max 20 chars)")}
               required
               className={`w-full px-3.5 py-2.5 rounded-xl border text-sm min-h-[44px] transition focus:outline-none focus:ring-2 ${
                 fieldErrors.sms_name
@@ -448,7 +448,7 @@ export function SignupForm() {
                   setFieldErrors((prev) => ({ ...prev, password: undefined }));
                 }
               }}
-              placeholder={isAmharic ? t.auth.passwordPlaceholder : "••••••••••"}
+              placeholder={isAmharic ? t.auth.passwordPlaceholder : (t.auth.passwordPlaceholder || "At least 10 characters")}
               required
               className={`w-full px-3.5 py-2.5 rounded-xl border text-sm min-h-[44px] transition focus:outline-none focus:ring-2 ${
                 fieldErrors.password
