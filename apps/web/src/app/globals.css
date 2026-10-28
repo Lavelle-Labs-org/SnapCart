@@ -1,8 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
+  --font-ethiopic: 'Noto Sans Ethiopic', sans-serif;
   --background: #f8fafc;
   --foreground: #0f172a;
   --color-canvas: #f8fafc;
