@@ -88,6 +88,11 @@ describe("BillingService", () => {
 
       expect(res.checkoutUrl).toBe("https://checkout.chapa.co/pay/123");
       expect(res.txRef).toMatch(/^obs_/);
+      expect(chapaServiceMock.initializeTransaction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Growth Pack",
+        })
+      );
       expect(prismaMock.paymentTransaction.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           seller_id: "seller-123",

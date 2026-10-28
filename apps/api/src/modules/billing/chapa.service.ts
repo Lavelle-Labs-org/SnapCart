@@ -71,14 +71,14 @@ export class ChapaService {
         amount: options.amount.toString(),
         currency: options.currency || "ETB",
         email: options.email,
-        first_name: options.firstName,
+        first_name: (options.firstName || "Seller").slice(0, 30),
         phone_number: options.phoneNumber,
         tx_ref: options.txRef,
         callback_url: options.callbackUrl,
         return_url: options.returnUrl,
         customization: {
-          title: options.title || "Snapcart SMS Credits",
-          description: options.description || "SMS Credits Package",
+          title: (options.title || "Snapcart").slice(0, 16),
+          description: (options.description || "SMS Credits Package").slice(0, 100),
         },
       };
 
