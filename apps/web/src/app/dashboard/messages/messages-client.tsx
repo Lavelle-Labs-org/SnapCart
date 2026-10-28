@@ -4,8 +4,6 @@ import React, { useState } from "react";
 import {
   Mail,
   RefreshCw,
-  Copy,
-  Check,
   CheckCircle2,
   XCircle,
   AlertCircle,
@@ -265,25 +263,12 @@ export default function MessagesClient({
 }: MessagesClientProps) {
   const { t, isAmharic } = useTranslation();
   const [messages, setMessages] = useState<MessageItem[]>(initialMessages);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [actionNotice, setActionNotice] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
-
-  const handleCopy = async (id: string, textToCopy: string) => {
-    try {
-      if (typeof navigator !== "undefined" && navigator.clipboard) {
-        await navigator.clipboard.writeText(textToCopy);
-      }
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
-    } catch {
-      // Ignore clipboard write errors
-    }
-  };
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -412,8 +397,6 @@ export default function MessagesClient({
             </div>
           ) : (
             filteredMessages.map((msg) => {
-              const displayId = msg.smshubMessageId || msg.id;
-
               return (
                 <div key={`mobile-${msg.id}`} className="p-4 space-y-2.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition">
                   <div className="flex items-center justify-between">
@@ -436,22 +419,6 @@ export default function MessagesClient({
                       <span>•</span>
                       <span>{formatCreditsLabel(msg.creditsUsed ?? 0, isAmharic)}</span>
                     </div>
-                    <div className="flex items-center gap-1 font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                      <span className="truncate max-w-[100px]">{displayId}</span>
-                      <button
-                        type="button"
-                        title={isAmharic ? "መለያ ቅዳ" : "Copy ID"}
-                        aria-label={isAmharic ? `የመልዕክት መለያ ${displayId} ቅዳ` : `Copy ID ${displayId}`}
-                        onClick={() => handleCopy(msg.id, displayId)}
-                        className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1"
-                      >
-                        {copiedId === msg.id ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                        ) : (
-                          <Copy className="w-3.5 h-3.5" />
-                        )}
-                      </button>
-                    </div>
                   </div>
                 </div>
               );
@@ -470,21 +437,18 @@ export default function MessagesClient({
                 <th className="px-4 py-3">{isAmharic ? t.messages.colStatus : "Status"}</th>
                 <th className="px-4 py-3">{isAmharic ? t.messages.colNetwork : "Network"}</th>
                 <th className="px-4 py-3">{isAmharic ? t.messages.colCredits : "Credits"}</th>
-                <th className="px-4 py-3">{isAmharic ? t.messages.colSmshubId : "SMSHub ID"}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredMessages.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-slate-400 dark:text-slate-500 text-sm">
+                  <td colSpan={6} className="px-4 py-12 text-center text-slate-400 dark:text-slate-500 text-sm">
                     <Mail className="w-8 h-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
                     {isAmharic ? t.messages.emptyText : "No SMS messages match the selected filter."}
                   </td>
                 </tr>
               ) : (
                 filteredMessages.map((msg) => {
-                  const displayId = msg.smshubMessageId || msg.id;
-
                   return (
                     <tr key={msg.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition">
                       {/* Time */}
@@ -515,26 +479,6 @@ export default function MessagesClient({
                       {/* Credits */}
                       <td className="px-4 py-3.5 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
                         {msg.creditsUsed ?? 0}
-                      </td>
-
-                      {/* SMSHub ID with Copy Button (Acceptance Criterion 2) */}
-                      <td className="px-4 py-3.5 font-mono text-xs text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                        <div className="flex items-center space-x-1.5">
-                          <span className="truncate max-w-[130px]">{displayId}</span>
-                          <button
-                            type="button"
-                            title={isAmharic ? "መለያ ቅዳ" : "Copy ID"}
-                            aria-label={isAmharic ? `የመልዕክት መለያ ${displayId} ቅዳ` : `Copy ID ${displayId}`}
-                            onClick={() => handleCopy(msg.id, displayId)}
-                            className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition p-1 rounded"
-                          >
-                            {copiedId === msg.id ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                            ) : (
-                              <Copy className="w-3.5 h-3.5" />
-                            )}
-                          </button>
-                        </div>
                       </td>
                     </tr>
                   );

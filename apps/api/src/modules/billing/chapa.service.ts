@@ -77,8 +77,8 @@ export class ChapaService {
         callback_url: options.callbackUrl,
         return_url: options.returnUrl,
         customization: {
-          title: (options.title || "Snapcart").slice(0, 16),
-          description: (options.description || "SMS Credits Package").slice(0, 100),
+          title: (options.title || "Snapcart").trim().slice(0, 16),
+          description: (options.description || "SMS Credits Package").trim().slice(0, 100),
         },
       };
 
