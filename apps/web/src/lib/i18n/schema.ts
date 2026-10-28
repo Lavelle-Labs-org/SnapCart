@@ -83,6 +83,16 @@ export interface TranslationSchema {
     itemsOrdered: string;
     smsNotice: string;
     backToStore: string;
+    atShop: (shopName: string) => string;
+    orderBadge: (num: string | number) => string;
+    consentedNotice: string;
+    pickupCodeSmsTitle: string;
+    pickupCodeSmsDesc: string;
+    optedOutNotice: string;
+    checkWithSellerTitle: string;
+    checkWithSellerDesc: string;
+    backToStorefront: string;
+    brandPowered: string;
   };
   action: {
     pageTitle: (storeName: string) => string;
@@ -295,6 +305,27 @@ export interface TranslationSchema {
     reissueBtn: string;
     reissuedSuccess: string;
     backToOrders: string;
+    totalAmount: string;
+    lifecycleTitle: string;
+    orderRejectedTitle: string;
+    orderRejectedDesc: string;
+    stepPlaced: string;
+    stepAccepted: string;
+    stepReady: string;
+    stepCompleted: string;
+    orderItemsTitle: (count: number) => string;
+    grandTotal: string;
+    stateHistoryTitle: string;
+    noTransitionsRecorded: string;
+    smsAuditTitle: string;
+    noSmsAuditRecorded: string;
+    colEvent: string;
+    colRecipient: string;
+    colTimestamp: string;
+    customerInfoTitle: string;
+    guestCustomer: string;
+    smsConsentGranted: string;
+    noSmsConsent: string;
   };
   messages: {
     title: string;
@@ -427,6 +458,10 @@ export interface TranslationSchema {
     noTransactionsYet: string;
     receiptsAppearHere: string;
     colMethod: string;
+    statusCompleted: string;
+    statusPending: string;
+    statusFailed: string;
+    smsUnit: string;
   };
   settings: {
     title: string;

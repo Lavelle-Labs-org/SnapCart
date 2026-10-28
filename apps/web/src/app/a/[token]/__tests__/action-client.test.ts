@@ -129,4 +129,26 @@ describe("SellerActionClient Logic & State Handling (FE-005, #28)", () => {
       expect(formatSmsNotice(undefined)).toBeNull();
     });
   });
+
+  describe("ThemeToggle & Dark Mode Support", () => {
+    it("renders ThemeToggle and dark mode container styles in SellerActionClient", async () => {
+      const React = await import("react");
+      const { renderToString } = await import("react-dom/server");
+      const { SellerActionClient } = await import("../action-client");
+
+      const html = renderToString(
+        React.createElement(SellerActionClient, {
+          token: "test-token",
+          order: mockOrder as any,
+        })
+      );
+
+      // Verify ThemeToggle button exists in header
+      expect(html).toContain('aria-label="Toggle color theme"');
+      // Verify dark mode classes on main surfaces
+      expect(html).toContain("dark:bg-slate-950");
+      expect(html).toContain("dark:bg-slate-900");
+      expect(html).toContain("dark:border-slate-800");
+    });
+  });
 });

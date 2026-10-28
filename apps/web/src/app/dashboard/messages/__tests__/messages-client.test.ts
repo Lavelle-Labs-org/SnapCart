@@ -2,10 +2,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   maskPhoneNumber,
   formatMessageTime,
+  formatSkipReason,
+  formatEventLabel,
+  formatNetworkName,
+  formatCreditsLabel,
   getMessageStatusBadge,
   resendMessageApi,
   fetchMessagesApi,
 } from "../messages-client";
+import MessagesClient from "../messages-client";
+import React from "react";
+import { renderToString } from "react-dom/server";
 
 describe("MessagesClient Helpers & API Actions (FE-012, Issue #35)", () => {
   beforeEach(() => {
@@ -148,6 +155,78 @@ describe("MessagesClient Helpers & API Actions (FE-012, Issue #35)", () => {
 
       expect(messages).toHaveLength(1);
       expect(messages[0].id).toBe("msg-1");
+    });
+  });
+
+  describe("Amharic Language Support on SMS Log Helpers", () => {
+    it("renders Amharic status badges when isAmharic=true", () => {
+      expect(extractTextFromNode(getMessageStatusBadge("sent", null, true))).toContain("የተላከ");
+      expect(extractTextFromNode(getMessageStatusBadge("failed", null, true))).toContain("ያልተሳካ");
+      expect(extractTextFromNode(getMessageStatusBadge("skipped", "opted_out", true))).toContain("የተዘለለ");
+      expect(extractTextFromNode(getMessageStatusBadge("skipped", "opted_out", true))).toContain("ደንበኛው መልዕክት አልፈልግም ብሏል");
+      expect(extractTextFromNode(getMessageStatusBadge("test_passed", null, true))).toContain("የሙከራ ሁነታ (አልፏል)");
+      expect(extractTextFromNode(getMessageStatusBadge("unknown", null, true))).toContain("ያልታወቀ");
+      expect(extractTextFromNode(getMessageStatusBadge("queued", null, true))).toContain("በተራ ላይ ያለ");
+    });
+
+    it("localizes event labels", () => {
+      expect(formatEventLabel("seller_new_order", true)).toBe("አዲስ ትዕዛዝ");
+      expect(formatEventLabel("buyer_order_accepted", true)).toBe("ትዕዛዝ ተቀባይነት አግኝቷል");
+      expect(formatEventLabel("buyer_order_ready", true)).toBe("ትዕዛዝ ዝግጁ ሆኗል");
+      expect(formatEventLabel("buyer_order_rejected", true)).toBe("ትዕዛዝ ተሰርዟል");
+      expect(formatEventLabel("buyer_pickup_code", true)).toBe("የመቀበያ ኮድ");
+    });
+
+    it("localizes network labels", () => {
+      expect(formatNetworkName("ethio_telecom", true)).toBe("ኢትዮ ቴሌኮም");
+      expect(formatNetworkName("safaricom", true)).toBe("ሳፋሪኮም");
+      expect(formatNetworkName(null, true)).toBe("ቀጥታ");
+    });
+
+    it("localizes credit count labels", () => {
+      expect(formatCreditsLabel(1, true)).toBe("1 ክሬዲት");
+      expect(formatCreditsLabel(5, true)).toBe("5 ክሬዲቶች");
+      expect(formatCreditsLabel(1, false)).toBe("1 credit");
+      expect(formatCreditsLabel(5, false)).toBe("5 credits");
+    });
+  });
+
+  describe("Removal of Actions Column in SMS Log Table", () => {
+    it("does not render Actions header or Resend button row in the table", () => {
+      const mockMessages = [
+        {
+          id: "msg-1",
+          recipientPhone: "0911223344",
+          event: "seller_new_order",
+          text: "Test SMS",
+          status: "failed",
+          attempts: 1,
+          createdAt: new Date().toISOString(),
+          network: "ethio_telecom",
+          creditsUsed: 1,
+        },
+      ];
+
+      const html = renderToString(
+        React.createElement(MessagesClient, {
+          initialMessages: mockMessages,
+        })
+      );
+
+      // Verify table headers do not include Actions
+      expect(html).not.toContain("<th class=\"px-4 py-3 text-right\">Actions</th>");
+      expect(html).not.toContain("<th class=\"px-4 py-3 text-right\">ተግባራት</th>");
+      // Verify table rows do not include resend action buttons
+      expect(html).not.toContain("Resend Message");
+      expect(html).not.toContain("በድጋሚ ላክ");
+
+      // Verify empty state uses colSpan 7 when there are no messages
+      const emptyHtml = renderToString(
+        React.createElement(MessagesClient, {
+          initialMessages: [],
+        })
+      );
+      expect(emptyHtml).toContain("colSpan=\"7\"");
     });
   });
 });

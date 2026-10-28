@@ -12,7 +12,6 @@ import {
   AlertTriangle,
   HelpCircle,
   Clock,
-  Send,
   ShieldAlert,
 } from "lucide-react";
 import { maskPhoneNumber as contractsMaskPhone } from "@order-by-sms/contracts";
@@ -59,88 +58,150 @@ export function maskPhoneNumber(phone: string): string {
 /**
  * Formats ISO date string into human-readable timestamp.
  */
-export function formatMessageTime(isoString: string): string {
+export function formatMessageTime(isoString: string, isAmharic: boolean = false): string {
   try {
     const date = new Date(isoString);
-    if (isNaN(date.getTime())) return "Recently";
-    return date.toLocaleTimeString("en-US", {
+    if (isNaN(date.getTime())) return isAmharic ? "በቅርቡ" : "Recently";
+    return date.toLocaleTimeString(isAmharic ? "am-ET" : "en-US", {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
     });
   } catch {
-    return "Recently";
+    return isAmharic ? "በቅርቡ" : "Recently";
   }
 }
 
 /**
- * Returns human-readable skip reason label.
+ * Returns human-readable skip reason label with Amharic support.
  */
-function formatSkipReason(reason?: string | null): string {
+export function formatSkipReason(reason?: string | null, isAmharic: boolean = false): string {
   switch (reason) {
     case "opted_out":
-      return "Buyer Opted Out";
+      return isAmharic ? "ደንበኛው መልዕክት አልፈልግም ብሏል" : "Buyer Opted Out";
     case "rate_limited":
-      return "Rate Limited";
+      return isAmharic ? "የመልዕክት ገደብ አልፏል" : "Rate Limited";
     case "daily_cap_exceeded":
-      return "Daily Cap Exceeded";
+      return isAmharic ? "የዕለት ገደብ አልፏል" : "Daily Cap Exceeded";
     case "sending_paused":
-      return "Sending Paused";
+      return isAmharic ? "መልዕክት መላክ ቆሟል" : "Sending Paused";
     case "not_in_allowlist":
-      return "Not in Allowlist";
+      return isAmharic ? "በተፈቀደ ዝርዝር ውስጥ የለም" : "Not in Allowlist";
     default:
-      return reason ? reason.replace(/_/g, " ") : "Suppressed";
+      return isAmharic ? "የታገደ" : (reason ? reason.replace(/_/g, " ") : "Suppressed");
   }
+}
+
+/**
+ * Returns localized event label.
+ */
+export function formatEventLabel(event: string, isAmharic: boolean = false): string {
+  const key = event.replace(/^(seller_|buyer_)/, "").toLowerCase();
+  if (isAmharic) {
+    switch (key) {
+      case "new_order":
+        return "አዲስ ትዕዛዝ";
+      case "order_accepted":
+        return "ትዕዛዝ ተቀባይነት አግኝቷል";
+      case "order_ready":
+        return "ትዕዛዝ ዝግጁ ሆኗል";
+      case "order_rejected":
+        return "ትዕዛዝ ተሰርዟል";
+      case "pickup_code":
+        return "የመቀበያ ኮድ";
+      default:
+        return event.replace(/^(seller_|buyer_)/, "").replace(/_/g, " ");
+    }
+  }
+  switch (key) {
+    case "new_order":
+      return "New Order";
+    case "order_accepted":
+      return "Order Accepted";
+    case "order_ready":
+      return "Order Ready";
+    case "order_rejected":
+      return "Order Rejected";
+    case "pickup_code":
+      return "Pickup Code";
+    default:
+      return event.replace(/^(seller_|buyer_)/, "").replace(/_/g, " ");
+  }
+}
+
+/**
+ * Returns localized network name.
+ */
+export function formatNetworkName(network?: string | null, isAmharic: boolean = false): string {
+  if (!network) return isAmharic ? "ቀጥታ" : "Direct";
+  const norm = network.toLowerCase();
+  if (norm === "ethio_telecom") return isAmharic ? "ኢትዮ ቴሌኮም" : "Ethio Telecom";
+  if (norm === "safaricom") return isAmharic ? "ሳፋሪኮም" : "Safaricom";
+  return network.replace(/_/g, " ");
+}
+
+/**
+ * Returns localized credits label.
+ */
+export function formatCreditsLabel(count: number, isAmharic: boolean = false): string {
+  if (isAmharic) {
+    return count === 1 ? "1 ክሬዲት" : `${count} ክሬዲቶች`;
+  }
+  return count === 1 ? "1 credit" : `${count} credits`;
 }
 
 /**
  * Renders status badge with real status (never assumes delivered per Invariant #8).
  */
-export function getMessageStatusBadge(status: string, skipReason?: string | null) {
+export function getMessageStatusBadge(
+  status: string,
+  skipReason?: string | null,
+  isAmharic: boolean = false
+) {
   switch (status) {
     case "sent":
       return (
         <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
           <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-          <span>Sent (Carrier Accepted)</span>
+          <span>{isAmharic ? "የተላከ (በኦፕሬተር ተቀባይነት አግኝቷል)" : "Sent (Carrier Accepted)"}</span>
         </span>
       );
     case "failed":
       return (
         <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300">
           <XCircle className="w-3 h-3 text-rose-600 dark:text-rose-400" />
-          <span>Failed</span>
+          <span>{isAmharic ? "ያልተሳካ" : "Failed"}</span>
         </span>
       );
     case "skipped":
       return (
         <span
-          title={skipReason ? `Reason: ${formatSkipReason(skipReason)}` : "Message skipped"}
+          title={skipReason ? (isAmharic ? `ምክንያት፡ ${formatSkipReason(skipReason, true)}` : `Reason: ${formatSkipReason(skipReason)}`) : (isAmharic ? "መልዕክት ተዘልሏል" : "Message skipped")}
           className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
         >
           <AlertCircle className="w-3 h-3 text-slate-500 dark:text-slate-400" />
-          <span>Skipped ({formatSkipReason(skipReason)})</span>
+          <span>{isAmharic ? `የተዘለለ (${formatSkipReason(skipReason, true)})` : `Skipped (${formatSkipReason(skipReason)})`}</span>
         </span>
       );
     case "test_passed":
       return (
         <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
           <CheckCircle2 className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-          <span>Test Mode (Passed)</span>
+          <span>{isAmharic ? "የሙከራ ሁነታ (አልፏል)" : "Test Mode (Passed)"}</span>
         </span>
       );
     case "unknown":
       return (
         <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
           <HelpCircle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-          <span>Unknown</span>
+          <span>{isAmharic ? "ያልታወቀ" : "Unknown"}</span>
         </span>
       );
     case "queued":
       return (
         <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
           <Clock className="w-3 h-3 text-slate-500 dark:text-slate-400" />
-          <span>Queued</span>
+          <span>{isAmharic ? "በተራ ላይ ያለ" : "Queued"}</span>
         </span>
       );
     default:
@@ -205,7 +266,6 @@ export default function MessagesClient({
   const { t, isAmharic } = useTranslation();
   const [messages, setMessages] = useState<MessageItem[]>(initialMessages);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [resendingId, setResendingId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [actionNotice, setActionNotice] = useState<{
     type: "success" | "error";
@@ -238,41 +298,6 @@ export default function MessagesClient({
       });
     } finally {
       setIsRefreshing(false);
-    }
-  };
-
-  const handleResend = async (msg: MessageItem) => {
-    setResendingId(msg.id);
-    setActionNotice(null);
-    try {
-      const res = await resendMessageApi(msg.id);
-      const updated = res.data?.message;
-
-      if (updated) {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === msg.id ? { ...m, ...updated } : m))
-        );
-      } else {
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === msg.id
-              ? { ...m, status: "sent", attempts: m.attempts + 1 }
-              : m
-          )
-        );
-      }
-
-      setActionNotice({
-        type: "success",
-        message: `Message for ${maskPhoneNumber(msg.recipientPhone)} resent successfully.`,
-      });
-    } catch (err: any) {
-      setActionNotice({
-        type: "error",
-        message: `Resend failed: ${err?.message || "Unknown error"}`,
-      });
-    } finally {
-      setResendingId(null);
     }
   };
 
@@ -310,12 +335,12 @@ export default function MessagesClient({
       {isSendingPaused && (
         <div
           role="alert"
-          className="flex items-center space-x-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-900"
+          className="flex items-center space-x-3 p-4 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-900 rounded-xl text-amber-900 dark:text-amber-200"
         >
-          <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0" />
+          <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
           <div className="text-sm">
-            <span className="font-semibold">SMS sending is currently paused.</span> Outgoing
-            transactional messages and verification codes are temporarily suspended by emergency switch.
+            <span className="font-semibold">{isAmharic ? "የኤስኤምኤስ መልዕክት መላክ ቆሟል።" : "SMS sending is currently paused."}</span>{" "}
+            {isAmharic ? "የደንበኞች ማረጋገጫ ኮዶች እና ማሳወቂያዎች በድንገተኛ ማቆሚያ ምክንያት ለጊዜው ተቋርጠዋል።" : "Outgoing transactional messages and verification codes are temporarily suspended by emergency switch."}
           </div>
         </div>
       )}
@@ -323,12 +348,12 @@ export default function MessagesClient({
       {isLowBalance && (
         <div
           role="alert"
-          className="flex items-center space-x-3 p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-900"
+          className="flex items-center space-x-3 p-4 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 rounded-xl text-rose-900 dark:text-rose-200"
         >
-          <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+          <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
           <div className="text-sm">
-            <span className="font-semibold">SMS credit balance is low.</span> Please replenish credits
-            to prevent delivery interruptions for incoming customer orders.
+            <span className="font-semibold">{isAmharic ? "የኤስኤምኤስ ክሬዲት መጠን አነስተኛ ነው።" : "SMS credit balance is low."}</span>{" "}
+            {isAmharic ? "የደንበኞች ትዕዛዝ ማሳወቂያ እንዳይቋረጥ እባክዎ ክሬዲት ይሙሉ::" : "Please replenish credits to prevent delivery interruptions for incoming customer orders."}
           </div>
         </div>
       )}
@@ -338,8 +363,8 @@ export default function MessagesClient({
         <div
           role="status"
           className={`p-3.5 rounded-lg text-sm font-medium border flex items-center justify-between ${actionNotice.type === "success"
-              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-              : "bg-rose-50 text-rose-800 border-rose-200"
+              ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-900"
+              : "bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-200 border-rose-200 dark:border-rose-900"
             }`}
         >
           <span>{actionNotice.message}</span>
@@ -348,7 +373,7 @@ export default function MessagesClient({
             onClick={() => setActionNotice(null)}
             className="text-xs font-bold hover:underline ml-4"
           >
-            Dismiss
+            {isAmharic ? "ዝጋ" : "Dismiss"}
           </button>
         </div>
       )}
@@ -388,10 +413,6 @@ export default function MessagesClient({
           ) : (
             filteredMessages.map((msg) => {
               const displayId = msg.smshubMessageId || msg.id;
-              const canResend =
-                msg.status === "failed" || msg.status === "unknown";
-              const isThisResending = resendingId === msg.id;
-              const eventLabel = msg.event.replace(/^(seller_|buyer_)/, "").replace(/_/g, " ");
 
               return (
                 <div key={`mobile-${msg.id}`} className="p-4 space-y-2.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition">
@@ -400,27 +421,27 @@ export default function MessagesClient({
                       {maskPhoneNumber(msg.recipientPhone)}
                     </div>
                     <div>
-                      {getMessageStatusBadge(msg.status, msg.skipReason)}
+                      {getMessageStatusBadge(msg.status, msg.skipReason, isAmharic)}
                     </div>
                   </div>
                   <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                    <span className="capitalize font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
-                      {eventLabel}
+                    <span className="font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                      {formatEventLabel(msg.event, isAmharic)}
                     </span>
-                    <span>{formatMessageTime(msg.createdAt)}</span>
+                    <span>{formatMessageTime(msg.createdAt, isAmharic)}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 pt-1">
                     <div className="flex items-center gap-2">
-                      <span className="capitalize">{msg.network ? msg.network.replace("_", " ") : "Direct"}</span>
+                      <span>{formatNetworkName(msg.network, isAmharic)}</span>
                       <span>•</span>
-                      <span>{msg.creditsUsed ?? 0} {msg.creditsUsed === 1 ? "credit" : "credits"}</span>
+                      <span>{formatCreditsLabel(msg.creditsUsed ?? 0, isAmharic)}</span>
                     </div>
                     <div className="flex items-center gap-1 font-mono text-[11px] text-slate-500 dark:text-slate-400">
                       <span className="truncate max-w-[100px]">{displayId}</span>
                       <button
                         type="button"
-                        title="Copy ID"
-                        aria-label={`Copy ID ${displayId}`}
+                        title={isAmharic ? "መለያ ቅዳ" : "Copy ID"}
+                        aria-label={isAmharic ? `የመልዕክት መለያ ${displayId} ቅዳ` : `Copy ID ${displayId}`}
                         onClick={() => handleCopy(msg.id, displayId)}
                         className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1"
                       >
@@ -432,20 +453,6 @@ export default function MessagesClient({
                       </button>
                     </div>
                   </div>
-                  {canResend && (
-                    <div className="pt-2">
-                      <button
-                        type="button"
-                        aria-label={`Resend message ${msg.id}`}
-                        disabled={isThisResending}
-                        onClick={() => handleResend(msg)}
-                        className="w-full inline-flex items-center justify-center space-x-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 py-2.5 px-3 rounded-lg transition disabled:opacity-50 min-h-[44px]"
-                      >
-                        <Send className="w-3.5 h-3.5" />
-                        <span>{isThisResending ? (isAmharic ? t.messages.resending : "Resending...") : (isAmharic ? t.messages.resendBtn : "Resend Message")}</span>
-                      </button>
-                    </div>
-                  )}
                 </div>
               );
             })
@@ -464,13 +471,12 @@ export default function MessagesClient({
                 <th className="px-4 py-3">{isAmharic ? t.messages.colNetwork : "Network"}</th>
                 <th className="px-4 py-3">{isAmharic ? t.messages.colCredits : "Credits"}</th>
                 <th className="px-4 py-3">{isAmharic ? t.messages.colSmshubId : "SMSHub ID"}</th>
-                <th className="px-4 py-3 text-right">{isAmharic ? t.messages.colActions : "Actions"}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredMessages.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-slate-400 dark:text-slate-500 text-sm">
+                  <td colSpan={7} className="px-4 py-12 text-center text-slate-400 dark:text-slate-500 text-sm">
                     <Mail className="w-8 h-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
                     {isAmharic ? t.messages.emptyText : "No SMS messages match the selected filter."}
                   </td>
@@ -478,15 +484,12 @@ export default function MessagesClient({
               ) : (
                 filteredMessages.map((msg) => {
                   const displayId = msg.smshubMessageId || msg.id;
-                  const canResend =
-                    msg.status === "failed" || msg.status === "unknown";
-                  const isThisResending = resendingId === msg.id;
 
                   return (
                     <tr key={msg.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition">
                       {/* Time */}
                       <td className="px-4 py-3.5 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                        {formatMessageTime(msg.createdAt)}
+                        {formatMessageTime(msg.createdAt, isAmharic)}
                       </td>
 
                       {/* Recipient */}
@@ -496,19 +499,17 @@ export default function MessagesClient({
 
                       {/* Event */}
                       <td className="px-4 py-3.5 text-xs font-medium text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                        <span className="capitalize">
-                          {msg.event.replace(/^(seller_|buyer_)/, "").replace(/_/g, " ")}
-                        </span>
+                        <span>{formatEventLabel(msg.event, isAmharic)}</span>
                       </td>
 
                       {/* Status */}
                       <td className="px-4 py-3.5 whitespace-nowrap">
-                        {getMessageStatusBadge(msg.status, msg.skipReason)}
+                        {getMessageStatusBadge(msg.status, msg.skipReason, isAmharic)}
                       </td>
 
                       {/* Network */}
-                      <td className="px-4 py-3.5 text-xs capitalize text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                        {msg.network ? msg.network.replace("_", " ") : "-"}
+                      <td className="px-4 py-3.5 text-xs text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                        {formatNetworkName(msg.network, isAmharic)}
                       </td>
 
                       {/* Credits */}
@@ -522,8 +523,8 @@ export default function MessagesClient({
                           <span className="truncate max-w-[130px]">{displayId}</span>
                           <button
                             type="button"
-                            title="Copy ID"
-                            aria-label={`Copy ID ${displayId}`}
+                            title={isAmharic ? "መለያ ቅዳ" : "Copy ID"}
+                            aria-label={isAmharic ? `የመልዕክት መለያ ${displayId} ቅዳ` : `Copy ID ${displayId}`}
                             onClick={() => handleCopy(msg.id, displayId)}
                             className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition p-1 rounded"
                           >
@@ -534,22 +535,6 @@ export default function MessagesClient({
                             )}
                           </button>
                         </div>
-                      </td>
-
-                      {/* Row Action: Resend Button (Acceptance Criterion 3) */}
-                      <td className="px-4 py-3.5 text-right whitespace-nowrap">
-                        {canResend && (
-                          <button
-                            type="button"
-                            aria-label={`Resend message ${msg.id}`}
-                            disabled={isThisResending}
-                            onClick={() => handleResend(msg)}
-                            className="inline-flex items-center space-x-1 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 px-2.5 py-1 rounded-md transition disabled:opacity-50"
-                          >
-                            <Send className="w-3 h-3" />
-                            <span>{isThisResending ? (isAmharic ? t.messages.resending : "Resending...") : (isAmharic ? t.messages.resendBtn : "Resend")}</span>
-                          </button>
-                        )}
                       </td>
                     </tr>
                   );

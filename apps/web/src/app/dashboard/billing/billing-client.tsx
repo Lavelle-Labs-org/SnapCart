@@ -22,11 +22,19 @@ import {
 } from "@order-by-sms/contracts";
 import { useTranslation } from "../../../lib/i18n";
 
-export function BillingClient() {
+export interface BillingClientProps {
+  initialBalance?: BillingBalanceDto | null;
+  initialTransactions?: PaymentTransactionDto[];
+}
+
+export function BillingClient({
+  initialBalance = null,
+  initialTransactions = [],
+}: BillingClientProps = {}) {
   const { t, isAmharic } = useTranslation();
-  const [balance, setBalance] = useState<BillingBalanceDto | null>(null);
-  const [transactions, setTransactions] = useState<PaymentTransactionDto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [balance, setBalance] = useState<BillingBalanceDto | null>(initialBalance);
+  const [transactions, setTransactions] = useState<PaymentTransactionDto[]>(initialTransactions);
+  const [loading, setLoading] = useState(!initialBalance && initialTransactions.length === 0);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -173,15 +181,15 @@ export function BillingClient() {
           <div className="mt-3 flex flex-wrap gap-1.5">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              Telebirr
+              {isAmharic ? "ቴሌብር" : "Telebirr"}
             </span>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/60">
               <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
-              CBE Birr
+              {isAmharic ? "ሲቢኢ ብር" : "CBE Birr"}
             </span>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-200/60 dark:border-violet-800/60">
               <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />
-              Cards
+              {isAmharic ? "ካርድ" : "Cards"}
             </span>
           </div>
           <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
@@ -249,7 +257,7 @@ export function BillingClient() {
                     <span className="text-2xl font-bold tracking-tight">
                       {pkg.priceEtb}
                     </span>
-                    <span className="text-xs font-semibold">ETB</span>
+                    <span className="text-xs font-semibold">{isAmharic ? "ብር" : "ETB"}</span>
                     {pkg.discount && (
                       <span className="ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                         {pkg.discount}
@@ -352,38 +360,78 @@ export function BillingClient() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
-                  {(Array.isArray(transactions) ? transactions : []).map((t) => (
-                    <tr key={t.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
-                      <td className="px-4 py-3.5 whitespace-nowrap text-slate-500 dark:text-slate-400 font-mono text-[11px]">
-                        {new Date(t.createdAt).toLocaleDateString()} {new Date(t.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </td>
-                      <td className="px-4 py-3.5 font-mono text-[11px]">
-                        {t.txRef}
-                      </td>
-                      <td className="px-4 py-3.5 font-medium">
-                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">+{t.creditsAdded} SMS</span>
-                        <span className="ml-1 text-slate-400 font-normal">({t.packageId})</span>
-                      </td>
-                      <td className="px-4 py-3.5 font-semibold text-slate-900 dark:text-slate-100">
-                        {t.amountEtb} {t.currency}
-                      </td>
-                      <td className="px-4 py-3.5 uppercase text-[11px] text-slate-500">
-                        {t.paymentMethod || "Chapa"}
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${t.status === "completed"
-                              ? "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300"
-                              : t.status === "pending"
-                                ? "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300"
-                                : "bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300"
+                  {(Array.isArray(transactions) ? transactions : []).map((tx) => {
+                    const statusLabel =
+                      tx.status === "completed"
+                        ? (isAmharic ? t.billing.statusCompleted : "Completed")
+                        : tx.status === "pending"
+                          ? (isAmharic ? t.billing.statusPending : "Pending")
+                          : (isAmharic ? t.billing.statusFailed : (tx.status ? (tx.status.charAt(0).toUpperCase() + tx.status.slice(1)) : "Failed"));
+
+                    const packageName =
+                      tx.packageId === "starter_50" || tx.packageId === "starter"
+                        ? (isAmharic ? t.billing.starterPack : "Starter Pack")
+                        : tx.packageId === "growth_200" || tx.packageId === "growth"
+                          ? (isAmharic ? t.billing.growthPack : "Growth Pack")
+                          : tx.packageId === "pro_500" || tx.packageId === "pro"
+                            ? (isAmharic ? t.billing.proPack : "Pro Pack")
+                            : (tx.packageId || "");
+
+                    const methodLabel = tx.paymentMethod
+                      ? tx.paymentMethod.toLowerCase() === "chapa"
+                        ? (isAmharic ? "ቻፓ" : "Chapa")
+                        : tx.paymentMethod.toLowerCase() === "telebirr"
+                          ? (isAmharic ? "ቴሌብር" : "Telebirr")
+                          : tx.paymentMethod.toLowerCase() === "cbebirr"
+                            ? (isAmharic ? "ሲቢኢ ብር" : "CBE Birr")
+                            : tx.paymentMethod
+                      : (isAmharic ? "ቻፓ" : "Chapa");
+
+                    const formattedDate = new Date(tx.createdAt).toLocaleDateString(
+                      isAmharic ? "am-ET" : "en-US",
+                      { year: "numeric", month: "short", day: "numeric" }
+                    );
+                    const formattedTime = new Date(tx.createdAt).toLocaleTimeString(
+                      isAmharic ? "am-ET" : "en-US",
+                      { hour: "2-digit", minute: "2-digit" }
+                    );
+
+                    return (
+                      <tr key={tx.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
+                        <td className="px-4 py-3.5 whitespace-nowrap text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+                          {formattedDate} {formattedTime}
+                        </td>
+                        <td className="px-4 py-3.5 font-mono text-[11px]">
+                          {tx.txRef}
+                        </td>
+                        <td className="px-4 py-3.5 font-medium">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">+{tx.creditsAdded} {isAmharic ? t.billing.smsUnit : "SMS"}</span>
+                          {packageName ? (
+                            <span className="ml-1 text-slate-400 font-normal">({packageName})</span>
+                          ) : null}
+                        </td>
+                        <td className="px-4 py-3.5 font-semibold text-slate-900 dark:text-slate-100">
+                          {tx.amountEtb} {isAmharic ? "ብር" : (tx.currency || "ETB")}
+                        </td>
+                        <td className="px-4 py-3.5 uppercase text-[11px] text-slate-500">
+                          {methodLabel}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                              tx.status === "completed"
+                                ? "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300"
+                                : tx.status === "pending"
+                                  ? "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300"
+                                  : "bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300"
                             }`}
-                        >
-                          {t.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                          >
+                            {statusLabel}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

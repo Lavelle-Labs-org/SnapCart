@@ -58,14 +58,29 @@ async function createTestToken(sellerId: string): Promise<string> {
 
 import OrderDetailPage from "../page";
 import OrderActions from "../order-actions";
+import { renderToString } from "react-dom/server";
+import { LanguageProvider } from "../../../../../lib/i18n";
+import OrderDetailClient from "../order-detail-client";
 
 // Helper to recursively extract all text content from JSX tree
 function extractText(node: any): string {
   if (!node) return "";
-  if (typeof node === "string" || typeof node === "number") return String(node);
-  if (Array.isArray(node)) return node.map(extractText).join(" ");
-  if (node.props?.children) return extractText(node.props.children);
-  return "";
+  try {
+    const html = renderToString(node);
+    return html.replace(/<[^>]+>/g, " ");
+  } catch {
+    if (typeof node === "string" || typeof node === "number") return String(node);
+    if (Array.isArray(node)) return node.map(extractText).join(" ");
+    if (typeof node.type === "function") {
+      try {
+        return extractText(node.type(node.props));
+      } catch {
+        // ignore
+      }
+    }
+    if (node.props?.children) return extractText(node.props.children);
+    return "";
+  }
 }
 
 // Helper to find all elements matching a predicate in JSX tree
@@ -388,6 +403,77 @@ describe("OrderDetailPage (FE-010, Issue #33 - /dashboard/orders/[id])", () => {
       const text = extractText(element);
       expect(text).toContain("Order Rejected");
       expect(text).toContain("This order was declined and will not proceed to fulfillment");
+    });
+  });
+
+  describe("Reactive Language Support (Amharic)", () => {
+    it("renders full order detail page in Amharic reactively when wrapped in LanguageProvider with locale='am'", () => {
+      const mockOrder = {
+        id: "ord_am_test",
+        seller_id: "seller_test_123",
+        number: 2026,
+        buyer_name: "አበበ ቢቂላ",
+        buyer_phone: "0911223344",
+        sms_consent: true,
+        consent_wording: "የኤስኤምኤስ ማሳወቂያዎች ይላኩልኝ",
+        consent_at: new Date().toISOString(),
+        state: "new",
+        total_santim: 85000,
+        created_at: new Date().toISOString(),
+        order_items: [
+          {
+            id: "it_1",
+            name_at_order: "የሀበሻ ዶሮ ወጥ",
+            unit_price_santim: 65000,
+            quantity: 1,
+          },
+        ],
+        order_events: [
+          {
+            id: "ev_1",
+            from_state: null,
+            to_state: "new",
+            actor: "buyer",
+            created_at: new Date().toISOString(),
+          },
+        ],
+        messages: [
+          {
+            id: "msg_1",
+            event: "seller_new_order",
+            recipient_phone: "0911223344",
+            status: "sent",
+            created_at: new Date().toISOString(),
+          },
+        ],
+      };
+
+      const tree = (
+        <LanguageProvider initialLocale="am">
+          <OrderDetailClient order={mockOrder} />
+        </LanguageProvider>
+      );
+
+      const text = extractText(tree);
+      expect(text).toContain("ትዕዛዝ #2026");
+      expect(text).toContain("አዲስ");
+      expect(text).toContain("ጠቅላላ ዋጋ");
+      expect(text).toContain("850.00 ብር");
+      expect(text).toContain("የትዕዛዝ ሁኔታ ደረጃ");
+      expect(text).toContain("የቀረበ");
+      expect(text).toContain("የተቀበለ");
+      expect(text).toContain("ዝግጁ");
+      expect(text).toContain("የተጠናቀቀ");
+      expect(text).toContain("የታዘዙ ዕቃዎች (1)");
+      expect(text).toContain("የሀበሻ ዶሮ ወጥ");
+      expect(text).toContain("1 × 650.00 ብር");
+      expect(text).toContain("አጠቃላይ ድምር");
+      expect(text).toContain("የሁኔታ ሽግግር ታሪክ");
+      expect(text).toContain("የኤስኤምኤስ ማሳወቂያዎች መዝገብ");
+      expect(text).toContain("የተላከ");
+      expect(text).toContain("የደንበኛ መረጃ");
+      expect(text).toContain("የኤስኤምኤስ ስምምነት ተሰጥቷል");
+      expect(text).toContain("የትዕዛዝ እርምጃዎች");
     });
   });
 });

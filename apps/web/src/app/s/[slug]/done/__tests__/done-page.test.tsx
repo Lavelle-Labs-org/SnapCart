@@ -29,15 +29,21 @@ vi.mock("../../../../lib/prisma", () => ({
   default: prismaMock,
 }));
 
+import { renderToString } from "react-dom/server";
 import DonePage from "../page";
 
 // Helper to recursively extract all text content from JSX tree
 function extractText(node: any): string {
   if (!node) return "";
-  if (typeof node === "string" || typeof node === "number") return String(node);
-  if (Array.isArray(node)) return node.map(extractText).join(" ");
-  if (node.props?.children) return extractText(node.props.children);
-  return "";
+  try {
+    const html = renderToString(node);
+    return html.replace(/<[^>]+>/g, " ");
+  } catch {
+    if (typeof node === "string" || typeof node === "number") return String(node);
+    if (Array.isArray(node)) return node.map(extractText).join(" ");
+    if (node.props?.children) return extractText(node.props.children);
+    return "";
+  }
 }
 
 describe("DonePage (FE-004 - /s/[slug]/done)", () => {

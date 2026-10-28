@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "../../../lib/i18n";
 import { LanguageToggle } from "../../../components/language-toggle";
+import { ThemeToggle } from "../../../components/theme-toggle";
 
 export interface OrderItemData {
   id: string;
@@ -149,31 +150,31 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
     switch (currentState) {
       case "new":
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 uppercase">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 uppercase">
             {isAmharic ? "አዲስ ትዕዛዝ" : "New Order"}
           </span>
         );
       case "accepted":
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 uppercase">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 uppercase">
             {isAmharic ? "በመዘጋጀት ላይ" : "Preparing"}
           </span>
         );
       case "ready":
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-800 border border-teal-200 uppercase">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-800 dark:bg-teal-950/60 dark:text-teal-300 border border-teal-200 dark:border-teal-800 uppercase">
             {isAmharic ? "ለመረከብ ዝግጁ" : "Ready for Pickup"}
           </span>
         );
       case "completed":
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 uppercase">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 uppercase">
             {isAmharic ? "ተጠናቋል" : "Completed"}
           </span>
         );
       case "rejected":
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 uppercase">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 uppercase">
             {isAmharic ? "ተሰርዟል" : "Rejected"}
           </span>
         );
@@ -181,18 +182,19 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between max-w-md mx-auto border-x border-slate-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between max-w-md mx-auto border-x border-slate-200 dark:border-slate-800">
       {/* Header */}
-      <header className="bg-white border-b px-4 py-3 flex items-center justify-between sticky top-0 z-10 gap-2">
+      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between sticky top-0 z-10 gap-2">
         <div className="min-w-0 flex-1">
-          <span className="text-xs uppercase tracking-wider text-slate-500 font-semibold block truncate">
+          <span className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold block truncate">
             {order.shopName || (isAmharic ? "የነጋዴ መቆጣጠሪያ" : "Seller Action")}
           </span>
-          <h1 className="text-base sm:text-lg font-bold text-slate-900 truncate">
+          <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 truncate">
             {isAmharic ? `ትዕዛዝ #${order.number}` : `Order #${order.number}`}
           </h1>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
+          <ThemeToggle />
           <LanguageToggle />
           {renderBadge()}
         </div>
@@ -202,12 +204,12 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
       <main className="p-4 space-y-4 flex-1">
         {/* Alerts & Feedback */}
         {errorMessage && (
-          <div className="bg-rose-50 border border-rose-200 text-rose-800 text-xs p-3.5 rounded-xl flex items-start space-x-2">
-            <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+          <div className="bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 text-rose-800 dark:text-rose-200 text-xs p-3.5 rounded-xl flex items-start space-x-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="font-semibold">{errorMessage}</p>
               {remainingAttempts !== null && remainingAttempts > 0 && (
-                <p className="mt-1 text-rose-600">
+                <p className="mt-1 text-rose-600 dark:text-rose-400">
                   {remainingAttempts} attempt{remainingAttempts === 1 ? "" : "s"} remaining before lock.
                 </p>
               )}
@@ -216,24 +218,24 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
         )}
 
         {successNotice && (
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs p-3.5 rounded-xl flex items-start space-x-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+          <div className="bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-xs p-3.5 rounded-xl flex items-start space-x-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
             <span className="font-medium">{successNotice}</span>
           </div>
         )}
 
         {/* Customer Contact Card */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center justify-between shadow-sm">
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
               {isAmharic ? "ደንበኛ" : "Customer"}
             </p>
-            <p className="font-bold text-slate-900 text-base">{order.buyerName}</p>
-            <p className="text-xs text-slate-600 font-mono mt-0.5">{order.buyerPhone}</p>
+            <p className="font-bold text-slate-900 dark:text-slate-100 text-base">{order.buyerName}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-mono mt-0.5">{order.buyerPhone}</p>
           </div>
           <a
             href={`tel:${order.buyerPhone}`}
-            className="flex items-center space-x-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 active:bg-emerald-200 px-3.5 py-2.5 rounded-lg text-sm font-semibold transition border border-emerald-200 min-h-[44px]"
+            className="flex items-center space-x-1.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 active:bg-emerald-200 px-3.5 py-2.5 rounded-lg text-sm font-semibold transition border border-emerald-200 dark:border-emerald-800 min-h-[44px]"
             aria-label={`Call customer at ${order.buyerPhone}`}
           >
             <Phone className="w-4 h-4" />
@@ -242,29 +244,29 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
         </div>
 
         {/* Item Breakdown */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3 shadow-sm">
-          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
+          <h2 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
             {isAmharic ? `የታዘዙ እቃዎች (${order.items.length})` : `Ordered Items (${order.items.length})`}
           </h2>
-          <div className="divide-y divide-slate-100 text-sm">
+          <div className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
             {order.items.map((item) => (
               <div key={item.id} className="flex justify-between items-center py-2.5">
                 <div>
-                  <span className="font-bold text-slate-900 mr-2">{item.quantity}x</span>
-                  <span className="text-slate-800">{item.name}</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100 mr-2">{item.quantity}x</span>
+                  <span className="text-slate-800 dark:text-slate-200">{item.name}</span>
                 </div>
-                <span className="font-semibold text-slate-700 tabular-nums">
+                <span className="font-semibold text-slate-700 dark:text-slate-300 tabular-nums">
                   {item.quantity * item.priceBirr} {t.common.currency}
                 </span>
               </div>
             ))}
           </div>
 
-          <div className="border-t pt-3 flex justify-between items-center text-slate-900">
+          <div className="border-t border-slate-100 dark:border-slate-800 pt-3 flex justify-between items-center text-slate-900 dark:text-slate-100">
             <span className="font-semibold text-sm">
               {isAmharic ? "ጠቅላላ የሚከፈል (ጥሬ ገንዘብ)" : "Total Payable (Cash)"}
             </span>
-            <span className="text-emerald-600 font-bold text-xl tabular-nums">
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold text-xl tabular-nums">
               {order.totalBirr} {t.common.currency}
             </span>
           </div>
@@ -272,8 +274,8 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
 
         {/* State-specific explanatory notes */}
         {currentState === "new" && !showRejectConfirm && (
-          <div className="bg-slate-100 border border-slate-200 rounded-xl p-3 text-xs text-slate-600 flex items-start space-x-2">
-            <Clock className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+          <div className="bg-slate-100 dark:bg-slate-850 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-xs text-slate-600 dark:text-slate-300 flex items-start space-x-2">
+            <Clock className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
             <span>
               {isAmharic ? (
                 <>ትዕዛዙን ለማረጋገጥ <strong>ተቀበል</strong> የሚለውን ይጫኑ፤ ለደንበኛው ማረጋገጫ በኤስኤምኤስ ይላካል።</>
@@ -285,8 +287,8 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
         )}
 
         {currentState === "accepted" && (
-          <div className="bg-slate-100 border border-slate-200 rounded-xl p-3 text-xs text-slate-700 flex items-start space-x-2">
-            <BellRing className="w-4 h-4 text-slate-600 flex-shrink-0 mt-0.5" />
+          <div className="bg-slate-100 dark:bg-slate-850 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-xs text-slate-700 dark:text-slate-300 flex items-start space-x-2">
+            <BellRing className="w-4 h-4 text-slate-600 dark:text-slate-400 shrink-0 mt-0.5" />
             <span>
               {isAmharic ? (
                 <>እቃው ተዘጋጅቶ ሲያልቅ ባለ 4 ድጂት ሚስጥር የመቀበያ ኮድ ለደንበኛው በኤስኤምኤስ ለመላክ <strong>ዝግጁ ሆኗል</strong> የሚለውን ይጫኑ።</>
@@ -298,8 +300,8 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
         )}
 
         {currentState === "ready" && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 flex items-start space-x-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+          <div className="bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/60 rounded-xl p-3 text-xs text-emerald-800 dark:text-emerald-300 flex items-start space-x-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
             <span>
               {isAmharic
                 ? "ርክክቡን ለማረጋገጥ ደንበኛውን በኤስኤምኤስ የደረሰውን ባለ 4 ዲጂት ሚስጥር ኮድ ይጠይቁ።"
@@ -310,14 +312,14 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
 
         {/* Terminal state: Completed */}
         {currentState === "completed" && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 text-center space-y-3">
-            <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+          <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 rounded-xl p-6 text-center space-y-3">
+            <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-7 h-7" />
             </div>
-            <h3 className="font-bold text-emerald-900 text-lg">
+            <h3 className="font-bold text-emerald-900 dark:text-emerald-200 text-lg">
               {isAmharic ? "ርክክቡ በተሳካ ሁኔታ ተጠናቋል" : "Order Handover Complete"}
             </h3>
-            <p className="text-xs text-emerald-700 max-w-xs mx-auto">
+            <p className="text-xs text-emerald-700 dark:text-emerald-300 max-w-xs mx-auto">
               {isAmharic
                 ? "ትክክለኛ የመቀበያ ኮድ ተረጋግጦ ርክክቡ ተፈጽሟል። ትዕዛዙ ተዘግቷል።"
                 : "Handover verified with valid pickup code. This order is closed and payment is collected."}
@@ -335,14 +337,14 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
 
         {/* Terminal state: Rejected */}
         {currentState === "rejected" && (
-          <div className="bg-rose-50 border border-rose-200 rounded-xl p-6 text-center space-y-3">
-            <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto">
+          <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-xl p-6 text-center space-y-3">
+            <div className="w-12 h-12 bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-400 rounded-full flex items-center justify-center mx-auto">
               <XCircle className="w-7 h-7" />
             </div>
-            <h3 className="font-bold text-rose-900 text-lg">
+            <h3 className="font-bold text-rose-900 dark:text-rose-200 text-lg">
               {isAmharic ? "ትዕዛዙ ተሰርዟል" : "Order Rejected"}
             </h3>
-            <p className="text-xs text-rose-700 max-w-xs mx-auto">
+            <p className="text-xs text-rose-700 dark:text-rose-300 max-w-xs mx-auto">
               {isAmharic
                 ? "ትዕዛዙ አልተቀበለም፤ ለደንበኛው የኤስኤምኤስ ማሳወቂያ ተልኳል።"
                 : "The order was cancelled and an SMS notification was sent to the customer."}
@@ -360,11 +362,11 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
 
         {/* Reject Confirmation Card */}
         {showRejectConfirm && (
-          <div className="bg-rose-50 border border-rose-300 rounded-xl p-4 space-y-3">
-            <h3 className="font-bold text-rose-900 text-sm">
+          <div className="bg-rose-50 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-900 rounded-xl p-4 space-y-3">
+            <h3 className="font-bold text-rose-900 dark:text-rose-200 text-sm">
               {isAmharic ? `ትዕዛዝ #${order.number} ይሰረዝ?` : `Reject Order #${order.number}?`}
             </h3>
-            <p className="text-xs text-rose-700">
+            <p className="text-xs text-rose-700 dark:text-rose-300">
               {isAmharic
                 ? "ትዕዛዙ እንደማይስተናገድ ለደንበኛው የኤስኤምኤስ መልዕክት ይላካል።"
                 : "The customer will receive an SMS notifying them that their order could not be fulfilled."}
@@ -374,7 +376,7 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
                 type="button"
                 onClick={() => setShowRejectConfirm(false)}
                 disabled={isSubmitting}
-                className="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold py-2.5 px-3 rounded-lg text-xs transition min-h-[44px]"
+                className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 font-semibold py-2.5 px-3 rounded-lg text-xs transition min-h-[44px]"
               >
                 {t.common.cancel}
               </button>
@@ -397,14 +399,14 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
 
       {/* Action Footer Buttons */}
       {currentState !== "completed" && currentState !== "rejected" && !showRejectConfirm && (
-        <footer className="bg-white border-t p-4 sticky bottom-0 space-y-3 z-10">
+        <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 sticky bottom-0 space-y-3 z-10">
           {currentState === "new" && (
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setShowRejectConfirm(true)}
                 disabled={isSubmitting}
-                className="col-span-1 bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 font-semibold py-3.5 rounded-xl transition flex items-center justify-center space-x-1 disabled:opacity-50 min-h-[44px]"
+                className="col-span-1 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 font-semibold py-3.5 rounded-xl transition flex items-center justify-center space-x-1 disabled:opacity-50 min-h-[44px]"
               >
                 <X className="w-4 h-4" />
                 <span>{isAmharic ? "ሰርዝ" : "Reject"}</span>
@@ -467,10 +469,10 @@ export function SellerActionClient({ token, order }: SellerActionClientProps) {
                     setErrorMessage(null);
                   }}
                   disabled={isSubmitting}
-                  className="w-full text-center text-2xl font-mono tracking-widest py-3 border-2 border-slate-300 rounded-xl focus:border-emerald-500 focus:outline-none bg-white min-h-[44px]"
+                  className="w-full text-center text-2xl font-mono tracking-widest py-3 border-2 border-slate-300 dark:border-slate-700 rounded-xl focus:border-emerald-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 min-h-[44px]"
                   aria-label="4-digit pickup code"
                 />
-                <p className="text-[11px] text-slate-500 text-center mt-1">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center mt-1">
                   {isAmharic
                     ? "ደንበኛው በኤስኤምኤስ የደረሰውን ባለ 4 ዲጂት ቁጥር ማቅረብ አለበት"
                     : "Customer must provide 4 digits from their SMS"}
