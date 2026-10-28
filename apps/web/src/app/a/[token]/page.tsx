@@ -110,15 +110,15 @@ export default async function ActionPage({ params }: ActionPageProps) {
 
 function renderInvalidTokenView(reason?: string) {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-6 text-center max-w-md mx-auto border-x border-slate-200">
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm w-full space-y-4">
-        <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center items-center p-6 text-center max-w-md mx-auto border-x border-slate-200 dark:border-slate-800">
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm w-full space-y-4">
+        <div className="w-14 h-14 bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center mx-auto">
           <AlertCircle className="w-7 h-7" />
         </div>
 
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Invalid or Expired Link</h1>
-          <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Invalid or Expired Link</h1>
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
             {reason ||
               "This seller order link is no longer valid, has expired, or has already been used."}
           </p>
