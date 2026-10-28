@@ -155,12 +155,68 @@ npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 6. Run Unit Tests
+### 6. SMSHub Webhook Integration ("Hooked" Quest)
+
+To earn the **"Hooked" quest badge (+15 pts)** in the SMSHub Buildathon, configure the inbound delivery webhook endpoint:
+
+#### 1. Configuration & Security
+Add your webhook signing secret in your `.env`:
+```env
+SMSHUB_WEBHOOK_SECRET="your_webhook_signing_secret_here"
+```
+> [!IMPORTANT]
+> Keep `SMSHUB_WEBHOOK_SECRET` secret and never commit live secrets to git.
+
+#### 2. Supported Public Callback URLs
+Snapcart supports flexible webhook routing with full cryptographic HMAC-SHA256 verification:
+- Primary Callback: `https://<your-public-domain>/webhooks/smshub`
+- Dual Callback: `https://<your-public-domain>/api/webhooks/smshub`
+
+Both URLs seamlessly ingest delivery reports, verify `X-SMSHub-Signature` (`t={timestamp},v1={hmac}`), enforce 300-second replay attack protection, sanitize sensitive codes (OTPs and pickup codes), and update order notification states.
+
+#### 3. Local Development Tunnel Setup
+SMSHub requires a public HTTPS URL to deliver webhook events. You can expose your local server using `ngrok` or `cloudflared`:
+
 ```bash
+# Using ngrok (forwarding to Next.js on port 3000):
+ngrok http 3000
+
+# Or using cloudflared:
+cloudflared tunnel --url http://localhost:3000
+```
+Copy your assigned HTTPS tunnel URL (e.g. `https://abc123.ngrok-free.app`) and configure the webhook URL as:
+`https://abc123.ngrok-free.app/webhooks/smshub`
+
+#### 4. Register Endpoint in SMSHub Dashboard
+1. Log into your [SMSHub Dashboard](https://smshub.et).
+2. Navigate to **API Access → Webhooks** (or [smshub.et/dashboard/webhooks](https://smshub.et/dashboard/webhooks)).
+3. Click **Add Endpoint**.
+4. Enter your Endpoint URL: `https://<your-domain>/webhooks/smshub`.
+5. Select event subscriptions:
+   - `message.sent` (carrier delivery confirmation)
+   - `message.failed` (carrier rejection / credit refund)
+   - `credits.low` (balance alerts)
+   - `ping` (health checks)
+6. Copy the generated **Webhook Secret** (`whsec_...`) into your `.env` file as `SMSHUB_WEBHOOK_SECRET`.
+7. Click **Send Test** in the SMSHub dashboard to dispatch a `ping` test event. Your server will respond with HTTP `200 OK` (`{"received": true, "event": "ping"}`).
+
+#### 5. Supported Event Payloads & Lifecycle Updates
+- **`message.sent`**: Updates the internal message status to `sent`, records `network` (`ethio` / `safaricom`) and `credits_used`, and logs an audited event in `message_events`.
+- **`message.failed`**: Updates the message status to `failed` and records the carrier `error_type`.
+- **`ping`**: Validates webhook connectivity without mutating order or message state.
+- **`credits.low`**: Logs proactive alerts when SMSHub credits drop below threshold.
+- **Idempotency**: Duplicate delivery IDs (`id` or `delivery_id`) are safely detected and ignored via unique constraints (`P2002`).
+
+### 7. Run Unit & E2E Tests
+```bash
+# Run all webhook integration and service tests:
+npx vitest run test/e2e/webhook-sync.test.ts apps/api/src/modules/webhooks/__tests__/
+
+# Run complete test suite:
 npm test
 ```
 
-### 7. Secret Scanning & Repository Hygiene
+### 8. Secret Scanning & Repository Hygiene
 To verify that no live production secrets (`sk_live_...`, `whsec_...`) or unencrypted credential files are staged before committing:
 ```bash
 npm run check:secrets

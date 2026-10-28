@@ -157,7 +157,7 @@ describe("Scenario E10: Inbound Webhook Signature & Status Sync Integration Test
 
     app = moduleRef.createNestApplication({ rawBody: true });
     app.setGlobalPrefix("api", {
-      exclude: ["webhooks/smshub", "webhooks/(.*)"],
+      exclude: ["webhooks/smshub", "webhooks/(.*)", "api/webhooks/smshub", "api/webhooks/(.*)"],
     });
     app.useGlobalInterceptors(new TransformInterceptor());
     app.useGlobalFilters(new HttpExceptionFilter());
@@ -515,6 +515,130 @@ describe("Scenario E10: Inbound Webhook Signature & Status Sync Integration Test
       expect(savedRaw).not.toContain("sat_super_secret_token_123");
       expect(savedRaw).not.toContain("sensitive_seller_key");
       expect(savedRaw).toContain("[REDACTED]");
+    });
+
+    it("processes official SMSHub payload schema (with 'type' and 'id' fields) and updates network and credits_used", async () => {
+      const smshubMsgId = "msg_official_schema_101";
+      const dbMsg = await prismaMock.message.create({
+        data: {
+          recipient_phone: "0911234567",
+          event: "order_ready",
+          text: "Your order is ready.",
+          status: "queued",
+          smshub_message_id: smshubMsgId,
+        },
+      });
+
+      const eventId = "evt_official_delivery_202";
+      const payload = {
+        id: eventId,
+        type: "message.sent",
+        created: "2026-10-28T04:20:00+03:00",
+        data: {
+          message_id: smshubMsgId,
+          msisdn: "0911234567",
+          network: "ethio",
+          status: "sent",
+          source: "api",
+          campaign_id: null,
+          credits_used: 1,
+          text: "Your order is ready.",
+          error: null,
+        },
+      };
+
+      const rawBody = JSON.stringify(payload);
+      const signature = signWebhook(rawBody, WEBHOOK_SECRET);
+
+      const res = await request(app.getHttpServer())
+        .post("/webhooks/smshub")
+        .set("Content-Type", "application/json")
+        .set("X-SMSHub-Signature", signature)
+        .set("X-SMSHub-Event", "message.sent")
+        .set("X-SMSHub-Delivery", eventId)
+        .send(rawBody);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.received).toBe(true);
+      expect(res.body.data.event).toBe("message.sent");
+      expect(res.body.data.deliveryId).toBe(eventId);
+
+      const updated = dbMessages.get(dbMsg.id);
+      expect(updated.status).toBe("sent");
+      expect(updated.network).toBe("ethio");
+      expect(updated.credits_used).toBe(1);
+    });
+
+    it("supports the dual route /api/webhooks/smshub for flexible callback URL configuration", async () => {
+      const eventId = "evt_api_prefix_path_303";
+      const payload = {
+        id: eventId,
+        type: "ping",
+        created: "2026-10-28T04:20:00+03:00",
+      };
+
+      const rawBody = JSON.stringify(payload);
+      const signature = signWebhook(rawBody, WEBHOOK_SECRET);
+
+      const res = await request(app.getHttpServer())
+        .post("/api/webhooks/smshub")
+        .set("Content-Type", "application/json")
+        .set("X-SMSHub-Signature", signature)
+        .set("X-SMSHub-Event", "ping")
+        .set("X-SMSHub-Delivery", eventId)
+        .send(rawBody);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.received).toBe(true);
+      expect(res.body.data.event).toBe("ping");
+    });
+
+    it("handles dashboard 'ping' health check events gracefully without errors", async () => {
+      const pingId = "evt_dashboard_ping_test";
+      const payload = {
+        id: pingId,
+        type: "ping",
+        created: new Date().toISOString(),
+      };
+      const rawBody = JSON.stringify(payload);
+      const signature = signWebhook(rawBody, WEBHOOK_SECRET);
+
+      const res = await request(app.getHttpServer())
+        .post("/webhooks/smshub")
+        .set("Content-Type", "application/json")
+        .set("X-SMSHub-Signature", signature)
+        .set("X-SMSHub-Event", "ping")
+        .set("X-SMSHub-Delivery", pingId)
+        .send(rawBody);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.received).toBe(true);
+      expect(res.body.data.event).toBe("ping");
+    });
+
+    it("handles 'credits.low' balance alert events without requiring message_id", async () => {
+      const alertId = "evt_credits_low_alert";
+      const payload = {
+        id: alertId,
+        type: "credits.low",
+        data: {
+          credits_remaining: 3,
+        },
+      };
+      const rawBody = JSON.stringify(payload);
+      const signature = signWebhook(rawBody, WEBHOOK_SECRET);
+
+      const res = await request(app.getHttpServer())
+        .post("/webhooks/smshub")
+        .set("Content-Type", "application/json")
+        .set("X-SMSHub-Signature", signature)
+        .set("X-SMSHub-Event", "credits.low")
+        .set("X-SMSHub-Delivery", alertId)
+        .send(rawBody);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.received).toBe(true);
+      expect(res.body.data.event).toBe("credits.low");
     });
   });
 });
