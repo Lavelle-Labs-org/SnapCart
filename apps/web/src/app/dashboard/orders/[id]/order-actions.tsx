@@ -139,7 +139,21 @@ export default function OrderActions({
         </h2>
         <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
           {isAmharic ? "ሁኔታ: " : "State: "}
-          <span className="font-semibold text-slate-700 dark:text-slate-300">{currentState}</span>
+          <span className="font-semibold text-slate-700 dark:text-slate-300">
+            {isAmharic
+              ? (currentState === "new"
+                  ? "አዲስ"
+                  : currentState === "accepted"
+                    ? "ተቀባይነት አግኝቷል"
+                    : currentState === "ready"
+                      ? "ለመረከብ ዝግጁ"
+                      : currentState === "completed"
+                        ? "ተጠናቋል"
+                        : currentState === "rejected"
+                          ? "ውድቅ ተደርጓል"
+                          : currentState)
+              : currentState}
+          </span>
         </span>
       </div>
 
