@@ -220,13 +220,16 @@ describe("MessagesClient Helpers & API Actions (FE-012, Issue #35)", () => {
       expect(html).not.toContain("Resend Message");
       expect(html).not.toContain("በድጋሚ ላክ");
 
-      // Verify empty state uses colSpan 7 when there are no messages
+      // Verify empty state uses colSpan 6 when there are no messages (SMSHub ID column removed)
       const emptyHtml = renderToString(
         React.createElement(MessagesClient, {
           initialMessages: [],
         })
       );
-      expect(emptyHtml).toContain("colSpan=\"7\"");
+      expect(emptyHtml).toContain("colSpan=\"6\"");
+
+      // Verify table does not render SMSHub ID column header
+      expect(html).not.toContain("SMSHub ID");
     });
   });
 });
