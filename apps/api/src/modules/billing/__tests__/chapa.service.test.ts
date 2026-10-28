@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { ChapaService } from "../chapa.service";
 import { createHmac } from "crypto";
 
@@ -49,6 +49,50 @@ describe("ChapaService", () => {
       expect(res.status).toBe("success");
       expect(res.checkoutUrl).toBeDefined();
       expect(res.checkoutUrl).toContain("obs_unit_123");
+    });
+
+    it("clamps customization.title to max 16 chars when calling Chapa API", async () => {
+      const service = new ChapaService();
+      (service as any).secretKey = "CHASECK_LIVE_REAL_KEY";
+      vi.stubEnv("NODE_ENV", "production");
+
+      let capturedPayload: any = null;
+      const originalFetch = global.fetch;
+      global.fetch = async (_url: any, init: any) => {
+        capturedPayload = JSON.parse(init.body);
+        return {
+          ok: true,
+          json: async () => ({
+            status: "success",
+            message: "Hosted Link",
+            data: { checkout_url: "https://checkout.chapa.co/pay/123" },
+          }),
+        } as any;
+      };
+
+      try {
+        await service.initializeTransaction({
+          amount: 50,
+          currency: "ETB",
+          email: "seller@snapcart.et",
+          firstName: "Very Long Business Name Exceeding Thirty Characters Here",
+          phoneNumber: "0911223344",
+          txRef: "obs_test_limit",
+          callbackUrl: "https://snapcart.et/api/webhooks/chapa",
+          returnUrl: "https://snapcart.et/dashboard/billing/return",
+          title: "Snapcart SMS Credits Too Long", // 29 chars
+          description: "A".repeat(150),
+        });
+
+        expect(capturedPayload).not.toBeNull();
+        expect(capturedPayload.customization.title.length).toBeLessThanOrEqual(16);
+        expect(capturedPayload.customization.title).toBe("Snapcart SMS Cre");
+        expect(capturedPayload.first_name.length).toBeLessThanOrEqual(30);
+        expect(capturedPayload.customization.description.length).toBeLessThanOrEqual(100);
+      } finally {
+        global.fetch = originalFetch;
+        vi.unstubAllEnvs();
+      }
     });
   });
 });

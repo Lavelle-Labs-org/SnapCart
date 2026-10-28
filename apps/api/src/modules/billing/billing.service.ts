@@ -134,13 +134,13 @@ export class BillingService {
       amount: pkg.priceEtb,
       currency: "ETB",
       email: `${cleanSlug}@${emailDomain}`,
-      firstName: seller.business_name || "Seller",
+      firstName: (seller.business_name || "Seller").slice(0, 30),
       phoneNumber: cleanPhone,
       txRef,
       callbackUrl,
       returnUrl: customReturnUrl || defaultReturnUrl,
-      title: "Snapcart SMS Credits",
-      description: `${pkg.name} - ${pkg.credits} SMS Credits`.replace(/[^\w\s.-]/g, ""),
+      title: (pkg.name || "Snapcart").slice(0, 16),
+      description: `${pkg.name} - ${pkg.credits} SMS Credits`.replace(/[^\w\s.-]/g, "").slice(0, 100),
     });
 
     if (chapaRes.status !== "success" || !chapaRes.checkoutUrl) {

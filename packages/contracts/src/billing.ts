@@ -1,3 +1,23 @@
+/**
+ * Chapa Payment Gateway payload limits and constraints.
+ * Reference: https://developer.chapa.co/docs/accept-payments/
+ */
+export const CHAPA_LIMITS = {
+  /**
+   * Maximum character length allowed for customization.title on Chapa hosted checkout.
+   * Chapa returns 400 "The customization.title must not exceed 16 characters." if exceeded.
+   */
+  CUSTOMIZATION_TITLE_MAX: 16,
+  /**
+   * Maximum character length for customization.description.
+   */
+  CUSTOMIZATION_DESCRIPTION_MAX: 100,
+  /**
+   * Maximum character length for first_name.
+   */
+  FIRST_NAME_MAX: 30,
+} as const;
+
 export interface BillingPackage {
   id: string;
   name: string;
