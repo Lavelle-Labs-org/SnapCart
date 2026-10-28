@@ -101,6 +101,16 @@ export function DoneClient({
           <Home className="w-4 h-4" />
           <span>{t.orderDone.backToStorefront}</span>
         </Link>
+        <div className="pt-1">
+          <Link
+            href="/"
+            data-testid="done-seller-cta-link"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline"
+          >
+            <Store className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>{isAmharic ? "ነጋዴ ነዎት? በ Snapcart መሸጥ ይጀምሩ" : "Are you a seller? Start selling on Snapcart"}</span>
+          </Link>
+        </div>
         <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium tracking-wide">
           {t.orderDone.brandPowered}
         </p>
