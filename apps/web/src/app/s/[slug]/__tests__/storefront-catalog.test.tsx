@@ -23,7 +23,7 @@ describe("StorefrontCatalog Component (Landing / Seller links)", () => {
     },
   ];
 
-  it("renders top and footer links to the landing / sellers page in English", () => {
+  it("renders top seller links and footer brand link in English", () => {
     const html = renderToString(
       <LanguageProvider initialLocale="en">
         <StorefrontCatalog seller={mockSeller} products={mockProducts} />
@@ -35,16 +35,13 @@ describe("StorefrontCatalog Component (Landing / Seller links)", () => {
     expect(html).toContain('data-testid="storefront-top-landing-link"');
     expect(html).toContain('data-testid="storefront-top-seller-link"');
     expect(html).toContain("Create your store");
-
-    // Verify footer seller CTA and brand link
-    expect(html).toContain('data-testid="storefront-footer-seller-link"');
+    // Verify footer brand link
     expect(html).toContain('data-testid="storefront-footer-brand-link"');
-    expect(html).toContain("Are you a seller? Start selling on Snapcart");
     expect(html).toContain("Powered by");
     expect(html).toContain("Snapcart");
   });
 
-  it("reactively renders top and footer links in Amharic", () => {
+  it("reactively renders top seller links and footer brand link in Amharic", () => {
     const html = renderToString(
       <LanguageProvider initialLocale="am">
         <StorefrontCatalog seller={mockSeller} products={mockProducts} />
@@ -53,7 +50,6 @@ describe("StorefrontCatalog Component (Landing / Seller links)", () => {
 
     expect(html).toContain('href="/"');
     expect(html).toContain("የራስዎን መደብር ይክፈቱ");
-    expect(html).toContain("ነጋዴ ነዎት? በ Snapcart መሸጥ ይጀምሩ");
     expect(html).toContain("በቅጽበት ይዘዙ");
   });
 });
